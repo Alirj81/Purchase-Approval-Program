@@ -1,4 +1,4 @@
-namespace PurchaseApproval.Web.Models;
+namespace PurchaseApproval.Models;
 
 public class Employee
 {
