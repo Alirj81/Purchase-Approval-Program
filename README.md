@@ -1,292 +1,591 @@
 # Purchase Approval Program
 
-**An internal, web-based purchase request and management approval system.**
+**Internal Payment Request, Approval & Transaction Tracking System**
 
-**Project Status:** Planning & Requirements Definition — Pre-Development  
-**Version:** 0.1.0 (Planned MVP)  
-**Development:** Not yet started
+A self-hosted web application for managing company payment requests, formal management approvals, accountant execution records, and financial accountability.
+
+**Organization:** Novin Abzian  
+**Technology:** C# / ASP.NET Core 10 / PostgreSQL  
+**Development Stage:** Backend Foundation & Database Implementation  
+**Status:** Active Development — Not Production Ready
+
+---
 
 ## 1. Project Overview
 
-The Purchase Approval Program is a planned internal web application designed to simplify, formalize, and document purchase approval procedures within a company.
+The Purchase Approval Program is an internal web application being developed to formalize and simplify how outgoing company payments are requested, reviewed, authorized, and recorded.
 
-The system will provide authorized employees with a structured method for submitting purchase requests, while allowing management to review, assess, approve, or reject these requests through a centralized administration dashboard.
+The system is intended to replace informal payment authorization procedures with a structured digital workflow that connects employees, company management, and accounting personnel.
 
-The primary objective is to replace informal purchase authorization procedures with a transparent, traceable, and accountable digital workflow.
+Although initially conceived as a purchase approval tool, the application's scope has expanded to cover **any outgoing company payment**, including purchases, services, reimbursements, advances, and other authorized expenses.
 
-The application is intended to be hosted on the company's own server and accessible through modern desktop and mobile browsers.
+Its primary objective is to ensure that every payment has a documented business justification, a responsible requester, an identifiable management decision, and a traceable financial execution record.
 
-## 2. Project Objectives
+The application will operate on the company's own infrastructure and provide a Persian-language, right-to-left interface accessible through desktop and mobile browsers.
 
-The system aims to:
+### Core Principles
 
-- Establish a standardized purchase request procedure.
-- Ensure that purchases receive formal management authorization.
-- Reduce reliance on informal communications and verbal approvals.
-- Provide managers with sufficient time and information to assess purchasing needs.
-- Maintain a traceable history of requests and decisions.
-- Identify the responsible decision-maker for every approval or rejection.
-- Enable employees to track their submitted requests.
-- Support exporting approved requests to Excel.
-- Limit unnecessary administrative complexity.
-- Protect internal company information through controlled access.
+- Human-controlled financial authorization
+- Clear separation between approval and payment execution
+- Minimal complexity for employees
+- Role-based access and responsibility
+- Complete traceability of financial decisions
+- Accurate historical records
+- Secure internal deployment
+- Practical accounting exports and printable documents
 
-**Core Principle:** The application supports management decision-making rather than automating purchasing decisions.
+**Important:** The software will document payment authorization and execution. It will not independently authorize payments, transfer money, or replace accounting software.
 
-## 3. Planned Functionality
+## 2. User Roles
 
-### 3.1 Employee Access Management
+The system is designed around three primary user roles.
 
-The application will use a controlled access system for authorized company personnel.
+### Employee
 
-Instead of requiring traditional employee accounts with self-registration, administrators will issue individual access credentials.
+Employees are authorized personnel who can submit payment requests.
 
-Planned behavior:
+Planned capabilities:
 
-- Each authorized employee receives a username and a securely generated access key.
-- The username and access key provide access to the purchase request form.
-- Access keys remain valid indefinitely unless an administrator revokes, disables, or regenerates them.
-- Administrators can add, disable, or remove employee access.
-- Revoking or regenerating a credential must invalidate associated active sessions.
-- Browser sessions will have their own expiration rules independently of access key validity.
+- Access the application using administrator-issued credentials
+- Submit requests with multiple expense entries
+- Have personal information automatically populated from their registered employee profile
+- Provide payment justifications and supporting documents
+- Track the status of previously submitted requests
+- View management decisions
 
-Access credentials will be treated as sensitive authentication information, with secure storage, server-side validation, and access controls.
+Employees will not need traditional self-registration. Access will be controlled centrally.
 
-### 3.2 Purchase Request Submission
+### Administrator / Manager
 
-Authorized employees will be able to submit purchase requests through a responsive web form.
+Administrators represent authorized company management and have responsibility for formal approval decisions.
 
-The planned request information includes:
+Planned capabilities:
 
-- Employee identification
-- Department or relevant staff information
-- Requested item or product
-- Requested quantity
-- Estimated unit price
-- Purchase justification or description
-- Priority level
-- Submission date and time (automatically recorded)
+- Create, manage, disable, and revoke employee access credentials
+- Manage authorized administrative and accounting users
+- Review pending payment requests
+- Approve or reject entire requests
+- Record optional rejection explanations
+- Submit payment requests themselves
+- View request and transaction history
+- Track pending or unsuccessful financial transfers
+- Confirm completed payments when management performs the transaction directly
+- Review and close unsuccessful transaction records
+- Access administrative reports and exports
 
-The system will enforce form validation and a maximum of 10 requests per authorized employee per day.
+Administrators may be authorized to execute payments, but **approval authority remains separate from the act of executing a transaction**.
 
-Each successfully submitted request will receive a unique reference number.
+### Accountant
 
-### 3.3 Request Tracking
+Accountants are responsible for recording the financial execution of approved requests.
 
-Every purchase request will have a unique tracking identifier and a private tracking link.
+Planned capabilities:
 
-Employees will be able to check their request's current status without contacting management directly.
+- View approved requests awaiting payment
+- Mark transactions as transferred or unsuccessful
+- Record payment methods and reference details
+- Enter or confirm the actual transaction date and time
+- Record unsuccessful transaction explanations
+- Maintain visibility of outstanding payment records
+- Review financial execution history
+- Access authorized accounting reports and exports
 
-Planned request statuses:
+Accountants do not have management approval or rejection authority.
 
-| Status | Description |
+## 3. Payment Request Workflow
+
+The business process consists of four main stages.
+
+### Stage 1 — Request Submission
+
+An authorized employee or administrator creates a payment request.
+
+The request includes:
+
+- Requester information
+- Payment recipient's name
+- Payment justification
+- One or more expense entries
+- Amounts in Iranian rials (IRR)
+- Optional recipient account/card information
+- Optional supporting invoices or documents
+
+Each expense entry contains a description, amount, invoice indicator, and optional remarks.
+
+The application will automatically calculate the total amount from the entered expense rows.
+
+**The maximum permitted total for one request is 10,000,000,000 IRR.**
+
+Recipient bank details may be omitted, but the interface should warn the requester that this information may be needed for payment execution.
+
+A unique request reference and private tracking identifier will be generated when a request is submitted.
+
+Employee submissions are intended to be limited to 10 requests per day.
+
+### Stage 2 — Management Review
+
+New requests enter the administrator approval queue.
+
+An authorized administrator examines the entire request, including its financial amount, justification, recipient, and supporting information.
+
+The administrator can either:
+
+- **Approve:** Authorize the complete request for payment.
+- **Reject:** Decline the complete request, optionally recording an explanation.
+
+Partial approval of individual expense rows is outside the current scope.
+
+Every decision must preserve:
+
+- Request reference number
+- Decision type
+- Responsible administrator's identity
+- Administrator's name at the time of the decision
+- Server-recorded decision timestamp
+- Rejection reason, when provided
+
+The request decision and its financial execution status are maintained independently.
+
+### Stage 3 — Payment Execution
+
+Following approval, the request becomes available for execution by an accountant or authorized administrator.
+
+The financial execution record supports three statuses:
+
+| Status | Meaning | Record Behavior |
+|---|---|---|
+| Awaiting Transfer | The approved payment has not yet been completed | Remains open |
+| Transferred | Payment has been successfully completed | Automatically closed |
+| Unsuccessful | A payment attempt was unsuccessful | Flagged for attention; can be manually closed |
+
+The planned interface will highlight unsuccessful transactions with a red warning indicator.
+
+Successful transactions should record:
+
+- Identity of the accountant or administrator
+- Name and role at the time of execution
+- Payment method
+- Actual transaction date and time
+- Server-recorded confirmation timestamp
+- Relevant transaction reference information
+
+The date and time entry will default to the current time on the user's device, while allowing manual correction when a transaction occurred earlier.
+
+The application must preserve the distinction between the **reported transaction time** and the **time the server recorded the action**.
+
+Supported payment methods in the data model:
+
+- Cash
+- Bank transfer
+- Cheque
+- Other
+
+Additional information, including bank details, cheque details, and external transaction references, can be recorded where appropriate.
+
+### Stage 4 — Record Closure & History
+
+Successfully transferred payments are closed automatically in the planned workflow.
+
+Unsuccessful transfers remain visible until an authorized administrator or accountant resolves or manually closes the record.
+
+Manual closure must preserve the responsible user's identity, time of closure, and any provided explanation.
+
+Transaction corrections and status changes should produce audit entries rather than silently overwriting historical activity.
+
+Administrators will be able to review the complete financial lifecycle of each request.
+
+## 4. Request and Financial Statuses
+
+The application separates management authorization from financial execution.
+
+**Approval statuses:**
+
+- `Pending`
+- `Approved`
+- `Rejected`
+
+**Transfer statuses:**
+
+- `AwaitingTransfer`
+- `Transferred`
+- `Unsuccessful`
+
+For example, a request may be approved by management while its transaction remains awaiting transfer.
+
+This distinction is essential for tracking authorized payments that have not yet been financially executed.
+
+## 5. Reporting and Document Generation
+
+The planned application will provide Excel-based exports for company documentation and accounting procedures.
+
+### Individual Request Documents
+
+A request's exported confirmation record should contain:
+
+- Unique request reference
+- Requester and recipient information
+- Full expense breakdown
+- Total authorized amount
+- Management approval or rejection decision
+- Approving/rejecting administrator's name
+- Decision date and time
+- Rejection explanation, if provided
+- Payment execution status
+- Accountant or administrator responsible for execution
+- Actual transaction date and time
+- Relevant payment references
+
+A formatted administrative signature or approval attribution may be included. Any cryptographic digital-signature functionality would require separate implementation and verification.
+
+### Accounting Reports
+
+The accounting interface is intended to support:
+
+- Date-range filtering
+- Lists of approved requests
+- Pending financial executions
+- Successful transactions
+- Unsuccessful transactions
+- Excel export of relevant financial records
+
+Reporting will preserve information needed to distinguish a management authorization from a completed payment.
+
+## 6. Security & Access Management
+
+The application uses a two-part authentication architecture.
+
+### Employee Access
+
+Employees will receive administrator-generated usernames and access keys.
+
+The employee model already defines support for:
+
+- User profiles
+- Hashed access keys
+- Credential versioning
+- Active, disabled, and revoked access states
+- Authentication timestamps
+- Credential lifecycle records
+
+The associated login, key generation, and revocation workflows remain to be implemented.
+
+### Administrator & Accountant Authentication
+
+Privileged accounts use the ASP.NET Core Identity foundation.
+
+Current configuration includes:
+
+- Identity-based user management
+- Password complexity requirements
+- Account lockout settings
+- Entity Framework Core identity storage
+- Role-based authorization policies
+
+The application currently defines these authorization policies:
+
+| Policy | Authorized Roles |
 |---|---|
-| Pending | Awaiting management review |
-| Approved | Formally authorized by management |
-| Rejected | Declined by management |
-| Cancelled / Expired | No longer active without approval |
+| `CanDecideRequests` | Administrator |
+| `CanExecutePayments` | Administrator, Accountant |
 
-Tracking links must be sufficiently protected against unauthorized access or enumeration.
+Additional planned security measures include:
 
-### 3.4 Management Approval Dashboard
+- HTTPS-only production access
+- Secure session handling
+- Server-side input validation
+- Request rate limiting
+- Protection against unauthorized record access
+- Secure file upload validation
+- Anti-forgery protection
+- Audit logging
+- Secure storage of secrets and credentials
 
-An authenticated administration interface will enable authorized managers and company owners to evaluate submitted purchase requests.
+**Authorization configuration is not equivalent to a completed or security-tested authentication workflow.**
 
-The dashboard will provide:
+## 7. Current Technical Architecture
 
-- A centralized view of submitted requests
-- Request details and purchase justifications
-- Submission timestamps and employee information
-- Request status and priority
-- Approval and rejection actions
-- Recorded reasons for rejected requests
-- Identification of the responsible decision-maker
-- Timestamps for management decisions
+The project uses an ASP.NET Core Razor Pages architecture supported by PostgreSQL and Entity Framework Core.
 
-Managers will independently assess the necessity of a purchase, including stock availability and operational requirements.
+| Component | Technology | Current State |
+|---|---|---|
+| Language | C# | In use |
+| Framework | .NET 10 / ASP.NET Core | Initialized |
+| Web architecture | Razor Pages | Initialized |
+| Database | PostgreSQL | Integrated through EF Core |
+| ORM | Entity Framework Core 10 | Configured |
+| Database provider | Npgsql | Configured |
+| Identity | ASP.NET Core Identity | Foundation configured |
+| Authorization | Role-based policies | Configured |
+| Testing | xUnit | Initial tests added |
+| Database migrations | EF Core Migrations | Initial migration created |
+| Excel generation | ClosedXML (proposed) | Not implemented |
+| User interface | Persian RTL responsive design | Planned |
+| Hosting | Company-managed internal server | Not deployed |
 
-**Approval decisions will not be automated.**
+### Current Solution Structure
 
-The application will record the formal decision and its associated information.
+Repository: `Alirj81/Purchase-Approval-Program`
 
-### 3.5 Excel Export
+Main components:
 
-Authorized administrators will be able to export approved purchase requests into Excel files.
+- `PurchaseApproval.slnx` — .NET solution
+- `src/PurchaseApproval.Web/` — ASP.NET Core web application
+- `src/PurchaseApproval.Web/Models/` — Domain and identity models
+- `src/PurchaseApproval.Web/Data/` — Database context and migrations
+- `src/PurchaseApproval.Web/Security/` — Application roles and authorization policies
+- `src/PurchaseApproval.Web/Pages/` — Razor Pages
+- `tests/PurchaseApproval.Web.Tests/` — xUnit test project
+- `dotnet-tools.json` — Local .NET tooling configuration
+- `.env.example` — Example PostgreSQL environment setting
 
-This feature is intended to assist with internal purchasing procedures, documentation, and subsequent administrative work.
+## 8. Implemented Data Foundation
 
-Excel exports will be restricted to appropriately authorized administrative users.
+The project has progressed beyond its initial documentation stage.
 
-### 3.6 Data Retention
+The repository now includes domain models and a first Entity Framework Core database migration.
 
-The system is planned to use a limited retention policy to reduce unnecessary storage of historical request information.
+### Defined Models
 
-- Pending requests remain available until resolved, cancelled, or expired.
-- Completed requests are retained for 90 days following their final decision.
-- Eligible historical records are removed through a scheduled cleanup mechanism.
-
-The final implementation will consider applicable organizational record-retention requirements.
-
-## 4. Planned Technology Stack
-
-The initial development roadmap proposes the following technologies:
-
-| Component | Proposed Technology |
+| Model | Purpose |
 |---|---|
-| Primary language | C# |
-| Backend framework | ASP.NET Core 10 |
-| Web architecture | Razor Pages |
-| Frontend | HTML, CSS, JavaScript |
-| Database | PostgreSQL |
-| Database access | Entity Framework Core |
-| Excel generation | ClosedXML |
-| Testing | xUnit |
-| Version control | Git / GitHub |
-| Deployment | Company-hosted server with HTTPS |
+| `ApplicationUser` | Administrator/accountant identity and profile |
+| `Employee` | Employee profiles and access credential metadata |
+| `PaymentRequest` | Payment request and requester information |
+| `PaymentRequestLine` | Individual expense entries |
+| `PaymentRequestAttachment` | Supporting files and metadata |
+| `ApprovalDecision` | Management decisions and attribution |
+| `TransferOutcome` | Financial execution and closure information |
+| `TransferAuditEntry` | History of transaction-related actions |
+| `ItemCatalogueEntry` | Reusable expense/item name suggestions |
 
-These technologies represent the initial architectural direction and may be refined during development.
+### Database Design
 
-## 5. Intended System Workflow
+The current database configuration includes structural constraints for:
 
-**Step 1 — Authentication**
+- Unique payment request references
+- Unique hashed tracking identifiers
+- Positive expense amounts
+- Maximum request total of 10 billion rials
+- Payment request ownership by exactly one requester account type
+- Request and transfer relationships
+- Restricted deletion of referenced user records
+- Ordered expense entries
+- File attachments limited to 5 MiB each
+- Identity and audit relationships
+- Optimistic concurrency fields for selected financial records
 
-An authorized employee accesses the system using their assigned username and access key.
+Requester details and responsible user names are preserved as snapshots so that subsequent profile changes do not automatically alter the identities recorded in historical payment records.
 
-**Step 2 — Request Creation**
+These are database and model-level foundations; the complete business workflows and user interfaces are still under development.
 
-The employee completes the purchasing form, explains the business need, and submits the request.
+## 9. Development Setup
 
-**Step 3 — Request Registration**
+### Prerequisites
 
-The application validates and stores the request, assigns a unique reference number, and generates a private status-tracking link.
+- .NET 10 SDK
+- PostgreSQL
+- Git
+- Visual Studio, VS Code, or another compatible .NET development environment
 
-**Step 4 — Management Review**
+### Clone the Repository
 
-An authorized manager accesses the administration dashboard and independently evaluates the purchasing request.
+`git clone https://github.com/Alirj81/Purchase-Approval-Program.git`
 
-**Step 5 — Formal Decision**
+`cd Purchase-Approval-Program`
 
-The manager approves or rejects the request. The decision, responsible manager, timestamp, and any required explanation are recorded.
+### Restore Dependencies
 
-**Step 6 — Status Tracking**
+`dotnet restore`
 
-The employee can check the decision using the request's tracking information.
+`dotnet tool restore`
 
-**Step 7 — Export and Retention**
+### Configure the Database
 
-Approved requests can be exported by authorized administrators. Finalized requests remain stored according to the retention policy.
+A local PostgreSQL instance and a valid `DefaultConnection` configuration are required.
 
-## 6. Security Considerations
+The connection string should be supplied through .NET user secrets or environment variables rather than committed into source control.
 
-Security is a fundamental requirement because the application will handle internal company information and formal management decisions.
+For example, the application can read the environment variable:
 
-The implementation will prioritize:
+`ConnectionStrings__DefaultConnection`
 
-- Secure generation and storage of access credentials
-- Encrypted communication through HTTPS
-- Server-side validation of all submitted data
-- Authenticated management and administration interfaces
-- Role-based authorization
-- Session expiration and immediate credential revocation
-- Protection against unauthorized request access
-- Secure database operations
-- Request throttling and abuse prevention
-- Audit records for management decisions
-- Protection against common web vulnerabilities
+Alternatively, use the .NET user-secrets configuration key:
 
-Authentication and authorization mechanisms will be implemented and tested before deployment.
+`ConnectionStrings:DefaultConnection`
 
-## 7. Development Roadmap
+The provided `.env.example` is an example configuration file. A `.env` file is not automatically loaded by the application unless the execution environment or additional tooling explicitly supports it.
 
-The project will follow an incremental development approach.
+### Apply the Initial Database Migration
 
-### Phase 1 — Project Foundation
-- [ ] Initialize the ASP.NET Core solution
-- [ ] Establish the repository structure
-- [ ] Configure the development environment
-- [ ] Set up database connectivity
+`dotnet ef database update --project src/PurchaseApproval.Web --startup-project src/PurchaseApproval.Web`
 
-### Phase 2 — Data Models and Access Control
-- [ ] Design database entities and relationships
-- [ ] Implement administrator authentication
-- [ ] Implement employee credential generation
-- [ ] Implement access key validation and revocation
-- [ ] Establish authorization rules
+### Build
 
-### Phase 3 — Employee Request System
-- [ ] Develop the purchase request form
-- [ ] Implement server-side validation
-- [ ] Enforce daily submission limits
-- [ ] Generate unique request references
-- [ ] Implement secure request tracking
+`dotnet build`
 
-### Phase 4 — Management Dashboard
-- [ ] Develop the request management interface
-- [ ] Implement approval and rejection workflows
-- [ ] Record decisions and associated metadata
-- [ ] Implement request filtering and status management
+### Run Tests
 
-### Phase 5 — Export and Lifecycle Management
+`dotnet test`
+
+### Run the Web Application
+
+`dotnet run --project src/PurchaseApproval.Web --launch-profile https`
+
+The development HTTPS profile is configured for:
+
+`https://localhost:7054`
+
+The HTTP profile uses:
+
+`http://localhost:5083`
+
+The current application only provides an initial web foundation. It should not be treated as a functioning payment approval system.
+
+## 10. Development Progress
+
+### Phase 1 — Solution Foundation
+
+- [x] Create the GitHub repository
+- [x] Initialize the ASP.NET Core 10 project
+- [x] Establish the .NET solution structure
+- [x] Add the xUnit test project
+- [x] Configure PostgreSQL support
+- [x] Configure Entity Framework Core
+- [x] Configure ASP.NET Core Identity
+- [x] Define administrator and accountant roles
+- [x] Establish role-based authorization policies
+
+### Phase 2 — Domain & Database
+
+- [x] Define employee and privileged user models
+- [x] Define payment request models
+- [x] Define expense entry models
+- [x] Define management approval records
+- [x] Define financial transfer records
+- [x] Define transaction audit records
+- [x] Define attachment storage metadata
+- [x] Define item catalogue model
+- [x] Configure initial database relationships and constraints
+- [x] Generate the initial database migration
+
+### Phase 3 — Authentication & Employee Management
+
+- [ ] Implement administrator authentication pages
+- [ ] Implement accountant authentication pages
+- [ ] Implement employee access-key generation
+- [ ] Implement employee login and session handling
+- [ ] Implement credential revocation and regeneration
+- [ ] Implement automatic employee profile population
+- [ ] Implement role-management interfaces
+
+### Phase 4 — Payment Requests
+
+- [ ] Develop the Persian RTL submission form
+- [ ] Support adding/removing multiple expense rows
+- [ ] Implement automatic request totals
+- [ ] Enforce the maximum permitted request amount in application logic
+- [ ] Implement attachment upload validation and storage
+- [ ] Implement submission validation and rate limits
+- [ ] Generate unique request numbers and secure tracking links
+- [ ] Implement request persistence and status tracking
+
+### Phase 5 — Management Approval
+
+- [ ] Develop administrator dashboard
+- [ ] Implement request review screens
+- [ ] Implement approval and rejection operations
+- [ ] Record decision attribution and timestamps
+- [ ] Implement administrator-created requests
+- [ ] Implement searchable request history
+
+### Phase 6 — Accounting & Execution
+
+- [ ] Develop accountant dashboard
+- [ ] Implement transfer status management
+- [ ] Implement transaction date/time entry
+- [ ] Implement payment method and reference fields
+- [ ] Support administrator-executed transactions
+- [ ] Highlight unsuccessful transactions
+- [ ] Implement manual closure of unsuccessful transactions
+- [ ] Persist transaction correction and audit history
+
+### Phase 7 — Documents & Reporting
+
+- [ ] Generate printable approval/rejection receipts
+- [ ] Include responsible administrator attribution
+- [ ] Include execution details in updated records
 - [ ] Implement Excel export
-- [ ] Implement request retention policies
-- [ ] Implement scheduled data cleanup
-- [ ] Finalize audit and error-handling behavior
+- [ ] Implement date-range accounting reports
+- [ ] Develop the administrator history dashboard
 
-### Phase 6 — Testing and Deployment
-- [ ] Write unit and integration tests
-- [ ] Test authorization and security behavior
-- [ ] Validate mobile and desktop responsiveness
-- [ ] Prepare the company server environment
-- [ ] Configure HTTPS and deployment
-- [ ] Conduct final testing before internal release
+### Phase 8 — Quality Assurance & Deployment
 
-*All development tasks are currently pending.*
+- [ ] Expand unit and integration test coverage
+- [ ] Test authentication and permission boundaries
+- [ ] Test concurrent financial record updates
+- [ ] Verify file-upload security
+- [ ] Test complete request-to-transfer workflows
+- [ ] Finalize responsive Persian interface
+- [ ] Review historical record-retention requirements
+- [ ] Configure production security and backups
+- [ ] Deploy to the company-managed server
 
-## 8. Project Scope and Limitations
+## 11. Planned User Interface
 
-The first version will focus on purchase requests, formal managerial decisions, and administrative traceability.
+The intended application will prioritize simplicity for nontechnical personnel.
 
-The following capabilities are outside the initial scope:
+Design requirements include:
 
-- Automated purchasing decisions
-- Automated inventory verification
-- Direct payment processing
-- Replacement of existing accounting software
-- Complete inventory management
-- Automated purchasing or supplier ordering
+- Persian-first interface
+- Right-to-left layout
+- Persian/Jalali date presentation
+- Mobile-first responsive pages
+- Clear navigation between employee, administrator, and accountant areas
+- Minimal form input where information is already known
+- Prominent request and payment statuses
+- Appropriate warning indicators for unsuccessful transactions
 
-Potential future improvements may include product autocomplete, duplicate-request warnings, notifications, and additional reporting functionality.
+The interface should remain practical on both office computers and mobile browsers.
 
-These enhancements will be evaluated after the core workflow is functional.
+## 12. Scope & Limitations
 
-## 9. Current Development Status
+The application is intended as an internal payment authorization and tracking system.
 
-**The project is currently in its documentation and planning stage.**
+It is not intended to:
 
-At this point:
+- Initiate actual bank transfers
+- Automatically approve financial requests
+- Replace Sepidar or other accounting software
+- Automatically verify company inventory
+- Provide a complete accounting ledger
+- Operate as a general-purpose external payment platform
 
-- The initial business problem has been identified.
-- The core functional requirements have been outlined.
-- The intended approval workflow has been defined.
-- Initial authentication and security requirements have been established.
-- A preliminary technology stack has been selected.
-- A phased development roadmap has been prepared.
+Additional integrations and reporting capabilities may be considered after the core application is complete.
 
-No application features have been implemented, and no production-ready software is available.
+Historical financial information must be retained according to an agreed company retention policy and applicable legal requirements. Automated deletion rules have not yet been finalized.
 
-This repository will serve as the central location for source code, technical documentation, development history, and future releases.
+## 13. Project Status
 
-## 10. Project Vision
+**The repository is under active development.**
 
-The Purchase Approval Program is intended to demonstrate how a relatively simple internal application can improve operational accountability.
+The foundational project structure, identity configuration, authorization policies, financial domain models, and initial database migration have been established.
 
-Its value lies not in replacing human judgment, but in ensuring that organizational decisions are documented, traceable, and accessible to the appropriate people.
+The next major stage is implementing the authentication and application-service workflows that connect the existing data model to working Razor Pages interfaces.
 
-The long-term goal is a reliable, maintainable, and secure purchasing authorization workflow that can evolve alongside the organization's operational requirements.
+No production release is currently available.
+
+## 14. License & Usage
+
+No open-source license is currently provided.
+
+This software is being developed for internal company use. Public availability of source code, if applicable, does not automatically grant permission for redistribution or commercial reuse.
+
+Ownership and distribution permissions remain subject to applicable agreements.
 
 ---
 
 **Project:** Purchase Approval Program  
-**Initial Documentation:** October 2026  
-**Status:** Pre-Development  
-**License:** Not yet specified
+**Organization:** Novin Abzian  
+**Repository:** https://github.com/Alirj81/Purchase-Approval-Program  
+**Documentation Updated:** October 2026  
+**Development Status:** Active Development — Backend Foundation Established
