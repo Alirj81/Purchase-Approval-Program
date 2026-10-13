@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
+using PurchaseApproval.Security;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,7 +16,7 @@ var connectionString =
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString)); // Configure Entity Framework to use PostgreSQL
 
 builder.Services // Configure Identity for the application
-    .AddIdentity<Administrator, IdentityRole<int>>(options =>
+    .AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
     {
         options.User.RequireUniqueEmail = false;
 
@@ -31,6 +33,19 @@ builder.Services // Configure Identity for the application
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        AppPolicies.CanDecideRequests,
+        policy => policy.RequireRole(
+            AppRoles.Administrator));
+
+    options.AddPolicy(
+        AppPolicies.CanExecutePayments,
+        policy => policy.RequireRole(
+            AppRoles.Administrator,
+            AppRoles.Accountant));
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -44,6 +59,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.UseAuthentication();
 
 app.UseAuthorization();
 

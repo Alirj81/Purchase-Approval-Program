@@ -2,9 +2,15 @@ using Microsoft.AspNetCore.Identity;
 
 namespace PurchaseApproval.Models;
 
-public class Administrator : IdentityUser<int>
+public class ApplicationUser : IdentityUser<int>
 {
     public string FullName { get; set; } = string.Empty;
+
+    public string? Department { get; set; }
+
+    public string? Branch { get; set; }
+
+    public string? JobTitle { get; set; }
 
     public bool IsActive { get; set; } = true;
 

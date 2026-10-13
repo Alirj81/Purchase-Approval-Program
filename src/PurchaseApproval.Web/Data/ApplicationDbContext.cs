@@ -6,7 +6,7 @@ using PurchaseApproval.Models;
 namespace PurchaseApproval.Data;
 
 public class ApplicationDbContext
-    : IdentityDbContext<Administrator, IdentityRole<int>, int>
+    : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
 {
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options)
@@ -20,26 +20,38 @@ public class ApplicationDbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        ConfigureAdministrators(modelBuilder);
+        ConfigureApplicationUsers(modelBuilder);
         ConfigureEmployees(modelBuilder);
     }
 
-    private static void ConfigureAdministrators(ModelBuilder modelBuilder) // Configure the Administrator entity 
-    {
-        var administrator =
-            modelBuilder.Entity<Administrator>();
+    private static void ConfigureApplicationUsers(
+    ModelBuilder modelBuilder)
+{
+    var user = modelBuilder.Entity<ApplicationUser>();
 
-        administrator.ToTable("Administrators");
+    user.ToTable("ApplicationUsers");
 
-        administrator
-            .Property(admin => admin.FullName)
-            .HasMaxLength(200)
-            .IsRequired();
+    user
+        .Property(item => item.FullName)
+        .HasMaxLength(200)
+        .IsRequired();
 
-        administrator
-            .Property(admin => admin.IsActive)
-            .HasDefaultValue(true);
-    }
+    user
+        .Property(item => item.Department)
+        .HasMaxLength(100);
+
+    user
+        .Property(item => item.Branch)
+        .HasMaxLength(100);
+
+    user
+        .Property(item => item.JobTitle)
+        .HasMaxLength(100);
+
+    user
+        .Property(item => item.IsActive)
+        .HasDefaultValue(true);
+}
 
     private static void ConfigureEmployees(ModelBuilder modelBuilder) // Configure the Employee entity
     {
