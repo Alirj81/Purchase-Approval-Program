@@ -33,7 +33,7 @@ builder.Services // Configure Identity for the application
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-builder.Services.AddAuthorization(options =>
+builder.Services.AddAuthorization(options => // Configure authorization policies for the application
 {
     options.AddPolicy(
         AppPolicies.CanDecideRequests,
@@ -46,6 +46,7 @@ builder.Services.AddAuthorization(options =>
             AppRoles.Administrator,
             AppRoles.Accountant));
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

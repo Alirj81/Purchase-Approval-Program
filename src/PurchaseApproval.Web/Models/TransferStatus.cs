@@ -4,5 +4,5 @@ public enum TransferStatus
 {
     AwaitingTransfer = 1,
     Transferred = 2,
-    Failed = 3
+    Unsuccessful = 3
 }
