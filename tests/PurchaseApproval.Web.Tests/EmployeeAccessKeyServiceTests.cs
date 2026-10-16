@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
 using PurchaseApproval.Services;
-
+/// <summary>Contains unit tests for the EmployeeAccessKeyService class.</summary>
 namespace PurchaseApproval.Web.Tests;
-
+/// <summary>
+/// Contains unit tests for the EmployeeAccessKeyService class.
+/// </summary>
 public sealed class EmployeeAccessKeyServiceTests
 {
+    /// <summary>Initializes a new instance of the EmployeeAccessKeyService for testing.</summary>
     private readonly EmployeeAccessKeyService _service = new(new PasswordHasher<Employee>());
 
     [Fact]
@@ -22,7 +25,7 @@ public sealed class EmployeeAccessKeyServiceTests
     }
 
     /// <summary>Tests that verification rejects an incorrect access key.</summary>
-    [Fact]
+    [Fact] 
     public void Verify_RejectsIncorrectKey()
     {
         var employee = new Employee { Id = 42 };
@@ -68,7 +71,7 @@ public sealed class EmployeeAccessKeyServiceTests
     }
 
     /// <summary>Tests that TryGetEmployeeId rejects access keys with invalid format.</summary>
-    [Theory]
+    [Theory] 
     [InlineData("")]
     [InlineData("not-an-access-key")]
     [InlineData("pak_missing-id")]

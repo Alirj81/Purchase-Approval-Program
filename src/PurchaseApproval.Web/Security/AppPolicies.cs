@@ -1,6 +1,5 @@
 namespace PurchaseApproval.Security;
-
-/// <summary>Purpose: Shares permission names between Program.cs policy rules and protected pages.</summary>
+///  This is the static class that defines application policies.
 public static class AppPolicies
 {
     /// <summary>Allows administrators to create and control employee access.</summary>
