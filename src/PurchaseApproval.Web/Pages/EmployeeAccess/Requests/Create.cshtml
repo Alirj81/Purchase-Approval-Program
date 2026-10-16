@@ -11,6 +11,32 @@
         <p>Enter who should be paid and why the payment is needed.</p>
         <p class="text-secondary">You can check your details here. Request submission is not available yet.</p>
 
+        @* Security: Render profile details as encoded text, not editable or hidden inputs.
+           This also keeps them out of the form data sent back by the browser. *@
+        @if (Model.Requester is { } requester)
+        {
+            <section class="card mb-4" aria-labelledby="requester-heading">
+                <div class="card-body">
+                    <h2 id="requester-heading" class="h5">Your details</h2>
+                    <p class="text-secondary">These details are maintained by your administrator.</p>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Full name</dt>
+                        <dd class="col-sm-8">@requester.FullName</dd>
+                        <dt class="col-sm-4">Username</dt>
+                        <dd class="col-sm-8">@requester.Username</dd>
+                        <dt class="col-sm-4">Phone number</dt>
+                        <dd class="col-sm-8">@(requester.PhoneNumber ?? "Not provided")</dd>
+                        <dt class="col-sm-4">Department</dt>
+                        <dd class="col-sm-8">@(requester.Department ?? "Not provided")</dd>
+                        <dt class="col-sm-4">Branch</dt>
+                        <dd class="col-sm-8">@(requester.Branch ?? "Not provided")</dd>
+                        <dt class="col-sm-4">Job title</dt>
+                        <dd class="col-sm-8">@(requester.JobTitle ?? "Not provided")</dd>
+                    </dl>
+                </div>
+            </section>
+        }
+
         @if (Model.DetailsChecked)
         {
             <div class="alert alert-info" role="status">
