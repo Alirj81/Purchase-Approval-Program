@@ -64,6 +64,8 @@ builder.Services
 builder.Services.AddScoped<EmployeeCookieEvents>();
 builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>();
 builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>();
+// Structure: Resolve the profile reader used by the employee payment-request page.
+builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
 builder.Services.AddScoped<ApplicationRoleInitializer>();
 builder.Services.AddScoped<AdministratorBootstrapper>();
 
