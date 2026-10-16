@@ -20,3 +20,6 @@ TestResults/
 *.pfx
 *.p12
 *.key
+
+# Local development plans and reports (not for repository publication)
+/docs/

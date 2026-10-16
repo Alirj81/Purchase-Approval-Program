@@ -1,0 +1,63 @@
+@page
+@model PurchaseApproval.Web.Pages.Admin.Employees.CreateModel
+@{
+    ViewData["Title"] = "Create employee";
+}
+
+<section class="row">
+    <div class="col-lg-7">
+        <h1 class="h3 mb-3">Create employee</h1>
+
+        @if (Model.IssuedAccessKey is not null)
+        {
+            <div class="alert alert-warning">
+                <strong>Access key for @Model.Input.Username:</strong>
+                <code class="user-select-all">@Model.IssuedAccessKey</code>
+                <div>This value is displayed only once. Store it securely.</div>
+            </div>
+            <a asp-page="Index" class="btn btn-primary">Back to employees</a>
+        }
+        else
+        {
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="Input.FullName" class="form-label"></label>
+                    <input asp-for="Input.FullName" class="form-control" />
+                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Username" class="form-label"></label>
+                    <input asp-for="Input.Username" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                    <input asp-for="Input.PhoneNumber" class="form-control" />
+                    <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Department" class="form-label"></label>
+                    <input asp-for="Input.Department" class="form-control" />
+                    <span asp-validation-for="Input.Department" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Branch" class="form-label"></label>
+                    <input asp-for="Input.Branch" class="form-control" />
+                    <span asp-validation-for="Input.Branch" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.JobTitle" class="form-label"></label>
+                    <input asp-for="Input.JobTitle" class="form-control" />
+                    <span asp-validation-for="Input.JobTitle" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Create and generate key</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+            </form>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

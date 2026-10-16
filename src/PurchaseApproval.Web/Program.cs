@@ -3,7 +3,9 @@ using PurchaseApproval.Data;
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
+using PurchaseApproval.Services;
 
+// Purpose: Connect configuration, database access, authentication, and Razor Pages at application startup.
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -33,8 +35,44 @@ builder.Services // Configure Identity for the application
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/account/login";
+    options.AccessDeniedPath = "/account/access-denied";
+    options.Cookie.Name = "PurchaseApproval.PrivilegedSession";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
+});
+
+builder.Services
+    .AddAuthentication()
+    .AddCookie(
+        EmployeeAuthenticationDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.LoginPath = "/";
+            options.AccessDeniedPath = "/";
+            options.Cookie.Name = "PurchaseApproval.EmployeeSession";
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
+            options.EventsType = typeof(EmployeeCookieEvents);
+        });
+
+// Structure: AddScoped supplies one service instance per request and shares that request's DbContext.
+// This lets page constructors declare their dependencies instead of creating database services themselves.
+builder.Services.AddScoped<EmployeeCookieEvents>();
+builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>();
+builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>();
+builder.Services.AddScoped<ApplicationRoleInitializer>();
+builder.Services.AddScoped<AdministratorBootstrapper>();
+
 builder.Services.AddAuthorization(options => // Configure authorization policies for the application
 {
+    options.AddPolicy(
+        AppPolicies.CanManageEmployees,
+        policy => policy.RequireRole(AppRoles.Administrator));
+
     options.AddPolicy(
         AppPolicies.CanDecideRequests,
         policy => policy.RequireRole(
@@ -49,6 +87,22 @@ builder.Services.AddAuthorization(options => // Configure authorization policies
 
 var app = builder.Build();
 
+// Role initialization is idempotent and gives policy names a real database backing.
+await using (var startupScope = app.Services.CreateAsyncScope())
+{
+    var roleInitializer = startupScope.ServiceProvider
+        .GetRequiredService<ApplicationRoleInitializer>();
+    await roleInitializer.EnsureRolesAsync();
+
+    if (args.Contains("bootstrap-admin", StringComparer.OrdinalIgnoreCase))
+    {
+        var bootstrapper = startupScope.ServiceProvider
+            .GetRequiredService<AdministratorBootstrapper>();
+        await bootstrapper.RunAsync();
+        return;
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -60,6 +114,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+// Security: Identify the caller before authorization decides which pages they may access.
 app.UseAuthentication();
 
 app.UseAuthorization();

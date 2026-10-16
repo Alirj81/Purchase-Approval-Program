@@ -1,0 +1,16 @@
+@page "/employee"
+@model PurchaseApproval.Web.Pages.EmployeeAccess.IndexModel
+@{
+    ViewData["Title"] = "Employee dashboard";
+}
+
+<section>
+    <h1 class="h3">Employee dashboard</h1>
+    <p>Welcome, @Model.FullName</p>
+    <p>
+        <a asp-page="/EmployeeAccess/Requests/Create" class="btn btn-primary">New payment request</a>
+    </p>
+    <form method="post" asp-page="/EmployeeAccess/Logout">
+        <button type="submit" class="btn btn-outline-secondary">Sign out</button>
+    </form>
+</section>

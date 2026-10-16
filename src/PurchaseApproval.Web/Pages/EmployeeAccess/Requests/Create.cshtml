@@ -1,0 +1,59 @@
+@page "/employee/requests/create"
+@model PurchaseApproval.Web.Pages.EmployeeAccess.Requests.CreateModel
+@* Purpose: Displays the employee's payment-request form and field validation messages. *@
+@{
+    ViewData["Title"] = "New payment request";
+}
+
+<div class="row justify-content-center">
+    <section class="col-lg-8" aria-labelledby="request-heading">
+        <h1 id="request-heading" class="h3">New payment request</h1>
+        <p>Enter who should be paid and why the payment is needed.</p>
+        <p class="text-secondary">You can check your details here. Request submission is not available yet.</p>
+
+        @if (Model.DetailsChecked)
+        {
+            <div class="alert alert-info" role="status">
+                The details passed validation. No request has been saved or submitted.
+            </div>
+        }
+
+        @* Security: The form tag helper adds an antiforgery token, which Razor Pages checks on POST.
+           This helps prevent another website from submitting a form using the employee's session. *@
+        <form method="post" asp-page="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            @* Technique: asp-for connects labels and inputs to C# properties,
+               simplifying field names, submitted values, and validation messages. *@
+            <div class="mb-3">
+                <label asp-for="Input.PayeeName" class="form-label"></label>
+                <input asp-for="Input.PayeeName" class="form-control" maxlength="200" />
+                <span asp-validation-for="Input.PayeeName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Justification" class="form-label"></label>
+                <textarea asp-for="Input.Justification" class="form-control" rows="4" maxlength="2000"></textarea>
+                <span asp-validation-for="Input.Justification" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.RequestedAccountOrCardNumber" class="form-label"></label>
+                <input asp-for="Input.RequestedAccountOrCardNumber" class="form-control"
+                       maxlength="100" autocomplete="off" aria-describedby="account-help" />
+                <div id="account-help" class="form-text">
+                    Optional. Payment details may be needed before the payment can be made.
+                </div>
+                <span asp-validation-for="Input.RequestedAccountOrCardNumber" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Check details</button>
+            <a asp-page="/EmployeeAccess/Index" class="btn btn-outline-secondary">Back to dashboard</a>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    @* Technique: Reuse shared scripts for browser feedback. Server validation also runs. *@
+    <partial name="_ValidationScriptsPartial" />
+}

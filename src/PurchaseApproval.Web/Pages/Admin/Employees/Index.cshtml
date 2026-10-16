@@ -1,0 +1,87 @@
+@page
+@model PurchaseApproval.Web.Pages.Admin.Employees.IndexModel
+@{
+    ViewData["Title"] = "Employee management";
+}
+
+<section>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">Employee management</h1>
+        <a asp-page="Create" class="btn btn-primary">Create employee</a>
+    </div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @if (Model.IssuedAccessKey is not null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <strong>New access key for @Model.IssuedForUsername:</strong>
+            <code class="user-select-all">@Model.IssuedAccessKey</code>
+            <div>This key is displayed only once. Deliver it through a secure channel.</div>
+        </div>
+    }
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-success">@statusMessage</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Key version</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var employee in Model.Employees)
+            {
+                <tr>
+                    <td>@employee.FullName</td>
+                    <td><code>@employee.Username</code></td>
+                    <td>@employee.Department</td>
+                    <td>@employee.AccessStatus</td>
+                    <td>@employee.CredentialVersion</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form method="post" asp-page-handler="Regenerate">
+                                <input type="hidden" name="id" value="@employee.Id" />
+                                <button class="btn btn-sm btn-outline-primary" type="submit">New key</button>
+                            </form>
+                            @if (employee.AccessStatus == PurchaseApproval.Models.EmployeeAccessStatus.Active)
+                            {
+                                <form method="post" asp-page-handler="ChangeStatus">
+                                    <input type="hidden" name="id" value="@employee.Id" />
+                                    <input type="hidden" name="status" value="Disabled" />
+                                    <button class="btn btn-sm btn-outline-warning" type="submit">Disable</button>
+                                </form>
+                            }
+                            else if (employee.AccessStatus == PurchaseApproval.Models.EmployeeAccessStatus.Disabled)
+                            {
+                                <form method="post" asp-page-handler="ChangeStatus">
+                                    <input type="hidden" name="id" value="@employee.Id" />
+                                    <input type="hidden" name="status" value="Active" />
+                                    <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
+                                </form>
+                            }
+                            @if (employee.AccessStatus != PurchaseApproval.Models.EmployeeAccessStatus.Revoked)
+                            {
+                                <form method="post" asp-page-handler="ChangeStatus">
+                                    <input type="hidden" name="id" value="@employee.Id" />
+                                    <input type="hidden" name="status" value="Revoked" />
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Revoke</button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

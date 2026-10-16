@@ -1,424 +1,92 @@
 # Purchase Approval Program
 
-**Internal Payment Request, Approval & Transaction Tracking System**
-
-A self-hosted web application for managing company payment requests, formal management approvals, accountant execution records, and financial accountability.
-
-**Organization:** Novin Abzian  
-**Technology:** C# / ASP.NET Core 10 / PostgreSQL  
-**Development Stage:** Backend Foundation & Database Implementation  
-**Status:** Active Development — Not Production Ready
-
----
-
-## 1. Project Overview
-
-The Purchase Approval Program is an internal web application being developed to formalize and simplify how outgoing company payments are requested, reviewed, authorized, and recorded.
-
-The system is intended to replace informal payment authorization procedures with a structured digital workflow that connects employees, company management, and accounting personnel.
-
-Although initially conceived as a purchase approval tool, the application's scope has expanded to cover **any outgoing company payment**, including purchases, services, reimbursements, advances, and other authorized expenses.
-
-Its primary objective is to ensure that every payment has a documented business justification, a responsible requester, an identifiable management decision, and a traceable financial execution record.
-
-The application will operate on the company's own infrastructure and provide a Persian-language, right-to-left interface accessible through desktop and mobile browsers.
-
-### Core Principles
-
-- Human-controlled financial authorization
-- Clear separation between approval and payment execution
-- Minimal complexity for employees
-- Role-based access and responsibility
-- Complete traceability of financial decisions
-- Accurate historical records
-- Secure internal deployment
-- Practical accounting exports and printable documents
-
-**Important:** The software will document payment authorization and execution. It will not independently authorize payments, transfer money, or replace accounting software.
-
-## 2. User Roles
-
-The system is designed around three primary user roles.
-
-### Employee
-
-Employees are authorized personnel who can submit payment requests.
-
-Planned capabilities:
-
-- Access the application using administrator-issued credentials
-- Submit requests with multiple expense entries
-- Have personal information automatically populated from their registered employee profile
-- Provide payment justifications and supporting documents
-- Track the status of previously submitted requests
-- View management decisions
-
-Employees will not need traditional self-registration. Access will be controlled centrally.
-
-### Administrator / Manager
-
-Administrators represent authorized company management and have responsibility for formal approval decisions.
-
-Planned capabilities:
-
-- Create, manage, disable, and revoke employee access credentials
-- Manage authorized administrative and accounting users
-- Review pending payment requests
-- Approve or reject entire requests
-- Record optional rejection explanations
-- Submit payment requests themselves
-- View request and transaction history
-- Track pending or unsuccessful financial transfers
-- Confirm completed payments when management performs the transaction directly
-- Review and close unsuccessful transaction records
-- Access administrative reports and exports
-
-Administrators may be authorized to execute payments, but **approval authority remains separate from the act of executing a transaction**.
-
-### Accountant
-
-Accountants are responsible for recording the financial execution of approved requests.
-
-Planned capabilities:
-
-- View approved requests awaiting payment
-- Mark transactions as transferred or unsuccessful
-- Record payment methods and reference details
-- Enter or confirm the actual transaction date and time
-- Record unsuccessful transaction explanations
-- Maintain visibility of outstanding payment records
-- Review financial execution history
-- Access authorized accounting reports and exports
-
-Accountants do not have management approval or rejection authority.
-
-## 3. Payment Request Workflow
-
-The business process consists of four main stages.
-
-### Stage 1 — Request Submission
-
-An authorized employee or administrator creates a payment request.
-
-The request includes:
-
-- Requester information
-- Payment recipient's name
-- Payment justification
-- One or more expense entries
-- Amounts in Iranian rials (IRR)
-- Optional recipient account/card information
-- Optional supporting invoices or documents
-
-Each expense entry contains a description, amount, invoice indicator, and optional remarks.
-
-The application will automatically calculate the total amount from the entered expense rows.
-
-**The maximum permitted total for one request is 10,000,000,000 IRR.**
-
-Recipient bank details may be omitted, but the interface should warn the requester that this information may be needed for payment execution.
-
-A unique request reference and private tracking identifier will be generated when a request is submitted.
-
-Employee submissions are intended to be limited to 10 requests per day.
-
-### Stage 2 — Management Review
-
-New requests enter the administrator approval queue.
-
-An authorized administrator examines the entire request, including its financial amount, justification, recipient, and supporting information.
-
-The administrator can either:
-
-- **Approve:** Authorize the complete request for payment.
-- **Reject:** Decline the complete request, optionally recording an explanation.
-
-Partial approval of individual expense rows is outside the current scope.
-
-Every decision must preserve:
-
-- Request reference number
-- Decision type
-- Responsible administrator's identity
-- Administrator's name at the time of the decision
-- Server-recorded decision timestamp
-- Rejection reason, when provided
-
-The request decision and its financial execution status are maintained independently.
-
-### Stage 3 — Payment Execution
-
-Following approval, the request becomes available for execution by an accountant or authorized administrator.
-
-The financial execution record supports three statuses:
-
-| Status | Meaning | Record Behavior |
-|---|---|---|
-| Awaiting Transfer | The approved payment has not yet been completed | Remains open |
-| Transferred | Payment has been successfully completed | Automatically closed |
-| Unsuccessful | A payment attempt was unsuccessful | Flagged for attention; can be manually closed |
-
-The planned interface will highlight unsuccessful transactions with a red warning indicator.
-
-Successful transactions should record:
-
-- Identity of the accountant or administrator
-- Name and role at the time of execution
-- Payment method
-- Actual transaction date and time
-- Server-recorded confirmation timestamp
-- Relevant transaction reference information
-
-The date and time entry will default to the current time on the user's device, while allowing manual correction when a transaction occurred earlier.
-
-The application must preserve the distinction between the **reported transaction time** and the **time the server recorded the action**.
-
-Supported payment methods in the data model:
-
-- Cash
-- Bank transfer
-- Cheque
-- Other
-
-Additional information, including bank details, cheque details, and external transaction references, can be recorded where appropriate.
-
-### Stage 4 — Record Closure & History
-
-Successfully transferred payments are closed automatically in the planned workflow.
-
-Unsuccessful transfers remain visible until an authorized administrator or accountant resolves or manually closes the record.
-
-Manual closure must preserve the responsible user's identity, time of closure, and any provided explanation.
-
-Transaction corrections and status changes should produce audit entries rather than silently overwriting historical activity.
-
-Administrators will be able to review the complete financial lifecycle of each request.
-
-## 4. Request and Financial Statuses
-
-The application separates management authorization from financial execution.
-
-**Approval statuses:**
-
-- `Pending`
-- `Approved`
-- `Rejected`
-
-**Transfer statuses:**
-
-- `AwaitingTransfer`
-- `Transferred`
-- `Unsuccessful`
-
-For example, a request may be approved by management while its transaction remains awaiting transfer.
-
-This distinction is essential for tracking authorized payments that have not yet been financially executed.
-
-## 5. Reporting and Document Generation
-
-The planned application will provide Excel-based exports for company documentation and accounting procedures.
-
-### Individual Request Documents
-
-A request's exported confirmation record should contain:
-
-- Unique request reference
-- Requester and recipient information
-- Full expense breakdown
-- Total authorized amount
-- Management approval or rejection decision
-- Approving/rejecting administrator's name
-- Decision date and time
-- Rejection explanation, if provided
-- Payment execution status
-- Accountant or administrator responsible for execution
-- Actual transaction date and time
-- Relevant payment references
-
-A formatted administrative signature or approval attribution may be included. Any cryptographic digital-signature functionality would require separate implementation and verification.
-
-### Accounting Reports
-
-The accounting interface is intended to support:
-
-- Date-range filtering
-- Lists of approved requests
-- Pending financial executions
-- Successful transactions
-- Unsuccessful transactions
-- Excel export of relevant financial records
-
-Reporting will preserve information needed to distinguish a management authorization from a completed payment.
-
-## 6. Security & Access Management
-
-The application uses a two-part authentication architecture.
-
-### Employee Access
-
-Employees will receive administrator-generated usernames and access keys.
-
-The employee model already defines support for:
-
-- User profiles
-- Hashed access keys
-- Credential versioning
-- Active, disabled, and revoked access states
-- Authentication timestamps
-- Credential lifecycle records
-
-The associated login, key generation, and revocation workflows remain to be implemented.
-
-### Administrator & Accountant Authentication
-
-Privileged accounts use the ASP.NET Core Identity foundation.
-
-Current configuration includes:
-
-- Identity-based user management
-- Password complexity requirements
-- Account lockout settings
-- Entity Framework Core identity storage
-- Role-based authorization policies
-
-The application currently defines these authorization policies:
-
-| Policy | Authorized Roles |
-|---|---|
-| `CanDecideRequests` | Administrator |
-| `CanExecutePayments` | Administrator, Accountant |
-
-Additional planned security measures include:
-
-- HTTPS-only production access
-- Secure session handling
-- Server-side input validation
-- Request rate limiting
-- Protection against unauthorized record access
-- Secure file upload validation
-- Anti-forgery protection
-- Audit logging
-- Secure storage of secrets and credentials
-
-**Authorization configuration is not equivalent to a completed or security-tested authentication workflow.**
-
-## 7. Current Technical Architecture
-
-The project uses an ASP.NET Core Razor Pages architecture supported by PostgreSQL and Entity Framework Core.
-
-| Component | Technology | Current State |
-|---|---|---|
-| Language | C# | In use |
-| Framework | .NET 10 / ASP.NET Core | Initialized |
-| Web architecture | Razor Pages | Initialized |
-| Database | PostgreSQL | Integrated through EF Core |
-| ORM | Entity Framework Core 10 | Configured |
-| Database provider | Npgsql | Configured |
-| Identity | ASP.NET Core Identity | Foundation configured |
-| Authorization | Role-based policies | Configured |
-| Testing | xUnit | Initial tests added |
-| Database migrations | EF Core Migrations | Initial migration created |
-| Excel generation | ClosedXML (proposed) | Not implemented |
-| User interface | Persian RTL responsive design | Planned |
-| Hosting | Company-managed internal server | Not deployed |
-
-### Current Solution Structure
-
-Repository: `Alirj81/Purchase-Approval-Program`
-
-Main components:
-
-- `PurchaseApproval.slnx` — .NET solution
-- `src/PurchaseApproval.Web/` — ASP.NET Core web application
-- `src/PurchaseApproval.Web/Models/` — Domain and identity models
-- `src/PurchaseApproval.Web/Data/` — Database context and migrations
-- `src/PurchaseApproval.Web/Security/` — Application roles and authorization policies
-- `src/PurchaseApproval.Web/Pages/` — Razor Pages
-- `tests/PurchaseApproval.Web.Tests/` — xUnit test project
-- `dotnet-tools.json` — Local .NET tooling configuration
-- `.env.example` — Example PostgreSQL environment setting
-
-## 8. Implemented Data Foundation
-
-The project has progressed beyond its initial documentation stage.
-
-The repository now includes domain models and a first Entity Framework Core database migration.
-
-### Defined Models
-
-| Model | Purpose |
-|---|---|
-| `ApplicationUser` | Administrator/accountant identity and profile |
-| `Employee` | Employee profiles and access credential metadata |
-| `PaymentRequest` | Payment request and requester information |
-| `PaymentRequestLine` | Individual expense entries |
-| `PaymentRequestAttachment` | Supporting files and metadata |
-| `ApprovalDecision` | Management decisions and attribution |
-| `TransferOutcome` | Financial execution and closure information |
-| `TransferAuditEntry` | History of transaction-related actions |
-| `ItemCatalogueEntry` | Reusable expense/item name suggestions |
-
-### Database Design
-
-The current database configuration includes structural constraints for:
-
-- Unique payment request references
-- Unique hashed tracking identifiers
-- Positive expense amounts
-- Maximum request total of 10 billion rials
-- Payment request ownership by exactly one requester account type
-- Request and transfer relationships
-- Restricted deletion of referenced user records
-- Ordered expense entries
-- File attachments limited to 5 MiB each
-- Identity and audit relationships
-- Optimistic concurrency fields for selected financial records
-
-Requester details and responsible user names are preserved as snapshots so that subsequent profile changes do not automatically alter the identities recorded in historical payment records.
-
-These are database and model-level foundations; the complete business workflows and user interfaces are still under development.
-
-## 9. Development Setup
-
-### Prerequisites
+A simple web application for creating and managing company payment requests.
+
+This is a personal portfolio project and my first complete ASP.NET Core application. Its goal is
+to demonstrate a simple workflow for recording, approving, and tracking payment requests.
+
+## Main Features
+
+- Administrator and accountant login
+- Employee accounts with access keys
+- Employee access management
+- Payment request database models
+- Approval and payment status records
+- PostgreSQL database support
+- English web pages
+
+Some parts of the application are still under development.
+
+## Technologies
+
+- C#
+- ASP.NET Core Razor Pages
+- Entity Framework Core
+- ASP.NET Core Identity
+- PostgreSQL
+- Bootstrap
+- xUnit
+
+## Project Structure
+
+```text
+src/PurchaseApproval.Web/          Main web application
+tests/PurchaseApproval.Web.Tests/  Automated tests
+compose.yaml                       Local PostgreSQL setup
+PurchaseApproval.slnx              .NET solution file
+```
+
+## Requirements
 
 - .NET 10 SDK
-- PostgreSQL
-- Git
-- Visual Studio, VS Code, or another compatible .NET development environment
+- Docker Desktop, or a PostgreSQL 17 server
 
-### Clone the Repository
+## Setup
 
-`git clone https://github.com/Alirj81/Purchase-Approval-Program.git`
+1. Restore the project packages:
 
-`cd Purchase-Approval-Program`
+   ```powershell
+   dotnet restore
+   dotnet tool restore
+   ```
 
-### Restore Dependencies
+2. Create a `.env` file from `.env.example` and set a local PostgreSQL password.
 
-`dotnet restore`
+3. Start PostgreSQL:
 
-`dotnet tool restore`
+   ```powershell
+   docker compose up -d
+   ```
 
-### Configure the Database
+4. Add the database connection string with .NET user secrets:
 
-A local PostgreSQL instance and a valid `DefaultConnection` configuration are required.
+   ```powershell
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=purchase_approval_dev;Username=purchase_approval_app;Password=YOUR_PASSWORD" --project src/PurchaseApproval.Web
+   ```
 
-The connection string should be supplied through .NET user secrets or environment variables rather than committed into source control.
+5. Create the database tables:
 
-For example, the application can read the environment variable:
+   ```powershell
+   dotnet ef database update --project src/PurchaseApproval.Web --startup-project src/PurchaseApproval.Web
+   ```
 
-`ConnectionStrings__DefaultConnection`
+6. Run the application:
 
-Alternatively, use the .NET user-secrets configuration key:
+   ```powershell
+   dotnet run --project src/PurchaseApproval.Web
+   ```
 
-`ConnectionStrings:DefaultConnection`
+## Tests
 
-The provided `.env.example` is an example configuration file. A `.env` file is not automatically loaded by the application unless the execution environment or additional tooling explicitly supports it.
+Run the automated tests with:
 
-### Apply the Initial Database Migration
+```powershell
+dotnet test
+```
 
-`dotnet ef database update --project src/PurchaseApproval.Web --startup-project src/PurchaseApproval.Web`
+## Status
 
+<<<<<<< HEAD
 ### Build
 
 `dotnet build`
@@ -589,3 +257,6 @@ Ownership and distribution permissions remain subject to applicable agreements.
 **Repository:** https://github.com/Alirj81/Purchase-Approval-Program  
 **Documentation Updated:** October 2026  
 **Development Status:** Active Development — Backend Foundation Established
+=======
+This project is under development and is not ready for production use.
+>>>>>>> 2a7cd20 (payment request form added to dashboard with the requirements and check details for now, later to submit and work on the saving schema)
