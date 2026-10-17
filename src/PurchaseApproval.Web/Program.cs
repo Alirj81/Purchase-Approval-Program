@@ -71,6 +71,8 @@ builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>(
 // Resolve the profile reader used by the employee payment-request page.
 builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
 builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>();
+// The approval service keeps status changes and decision records in one database save.
+builder.Services.AddScoped<IApprovalDecisionService, ApprovalDecisionService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ApplicationRoleInitializer>();
 builder.Services.AddScoped<AdministratorBootstrapper>();
