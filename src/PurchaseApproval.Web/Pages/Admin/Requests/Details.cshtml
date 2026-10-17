@@ -1,0 +1,138 @@
+@* This view shows all request evidence and the administrator's final decision controls. *@
+@page "/admin/requests/{id:int}"
+@model PurchaseApproval.Web.Pages.Admin.Requests.DetailsModel
+@{
+    ViewData["Title"] = "Review payment request";
+}
+
+@if (Model.Review is { } request)
+{
+    <section aria-labelledby="request-heading">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div>
+                <a asp-page="Index" class="text-decoration-none">&larr; Back to request queue</a>
+                <h1 id="request-heading" class="h3 mt-2 mb-1">@request.ReferenceNumber</h1>
+                <span class="badge text-bg-@(request.Status == PurchaseApproval.Models.PaymentRequestStatus.Pending ? "warning" : request.Status == PurchaseApproval.Models.PaymentRequestStatus.Approved ? "success" : "danger")">@request.Status</span>
+            </div>
+            <div class="text-end">
+                <div class="fw-semibold">@request.TotalAmountRials.ToString("N0") rials</div>
+                <div class="small text-secondary">Submitted @request.SubmittedAtUtc.ToString("u")</div>
+            </div>
+        </div>
+
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success">@statusMessage</div>
+        }
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">Requester</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Name</dt><dd class="col-sm-7">@request.RequesterName</dd>
+                            <dt class="col-sm-5">Username</dt><dd class="col-sm-7"><code>@request.RequesterUsername</code></dd>
+                            <dt class="col-sm-5">Phone</dt><dd class="col-sm-7">@(request.RequesterPhone ?? "—")</dd>
+                            <dt class="col-sm-5">Department</dt><dd class="col-sm-7">@(request.Department ?? "—")</dd>
+                            <dt class="col-sm-5">Branch</dt><dd class="col-sm-7">@(request.Branch ?? "—")</dd>
+                            <dt class="col-sm-5">Job title</dt><dd class="col-sm-7">@(request.JobTitle ?? "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">Payment</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Payee</dt><dd class="col-sm-7">@request.PayeeName</dd>
+                            <dt class="col-sm-5">Account/card</dt><dd class="col-sm-7">@(request.RequestedAccountOrCardNumber ?? "—")</dd>
+                            <dt class="col-sm-5">Reason</dt><dd class="col-sm-7" style="white-space: pre-wrap">@request.Justification</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="h5 mt-4">Expense rows</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead><tr><th>Description</th><th>Invoice</th><th>Remarks</th><th class="text-end">Amount</th></tr></thead>
+                <tbody>
+                @foreach (var line in request.Lines)
+                {
+                    <tr>
+                        <td>@line.Description</td>
+                        <td>@(line.HasInvoice ? "Yes" : "No")</td>
+                        <td>@(line.Remarks ?? "—")</td>
+                        <td class="text-end text-nowrap">@line.AmountRials.ToString("N0") rials</td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot><tr class="fw-semibold"><td colspan="3">Total</td><td class="text-end text-nowrap">@request.TotalAmountRials.ToString("N0") rials</td></tr></tfoot>
+            </table>
+        </div>
+
+        <h2 class="h5 mt-4">Attachments</h2>
+        @if (request.Attachments.Count == 0)
+        {
+            <p class="text-secondary">No supporting files were attached.</p>
+        }
+        else
+        {
+            <ul class="list-group">
+            @foreach (var attachment in request.Attachments)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span>@attachment.FileName <span class="small text-secondary">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span>
+                    <a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">Download</a>
+                </li>
+            }
+            </ul>
+        }
+
+        @if (request.Decision is { } decision)
+        {
+            <div class="card mt-4 border-@(decision.DecisionType == PurchaseApproval.Models.ApprovalDecisionType.Approved ? "success" : "danger")">
+                <div class="card-header fw-semibold">Final decision: @decision.DecisionType</div>
+                <div class="card-body">
+                    <p class="mb-1">Recorded by @decision.AdministratorName on @decision.DecidedAtUtc.ToString("u").</p>
+                    @if (decision.RejectionReason is not null)
+                    {
+                        <p class="mb-0"><strong>Reason:</strong> @decision.RejectionReason</p>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mt-4">
+                <div class="card-header fw-semibold">Record final decision</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <p>Approve this request when its details and supporting evidence are complete.</p>
+                            <form method="post" asp-page-handler="Approve">
+                                <input type="hidden" asp-for="Input.Version" />
+                                <button type="submit" class="btn btn-success">Approve request</button>
+                            </form>
+                        </div>
+                        <div class="col-md-7 border-start-md">
+                            <form method="post" asp-page-handler="Reject">
+                                <input type="hidden" asp-for="Input.Version" />
+                                <div class="mb-3">
+                                    <label asp-for="Input.RejectionReason" class="form-label">Rejection reason</label>
+                                    <textarea asp-for="Input.RejectionReason" class="form-control" rows="4" maxlength="2000" required></textarea>
+                                    <div class="form-text">Give the requester a clear reason they can act on.</div>
+                                </div>
+                                <button type="submit" class="btn btn-danger">Reject request</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </section>
+}
