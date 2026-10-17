@@ -1,11 +1,16 @@
-using System.ComponentModel.DataAnnotations; /// Provides attribute classes that are used to define metadata for ASP.NET Core MVC and Razor Pages, such as validation rules and display formatting.
-using System.Security.Claims; /// Provides classes for working with claims-based identity, including the Claim and ClaimsPrincipal classes used to represent user identity and claims.
-using Microsoft.AspNetCore.Authentication; /// Provides classes for handling authentication, including authentication schemes and related functionality.
-using Microsoft.AspNetCore.Authorization; /// Provides classes for authorizing access to resources, including the AuthorizeAttribute used to enforce authentication and authorization policies.
-using Microsoft.AspNetCore.Mvc; /// Provides classes for handling HTTP requests and responses, including controllers, action results, and attributes for routing and model binding. 
-using Microsoft.AspNetCore.Mvc.RazorPages; 
-using Microsoft.AspNetCore.RateLimiting; 
-using PurchaseApproval.Security; 
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+// Selects the employee cookie and checks the current session before the form runs.
+using Microsoft.AspNetCore.Authentication;
+// Restricts this page to authenticated employees.
+using Microsoft.AspNetCore.Authorization;
+// Supplies page results, binding, and form response types.
+using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class used by this request form.
+using Microsoft.AspNetCore.Mvc.RazorPages;
+// Limits repeated submissions from the same employee.
+using Microsoft.AspNetCore.RateLimiting;
+using PurchaseApproval.Security;
 using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages.EmployeeAccess.Requests;

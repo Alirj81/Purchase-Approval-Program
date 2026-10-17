@@ -1,5 +1,8 @@
+// Identity types define the administrator and accountant tables in this context.
 using Microsoft.AspNetCore.Identity;
+// Connects Identity stores to Entity Framework Core.
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+// Provides DbContext, model configuration, and PostgreSQL query support.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Models;
 

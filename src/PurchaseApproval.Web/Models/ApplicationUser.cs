@@ -1,3 +1,4 @@
+// IdentityUser supplies the login, password, lockout, and role-related fields.
 using Microsoft.AspNetCore.Identity;
 
 namespace PurchaseApproval.Models;

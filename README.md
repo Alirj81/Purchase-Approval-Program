@@ -31,7 +31,6 @@ The project is under active development and is not ready for production use.
 ```text
 src/PurchaseApproval.Web/          Web application
 tests/PurchaseApproval.Web.Tests/  Automated tests
-docs/                              Plans and implementation reports
 compose.yaml                       Local PostgreSQL service
 PurchaseApproval.slnx              .NET solution
 ```

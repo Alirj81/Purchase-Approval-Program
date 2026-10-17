@@ -1,3 +1,4 @@
+// Uses the same password hasher as the employee access-key service.
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
 using PurchaseApproval.Services;

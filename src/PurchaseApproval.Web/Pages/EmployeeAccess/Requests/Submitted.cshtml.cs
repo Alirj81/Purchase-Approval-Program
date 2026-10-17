@@ -1,7 +1,11 @@
-using System.Security.Claims; /// Provides classes for working with claims-based identity, including the Claim and ClaimsPrincipal classes used to represent user identity and claims.
+using System.Security.Claims;
+// Requires the employee session before showing the receipt.
 using Microsoft.AspNetCore.Authorization;
+// Supplies the page result and route helpers used by the receipt page.
 using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Loads the submitted request without tracking it for changes.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Security;

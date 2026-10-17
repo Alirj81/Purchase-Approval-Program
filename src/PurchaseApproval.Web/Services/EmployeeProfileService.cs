@@ -1,11 +1,12 @@
+// Builds the filtered, read-only employee profile query.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
 
 namespace PurchaseApproval.Services;
 
-/// <summary>Purpose: Supplies current employee details to the payment-request form.</summary>
-// Structure: An interface lets the page use a simple test substitute without opening a database.
+/// <summary>Supplies current employee details to the payment-request form.</summary>
+// An interface lets the page use a simple test substitute without opening a database.
 public interface IEmployeeProfileService
 {
     /// <summary>Returns the profile only if the employee is active and the session version still matches.</summary>
@@ -15,8 +16,8 @@ public interface IEmployeeProfileService
         CancellationToken cancellationToken = default);
 }
 
-/// <summary>Purpose: Reads the administrator-maintained profile from the employee database table.</summary>
-// Technique: Constructor injection supplies the request's DbContext, avoiding manual connection setup.
+/// <summary>Reads the administrator-maintained profile from the employee database table.</summary>
+// Constructor injection supplies the request's DbContext, avoiding manual connection setup.
 public sealed class EmployeeProfileService(ApplicationDbContext dbContext) : IEmployeeProfileService
 {
     /// <inheritdoc />
@@ -25,14 +26,14 @@ public sealed class EmployeeProfileService(ApplicationDbContext dbContext) : IEm
         int credentialVersion,
         CancellationToken cancellationToken = default)
     {
-        // Security: Recheck access and version when loading the form, in case an administrator
+        // Recheck access and version when loading the form, in case an administrator
         // changed access after cookie validation. A revoked session must not receive profile details.
         return await dbContext.Employees
             .AsNoTracking()
             .Where(employee => employee.Id == employeeId
                 && employee.AccessStatus == EmployeeAccessStatus.Active
                 && employee.CredentialVersion == credentialVersion)
-            // Technique: Select requests only these columns, avoiding credential hashes and admin notes.
+            // Select requests only these columns, avoiding credential hashes and admin notes.
             .Select(employee => new EmployeeProfile(
                 employee.Id,
                 employee.FullName,
@@ -45,8 +46,8 @@ public sealed class EmployeeProfileService(ApplicationDbContext dbContext) : IEm
     }
 }
 
-/// <summary>Purpose: Carries only the employee information that the request form may display.</summary>
-// Syntax: A record with constructor properties groups read-only values without separate backing fields.
+/// <summary>Carries only the employee information that the request form may display.</summary>
+// A record with constructor properties groups read-only values without separate backing fields.
 public sealed record EmployeeProfile(
     int Id,
     string FullName,

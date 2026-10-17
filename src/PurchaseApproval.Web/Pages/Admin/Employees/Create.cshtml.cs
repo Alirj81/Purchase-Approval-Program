@@ -1,8 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+// Restricts employee creation to administrators.
 using Microsoft.AspNetCore.Authorization;
+// Creates the Identity relationship used by the page when needed.
 using Microsoft.AspNetCore.Identity;
+// Provides binding and redirect results for the form.
 using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Checks usernames before saving a new employee record.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;

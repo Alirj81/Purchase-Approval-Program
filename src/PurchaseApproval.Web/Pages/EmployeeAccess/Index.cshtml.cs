@@ -1,5 +1,7 @@
 using System.Security.Claims;
+// Restricts the dashboard to the employee cookie scheme.
 using Microsoft.AspNetCore.Authorization;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PurchaseApproval.Security;
 

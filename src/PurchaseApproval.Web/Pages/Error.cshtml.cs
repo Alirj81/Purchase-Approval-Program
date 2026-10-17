@@ -2,7 +2,9 @@
 //  The ErrorModel class provides properties and methods to handle error information, including the request ID and whether it should be displayed.
 
 using System.Diagnostics;
+// Provides response-cache metadata for the error response.
 using Microsoft.AspNetCore.Mvc;
+// Supplies the PageModel base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PurchaseApproval.Web.Pages;

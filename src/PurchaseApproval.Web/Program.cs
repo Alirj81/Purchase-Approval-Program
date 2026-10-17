@@ -1,12 +1,15 @@
-using Microsoft.EntityFrameworkCore; /// Provides Entity Framework Core functionality for database access.
-using PurchaseApproval.Data; /// Provides access to the application's database context.
-using Microsoft.AspNetCore.Identity; /// Provides ASP.NET Core Identity functionality for authentication and user management.
-using PurchaseApproval.Models; /// Provides access to the application's data models.
-using PurchaseApproval.Security; /// Provides security-related functionality, such as authentication schemes and cookie events.
-using PurchaseApproval.Services; /// Provides access to the application's service layer.
-using System.Threading.RateLimiting; /// Provides rate limiting functionality for controlling request rates.
+// Adds PostgreSQL and Entity Framework services to the web application's dependency injection setup.
+using Microsoft.EntityFrameworkCore;
+using PurchaseApproval.Data;
+// Identity provides administrator and accountant login, roles, and password handling.
+using Microsoft.AspNetCore.Identity;
+using PurchaseApproval.Models;
+using PurchaseApproval.Security;
+using PurchaseApproval.Services;
+// The submission page uses this to limit repeated requests from one employee.
+using System.Threading.RateLimiting;
 
-// Purpose: Connect configuration, database access, authentication, and Razor Pages at application startup.
+// Connect configuration, database access, authentication, and Razor Pages at application startup.
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -60,17 +63,17 @@ builder.Services
             options.EventsType = typeof(EmployeeCookieEvents);
         });
 
-// Structure: AddScoped supplies one service instance per request and shares that request's DbContext.
+// AddScoped supplies one service instance per request and shares that request's DbContext.
 // This lets page constructors declare their dependencies instead of creating database services themselves.
-builder.Services.AddScoped<EmployeeCookieEvents>(); /// addScoped registers the EmployeeCookieEvents service with a scoped lifetime, meaning one instance per request. the scope is tied to the lifetime of the HTTP request.
-builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>(); /// Registers the password hasher service for employees with a scoped lifetime.
-builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>(); /// Registers the employee access key service with a scoped lifetime.
-// Structure: Resolve the profile reader used by the employee payment-request page.
-builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>(); /// Registers the employee profile service 
-builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>(); /// Registers the payment request submission service with a scoped lifetime.
-builder.Services.AddSingleton(TimeProvider.System); /// Registers the system time provider as a singleton service.
-builder.Services.AddScoped<ApplicationRoleInitializer>(); /// Registers the application role initializer 
-builder.Services.AddScoped<AdministratorBootstrapper>(); /// Registers the administrator bootstrapper
+builder.Services.AddScoped<EmployeeCookieEvents>();
+builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>();
+builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>();
+// Resolve the profile reader used by the employee payment-request page.
+builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
+builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<ApplicationRoleInitializer>();
+builder.Services.AddScoped<AdministratorBootstrapper>();
 
 builder.Services.AddAuthorization(options => // Configure authorization policies for the application
 {
@@ -135,7 +138,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
-// Security: Identify the caller before authorization decides which pages they may access.
+// Identify the caller before authorization decides which pages they may access.
 app.UseAuthentication();
 
 app.UseRateLimiter();

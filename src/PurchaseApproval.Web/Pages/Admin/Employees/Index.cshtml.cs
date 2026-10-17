@@ -1,6 +1,10 @@
+// Applies the administrator-only employee management policy.
 using Microsoft.AspNetCore.Authorization;
+// Supplies handler results and binding support.
 using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Projects employee records without loading access-key hashes.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;

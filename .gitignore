@@ -20,6 +20,3 @@ TestResults/
 *.pfx
 *.p12
 *.key
-
-# Local development plans and reports are not published with the application.
-/docs/

@@ -1,3 +1,4 @@
+// Provides RoleManager for creating the application's named roles.
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Security;
 

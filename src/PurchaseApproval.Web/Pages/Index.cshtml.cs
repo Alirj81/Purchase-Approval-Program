@@ -1,9 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+// Signs employees into the separate access-key cookie.
 using Microsoft.AspNetCore.Authentication;
+// Allows anonymous access to the initial key form while protecting redirects.
 using Microsoft.AspNetCore.Authorization;
+// Provides binding and redirect results for the form handler.
 using Microsoft.AspNetCore.Mvc;
+// Supplies the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Queries the employee record used to verify the submitted key.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
@@ -12,17 +17,17 @@ using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages;
 
-/// <summary>Purpose: Displays the home key form and starts employee sessions after verifying access.</summary>
+/// <summary>Displays the home key form and starts employee sessions after verifying access.</summary>
 [AllowAnonymous]
 public sealed class IndexModel(
     ApplicationDbContext dbContext,
     IEmployeeAccessKeyService accessKeyService) : PageModel
 {
-    // Technique: BindProperty fills this input model from the submitted form, avoiding manual parsing.
+    // BindProperty fills this input model from the submitted form, avoiding manual parsing.
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
-    // Purpose: Remembers the requested page when authentication redirects an employee here.
+    // Remembers the requested page when authentication redirects an employee here.
     [BindProperty(SupportsGet = true)]
     public string? ReturnUrl { get; set; }
 
@@ -38,7 +43,7 @@ public sealed class IndexModel(
             return Page();
         }
 
-        // Security: The ID inside the key only locates a record. The full key must still be verified.
+        // The ID inside the key only locates a record. The full key must still be verified.
         if (!accessKeyService.TryGetEmployeeId(Input.AccessKey, out var employeeId))
         {
             ModelState.AddModelError(string.Empty, "The access key is incorrect.");
@@ -56,7 +61,7 @@ public sealed class IndexModel(
             return Page();
         }
 
-        // Security: Claims come from the verified database record, never from editable profile fields.
+        // Claims come from the verified database record, never from editable profile fields.
         // CredentialVersion lets EmployeeCookieEvents reject an old session after access changes.
         var claims = new List<Claim>
         {
@@ -86,7 +91,7 @@ public sealed class IndexModel(
         employee.LastAuthenticatedAtUtc = DateTimeOffset.UtcNow;
         await dbContext.SaveChangesAsync();
 
-        // Security: Only allow local destinations so a supplied return URL cannot redirect to another site.
+        // Only allow local destinations so a supplied return URL cannot redirect to another site.
         return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/employee");
     }
 

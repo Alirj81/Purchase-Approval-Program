@@ -1,3 +1,4 @@
+// UserManager creates the first privileged account and assigns its role.
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;

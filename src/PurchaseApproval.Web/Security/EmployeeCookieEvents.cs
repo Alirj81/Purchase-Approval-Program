@@ -1,6 +1,9 @@
 using System.Security.Claims;
+// Provides the cookie validation event contract.
 using Microsoft.AspNetCore.Authentication;
+// Identifies the cookie event context used by employee sessions.
 using Microsoft.AspNetCore.Authentication.Cookies;
+// Reads the current employee record during cookie validation.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
@@ -8,7 +11,7 @@ using PurchaseApproval.Models;
 namespace PurchaseApproval.Security;
 
 /// <summary>
-/// Purpose: Revalidates every employee cookie against the current database record. A disabled,
+/// Revalidates every employee cookie against the current database record. A disabled,
 /// revoked, deleted, or rotated credential therefore invalidates existing sessions.
 /// </summary>
 public sealed class EmployeeCookieEvents(ApplicationDbContext dbContext)
@@ -17,7 +20,7 @@ public sealed class EmployeeCookieEvents(ApplicationDbContext dbContext)
     /// <inheritdoc />
     public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
     {
-        // Syntax: ?. handles missing claims without a null-reference error; TryParse below rejects them.
+        // ?. handles missing claims without a null-reference error; TryParse below rejects them.
         var employeeIdValue = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
         var credentialVersionValue = context.Principal?.FindFirstValue(
             EmployeeAuthenticationDefaults.CredentialVersionClaim);
@@ -29,13 +32,13 @@ public sealed class EmployeeCookieEvents(ApplicationDbContext dbContext)
             return;
         }
 
-        // Technique: AsNoTracking avoids change-tracking overhead for this read-only lookup.
+        // AsNoTracking avoids change-tracking overhead for this read-only lookup.
         // RequestAborted cancels the database query if the browser disconnects.
         var employee = await dbContext.Employees
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == employeeId, context.HttpContext.RequestAborted);
 
-        // Security: Compare the cookie's version with today's database value. A signed cookie
+        // Compare the cookie's version with today's database value. A signed cookie
         // may still be outdated after an administrator disables access or generates a new key.
         if (employee is null
             || employee.AccessStatus != EmployeeAccessStatus.Active

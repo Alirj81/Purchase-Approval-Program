@@ -1,3 +1,4 @@
+// Provides the Razor Page base class for the access-denied view.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PurchaseApproval.Web.Pages.Account;

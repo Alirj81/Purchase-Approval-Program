@@ -1,7 +1,11 @@
 using System.Security.Claims;
+// Requires the employee cookie before request history is shown.
 using Microsoft.AspNetCore.Authorization;
+// Supplies the Forbid result and page response.
 using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Projects only the employee's own request history.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Security;

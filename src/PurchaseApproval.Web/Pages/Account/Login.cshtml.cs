@@ -1,19 +1,23 @@
 using System.ComponentModel.DataAnnotations;
+// Allows the login page to be opened before authentication.
 using Microsoft.AspNetCore.Authorization;
+// Validates passwords and applies Identity lockout rules.
 using Microsoft.AspNetCore.Identity;
+// Supplies form binding and redirect results.
 using Microsoft.AspNetCore.Mvc;
+// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PurchaseApproval.Models;
 
 namespace PurchaseApproval.Web.Pages.Account;
 
-/// <summary>Purpose: Authenticates administrators and accountants through ASP.NET Core Identity.</summary>
+/// <summary>Authenticates administrators and accountants through ASP.NET Core Identity.</summary>
 [AllowAnonymous]
 public sealed class LoginModel(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager) : PageModel
 {
-    // Technique: The input model groups editable login fields without binding an ApplicationUser entity.
+    // The input model groups editable login fields without binding an ApplicationUser entity.
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
@@ -39,7 +43,7 @@ public sealed class LoginModel(
             return Page();
         }
 
-        // Security: Identity checks the password hash and counts failed attempts for account lockout.
+        // Identity checks the password hash and counts failed attempts for account lockout.
         // Reusing Identity avoids implementing password comparison and failure counters ourselves.
         var checkResult = await signInManager.CheckPasswordSignInAsync(
             user,
@@ -60,7 +64,7 @@ public sealed class LoginModel(
         await userManager.UpdateAsync(user);
         await signInManager.SignInAsync(user, Input.RememberMe);
 
-        // Security: Restrict redirects to this application, even if the return URL came from a query string.
+        // Restrict redirects to this application, even if the return URL came from a query string.
         return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/");
     }
 

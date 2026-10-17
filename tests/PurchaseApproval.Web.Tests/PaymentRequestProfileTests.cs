@@ -1,8 +1,13 @@
 using System.Security.Claims;
+// Builds the request context used by the page-handler tests.
 using Microsoft.AspNetCore.Http;
+// Supplies the Identity scheme constant used by the test principal.
 using Microsoft.AspNetCore.Identity;
+// Provides the action result types asserted by the tests.
 using Microsoft.AspNetCore.Mvc;
+// Creates a PageContext for direct handler tests.
 using Microsoft.AspNetCore.Mvc.RazorPages;
+// Provides TempData support for the redirect test.
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
@@ -10,7 +15,7 @@ using PurchaseApproval.Web.Pages.EmployeeAccess.Requests;
 
 namespace PurchaseApproval.Web.Tests;
 
-/// <summary>Purpose: Checks requester identity selection and profile loading in the request form.</summary>
+/// <summary>Checks requester identity selection and profile loading in the request form.</summary>
 public sealed class PaymentRequestProfileTests
 {
     [Fact]
@@ -35,7 +40,7 @@ public sealed class PaymentRequestProfileTests
     public async Task InvalidPost_KeepsProfileVisibleAlongsideFieldErrors()
     {
         var page = CreatePage(new TestProfileService());
-        // Technique: Direct handler tests supply ModelState errors because the HTTP validation
+        // Direct handler tests supply ModelState errors because the HTTP validation
         // pipeline does not run here. This tests the error path without pretending to test middleware.
         page.ModelState.AddModelError("Input.PayeeName", "Enter the payee's name.");
 
@@ -71,7 +76,7 @@ public sealed class PaymentRequestProfileTests
     [InlineData(true)]
     public async Task UnavailableProfile_EndsEmployeeSession(bool isPost)
     {
-        // Security: A null profile represents a deleted employee, inactive access, or stale version.
+        // A null profile represents a deleted employee, inactive access, or stale version.
         var profiles = new TestProfileService { Profile = null };
         var page = CreatePage(profiles);
 
@@ -142,7 +147,7 @@ public sealed class PaymentRequestProfileTests
         return page;
     }
 
-    // Technique: A small substitute records the requested identity and controls whether a profile
+    // A small substitute records the requested identity and controls whether a profile
     // exists. It isolates page behavior; database filtering and real cookie handling need integration tests.
     private sealed class TestProfileService : IEmployeeProfileService
     {

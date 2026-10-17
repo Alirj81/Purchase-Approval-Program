@@ -1,13 +1,16 @@
-using System.Security.Cryptography; /// Provides cryptographic services, including secure encoding and decoding of data, as well as many other operations, such as hashing, random number generation, and message authentication.
-using Microsoft.AspNetCore.WebUtilities; /// Provides utility methods for working with web-related data, such as query strings and URL encoding.
-using PurchaseApproval.Data; /// Provides access to the application's data context, including entities and database operations.
-using PurchaseApproval.Models; /// Provides access to the application's domain models, including entities representing employees, payment requests, and related data.
+using System.Security.Cryptography;
+// URL-safe encoding is used for the private tracking token.
+using Microsoft.AspNetCore.WebUtilities;
+// This service writes requests and their child records through the application context.
+using PurchaseApproval.Data;
+// These are the request and attachment entities created during submission.
+using PurchaseApproval.Models;
 
 namespace PurchaseApproval.Services;
 
 public interface IPaymentRequestSubmissionService
 {
-    Task<PaymentRequestSubmissionResult> SubmitAsync( /// Task is an asynchronous operation that submits a payment request and returns the result. this syntax allows the method to be awaited asynchronously. The method takes various parameters including the requester, payment request lines, attachments, payee information, justification, and an optional requested account or card number. It also accepts a cancellation token to support cooperative cancellation of the asynchronous operation.
+    Task<PaymentRequestSubmissionResult> SubmitAsync(
         EmployeeProfile requester,
         IReadOnlyList<PaymentRequestLineInput> lines,
         IReadOnlyList<PaymentRequestAttachmentInput> attachments,

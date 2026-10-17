@@ -1,11 +1,13 @@
 using System.Security.Cryptography;
+// PasswordHasher protects employee access keys before they reach the database.
 using Microsoft.AspNetCore.Identity;
+// Base64Url creates compact keys that are safe to copy through a browser form.
 using Microsoft.AspNetCore.WebUtilities;
 using PurchaseApproval.Models;
 
 namespace PurchaseApproval.Services;
 
-/// <summary>Purpose: Defines access-key generation, lookup, and verification for employee sign-in.</summary>
+/// <summary>Defines access-key generation, lookup, and verification for employee sign-in.</summary>
 public interface IEmployeeAccessKeyService
 {
     /// <summary>Creates the first credential for a new employee.</summary>
@@ -25,7 +27,7 @@ public interface IEmployeeAccessKeyService
 public sealed class EmployeeAccessKeyService(IPasswordHasher<Employee> passwordHasher)
     : IEmployeeAccessKeyService
 {
-    // Security: 32 cryptographically random bytes provide 256 bits of secret material per key.
+    // 32 cryptographically random bytes provide 256 bits of secret material per key.
     private const int RandomByteCount = 32;
     private const string KeyPrefix = "pak_";
     private const char KeySeparator = '_';
@@ -42,7 +44,7 @@ public sealed class EmployeeAccessKeyService(IPasswordHasher<Employee> passwordH
     public string RotateCredential(Employee employee)
     {
         ArgumentNullException.ThrowIfNull(employee);
-        // Syntax: checked throws on overflow instead of silently wrapping the version number.
+    // checked throws on overflow instead of silently wrapping the version number.
         employee.CredentialVersion = checked(employee.CredentialVersion + 1);
         return SetCredential(employee);
     }
@@ -67,7 +69,7 @@ public sealed class EmployeeAccessKeyService(IPasswordHasher<Employee> passwordH
     }
 
     /// <inheritdoc />
-    // Security: Parsing locates a record; it does not authenticate. Verify must check the full key.
+    // Parsing locates a record; it does not authenticate. Verify must check the full key.
     public bool TryGetEmployeeId(string accessKey, out int employeeId)
     {
         employeeId = 0;
@@ -95,12 +97,12 @@ public sealed class EmployeeAccessKeyService(IPasswordHasher<Employee> passwordH
                 "The employee must be saved before an access key can be generated.");
         }
 
-        // Technique: Base64Url turns random bytes into copyable text without changing their randomness.
+    // Base64Url turns random bytes into copyable text without changing their randomness.
         var randomPart = WebEncoders.Base64UrlEncode(
             RandomNumberGenerator.GetBytes(RandomByteCount));
         var accessKey = $"{KeyPrefix}{employee.Id}{KeySeparator}{randomPart}";
 
-        // Security: PasswordHasher stores a salted one-way hash; the database cannot recover the key.
+    // PasswordHasher stores a salted one-way hash; the database cannot recover the key.
         employee.AccessKeyHash = passwordHasher.HashPassword(employee, accessKey);
         return accessKey;
     }
