@@ -1,0 +1,19 @@
+@page "/track/{reference}/{token}"
+@model PurchaseApproval.Web.Pages.TrackModel
+@{
+    ViewData["Title"] = "Track payment request";
+}
+
+<section class="mx-auto" style="max-width: 42rem">
+    <h1 class="h3">Payment request status</h1>
+    @if (Model.RequestStatus is { } request)
+    {
+        <dl class="row">
+            <dt class="col-sm-5">Reference</dt><dd class="col-sm-7">@request.ReferenceNumber</dd>
+            <dt class="col-sm-5">Status</dt><dd class="col-sm-7"><strong>@request.Status</strong></dd>
+            <dt class="col-sm-5">Total</dt><dd class="col-sm-7">@request.TotalAmountRials.ToString("N0") rials</dd>
+            <dt class="col-sm-5">Submitted</dt><dd class="col-sm-7">@request.SubmittedAtUtc.ToString("u")</dd>
+        </dl>
+        <p class="text-secondary">This page intentionally omits employee, payee, bank, and attachment details.</p>
+    }
+</section>

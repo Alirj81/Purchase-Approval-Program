@@ -1,0 +1,29 @@
+@page "/employee/requests"
+@model PurchaseApproval.Web.Pages.EmployeeAccess.Requests.IndexModel
+@{
+    ViewData["Title"] = "My payment requests";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">My payment requests</h1>
+    <a asp-page="Create" class="btn btn-primary">New request</a>
+</div>
+@if (Model.Requests.Count == 0)
+{
+    <p>You have not submitted any payment requests.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead><tr><th>Reference</th><th>Payee</th><th>Total (rials)</th><th>Status</th><th>Submitted</th></tr></thead>
+            <tbody>
+            @foreach (var request in Model.Requests)
+            {
+                <tr><td>@request.ReferenceNumber</td><td>@request.PayeeName</td><td>@request.TotalAmountRials.ToString("N0")</td><td>@request.Status</td><td>@request.SubmittedAtUtc.ToString("u")</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+<a asp-page="/EmployeeAccess/Index" class="btn btn-outline-secondary">Back to dashboard</a>

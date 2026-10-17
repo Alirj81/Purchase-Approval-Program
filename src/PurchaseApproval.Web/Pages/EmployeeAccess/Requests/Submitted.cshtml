@@ -1,0 +1,31 @@
+@page "/employee/requests/submitted/{id:int}"
+@model PurchaseApproval.Web.Pages.EmployeeAccess.Requests.SubmittedModel
+@{
+    ViewData["Title"] = "Request submitted";
+}
+
+<section class="mx-auto" style="max-width: 48rem" aria-labelledby="submitted-heading">
+    <div class="alert alert-success">
+        <h1 id="submitted-heading" class="h4">Payment request submitted</h1>
+        <p class="mb-0">Your request is pending management review.</p>
+    </div>
+    @if (Model.Receipt is { } receipt)
+    {
+        <dl class="row">
+            <dt class="col-sm-4">Reference</dt><dd class="col-sm-8"><strong>@receipt.ReferenceNumber</strong></dd>
+            <dt class="col-sm-4">Total</dt><dd class="col-sm-8">@receipt.TotalAmountRials.ToString("N0") rials</dd>
+            <dt class="col-sm-4">Status</dt><dd class="col-sm-8">@receipt.Status</dd>
+            <dt class="col-sm-4">Submitted</dt><dd class="col-sm-8">@receipt.SubmittedAtUtc.ToString("u")</dd>
+        </dl>
+    }
+    @if (Model.TrackingUrl is not null)
+    {
+        <div class="alert alert-warning">
+            <h2 class="h6">Save your private tracking link now</h2>
+            <p>This link contains a secret token and is shown only once. Anyone with it can see the request status.</p>
+            <input class="form-control" value="@Model.TrackingUrl" readonly aria-label="Private tracking link" />
+        </div>
+    }
+    <a asp-page="Index" class="btn btn-primary">View my requests</a>
+    <a asp-page="Create" class="btn btn-outline-secondary">Create another</a>
+</section>
