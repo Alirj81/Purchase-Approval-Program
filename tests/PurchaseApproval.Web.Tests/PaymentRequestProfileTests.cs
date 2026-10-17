@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
 using PurchaseApproval.Web.Pages.EmployeeAccess.Requests;
@@ -27,7 +28,7 @@ public sealed class PaymentRequestProfileTests
         Assert.NotNull(page.Requester);
         Assert.Equal("Current profile name", page.Requester.FullName);
         Assert.Equal("Operations", page.Requester.Department);
-        Assert.False(page.DetailsChecked);
+        Assert.Single(page.Input.Lines);
     }
 
     [Fact]
@@ -42,22 +43,27 @@ public sealed class PaymentRequestProfileTests
 
         Assert.IsType<PageResult>(result);
         Assert.NotNull(page.Requester);
-        Assert.False(page.DetailsChecked);
         Assert.False(page.ModelState.IsValid);
     }
 
     [Fact]
-    public async Task ValidPost_LoadsCurrentProfileAndChecksDetails()
+    public async Task ValidPost_LoadsCurrentProfileAndRedirectsAfterSubmission()
     {
         var page = CreatePage(new TestProfileService());
         page.Input.PayeeName = "Example supplier";
         page.Input.Justification = "Office supplies";
+        page.Input.Lines.Add(new CreateModel.LineInput
+        {
+            Description = "Printer paper",
+            AmountRials = 500_000
+        });
 
         var result = await page.OnPostAsync();
 
-        Assert.IsType<PageResult>(result);
+        var redirect = Assert.IsType<RedirectToPageResult>(result);
+        Assert.Equal("Submitted", redirect.PageName);
         Assert.NotNull(page.Requester);
-        Assert.True(page.DetailsChecked);
+        Assert.Equal("token", page.TempData["TrackingToken"]);
     }
 
     [Theory]
@@ -76,7 +82,6 @@ public sealed class PaymentRequestProfileTests
             Assert.Single(signOut.AuthenticationSchemes));
         Assert.Equal("/", signOut.Properties?.RedirectUri);
         Assert.Null(page.Requester);
-        Assert.False(page.DetailsChecked);
     }
 
     [Theory]
@@ -129,10 +134,12 @@ public sealed class PaymentRequestProfileTests
         {
             User = new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType))
         };
-        return new CreateModel(profiles)
+        var page = new CreateModel(profiles, new TestSubmissionService())
         {
             PageContext = new PageContext { HttpContext = context }
         };
+        page.TempData = new TempDataDictionary(context, new TestTempDataProvider());
+        return page;
     }
 
     // Technique: A small substitute records the requested identity and controls whether a profile
@@ -152,6 +159,29 @@ public sealed class PaymentRequestProfileTests
             RequestedEmployeeId = employeeId;
             RequestedVersion = credentialVersion;
             return Task.FromResult(Profile);
+        }
+    }
+
+    private sealed class TestSubmissionService : IPaymentRequestSubmissionService
+    {
+        public Task<PaymentRequestSubmissionResult> SubmitAsync(
+            EmployeeProfile requester,
+            IReadOnlyList<PaymentRequestLineInput> lines,
+            IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+            string payeeName,
+            string justification,
+            string? requestedAccountOrCardNumber,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(new PaymentRequestSubmissionResult(1, "PR-TEST", "token"));
+    }
+
+    private sealed class TestTempDataProvider : ITempDataProvider
+    {
+        public IDictionary<string, object> LoadTempData(HttpContext context)
+            => new Dictionary<string, object>();
+
+        public void SaveTempData(HttpContext context, IDictionary<string, object> values)
+        {
         }
     }
 }

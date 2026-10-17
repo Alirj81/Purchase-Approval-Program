@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using PurchaseApproval.Data;
-using Microsoft.AspNetCore.Identity;
-using PurchaseApproval.Models;
-using PurchaseApproval.Security;
-using PurchaseApproval.Services;
+using Microsoft.EntityFrameworkCore; /// Provides Entity Framework Core functionality for database access.
+using PurchaseApproval.Data; /// Provides access to the application's database context.
+using Microsoft.AspNetCore.Identity; /// Provides ASP.NET Core Identity functionality for authentication and user management.
+using PurchaseApproval.Models; /// Provides access to the application's data models.
+using PurchaseApproval.Security; /// Provides security-related functionality, such as authentication schemes and cookie events.
+using PurchaseApproval.Services; /// Provides access to the application's service layer.
+using System.Threading.RateLimiting; /// Provides rate limiting functionality for controlling request rates.
 
 // Purpose: Connect configuration, database access, authentication, and Razor Pages at application startup.
 var builder = WebApplication.CreateBuilder(args);
@@ -66,6 +67,8 @@ builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>(
 builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>();
 // Structure: Resolve the profile reader used by the employee payment-request page.
 builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
+builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ApplicationRoleInitializer>();
 builder.Services.AddScoped<AdministratorBootstrapper>();
 
@@ -85,6 +88,22 @@ builder.Services.AddAuthorization(options => // Configure authorization policies
         policy => policy.RequireRole(
             AppRoles.Administrator,
             AppRoles.Accountant));
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("employee-submission", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(10),
+                QueueLimit = 0
+            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
 var app = builder.Build();
@@ -119,6 +138,7 @@ app.UseRouting();
 // Security: Identify the caller before authorization decides which pages they may access.
 app.UseAuthentication();
 
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapStaticAssets();
