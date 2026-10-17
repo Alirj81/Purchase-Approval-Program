@@ -62,15 +62,15 @@ builder.Services
 
 // Structure: AddScoped supplies one service instance per request and shares that request's DbContext.
 // This lets page constructors declare their dependencies instead of creating database services themselves.
-builder.Services.AddScoped<EmployeeCookieEvents>();
-builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>();
-builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>();
+builder.Services.AddScoped<EmployeeCookieEvents>(); /// addScoped registers the EmployeeCookieEvents service with a scoped lifetime, meaning one instance per request. the scope is tied to the lifetime of the HTTP request.
+builder.Services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>(); /// Registers the password hasher service for employees with a scoped lifetime.
+builder.Services.AddScoped<IEmployeeAccessKeyService, EmployeeAccessKeyService>(); /// Registers the employee access key service with a scoped lifetime.
 // Structure: Resolve the profile reader used by the employee payment-request page.
-builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
-builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>();
-builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddScoped<ApplicationRoleInitializer>();
-builder.Services.AddScoped<AdministratorBootstrapper>();
+builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>(); /// Registers the employee profile service 
+builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>(); /// Registers the payment request submission service with a scoped lifetime.
+builder.Services.AddSingleton(TimeProvider.System); /// Registers the system time provider as a singleton service.
+builder.Services.AddScoped<ApplicationRoleInitializer>(); /// Registers the application role initializer 
+builder.Services.AddScoped<AdministratorBootstrapper>(); /// Registers the administrator bootstrapper
 
 builder.Services.AddAuthorization(options => // Configure authorization policies for the application
 {

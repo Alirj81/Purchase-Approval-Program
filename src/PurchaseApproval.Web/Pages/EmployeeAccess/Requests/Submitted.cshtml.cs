@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using System.Security.Claims; /// Provides classes for working with claims-based identity, including the Claim and ClaimsPrincipal classes used to represent user identity and claims.
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

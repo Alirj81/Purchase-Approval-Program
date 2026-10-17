@@ -6,7 +6,8 @@ using PurchaseApproval.Data;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
-
+/// index.cshtml.cs is the page model for listing employees and managing their access credentials. administrative users can view, regenerate access keys, and change access statuses of employees. 
+/// index.cshtml is the Razor Page view associated with this page model. it contains the HTML and Razor syntax for rendering the employee list and handling user interactions. each page model typically has a corresponding .cshtml file that defines the UI for that page. the .cs version however contains the server-side logic and handles HTTP requests for the page. and the reason it is the pages instead of models is because Razor Pages follow the "pages" convention, where each page has its own model and view, rather than using a centralized controller like in traditional MVC.
 namespace PurchaseApproval.Web.Pages.Admin.Employees;
 
 /// <summary>Lists employees and performs credential lifecycle operations.</summary>

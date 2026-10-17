@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using PurchaseApproval.Models;
 using PurchaseApproval.Services;
-/// <summary>Contains unit tests for the EmployeeAccessKeyService class.</summary>
+
 namespace PurchaseApproval.Web.Tests;
 /// <summary>
 /// Contains unit tests for the EmployeeAccessKeyService class.

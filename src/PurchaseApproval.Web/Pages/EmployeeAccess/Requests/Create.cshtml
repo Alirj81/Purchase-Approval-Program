@@ -9,7 +9,7 @@
         <h1 id="request-heading" class="h3">New payment request</h1>
         <p>Enter the payment details. The server will verify the total before saving.</p>
 
-        @if (Model.Requester is { } requester)
+        @if (Model.Requester is { } requester) /// @if checks if the Requester property of the model is not null and assigns it to the local variable 'requester'. This allows the subsequent code block to safely access the requester's details.
         {
             <section class="card mb-4" aria-labelledby="requester-heading">
                 <div class="card-body">
