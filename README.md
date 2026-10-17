@@ -1,56 +1,53 @@
 # Purchase Approval Program
 
-A simple web application for creating and managing company payment requests.
+An ASP.NET Core Razor Pages application for creating, approving, executing, and tracking internal
+company payment requests.
 
-This is a personal portfolio project and my first complete ASP.NET Core application. Its goal is
-to demonstrate a simple workflow for recording, approving, and tracking payment requests.
+The project is under active development and is not ready for production use.
 
-## Main Features
+## Current capabilities
 
-- Administrator and accountant login
-- Employee accounts with access keys
-- Employee access management
-- Payment request database models
-- Approval and payment status records
-- PostgreSQL database support
-- English web pages
+- Administrator and accountant authentication with ASP.NET Core Identity
+- Separate access-key authentication for employees
+- Administrator employee creation, access rotation, disabling, reactivation, and revocation
+- Employee profile auto-population from the authenticated database record
+- Employee payment requests with multiple expense rows and authoritative server totals
+- PDF, JPEG, and PNG attachments with size and file-signature validation
+- Pending-request persistence with requester snapshots
+- Unique request references and private token-based status links
+- Employee request history
+- PostgreSQL schema for approval, transfer, audit, attachment, and catalogue records
 
-Some parts of the application are still under development.
+## Technology
 
-## Technologies
-
-- C#
-- ASP.NET Core Razor Pages
-- Entity Framework Core
-- ASP.NET Core Identity
-- PostgreSQL
-- Bootstrap
+- .NET 10 and C#
+- ASP.NET Core Razor Pages and Identity
+- Entity Framework Core with PostgreSQL
+- Bootstrap and JavaScript
 - xUnit
 
-## Project Structure
+## Project structure
 
 ```text
-src/PurchaseApproval.Web/          Main web application
+src/PurchaseApproval.Web/          Web application
 tests/PurchaseApproval.Web.Tests/  Automated tests
-compose.yaml                       Local PostgreSQL setup
-PurchaseApproval.slnx              .NET solution file
+docs/                              Plans and implementation reports
+compose.yaml                       Local PostgreSQL service
+PurchaseApproval.slnx              .NET solution
 ```
 
-## Requirements
+## Local setup
 
-- .NET 10 SDK
-- Docker Desktop, or a PostgreSQL 17 server
+Requirements: .NET 10 SDK and Docker Desktop (or PostgreSQL 17).
 
-## Setup
-
-1. Restore the project packages:
+1. Restore tools and packages:
 
    ```powershell
    dotnet restore
    dotnet tool restore
    ```
 
-2. Create a `.env` file from `.env.example` and set a local PostgreSQL password.
+2. Copy `.env.example` to `.env`, then set a local database password.
 
 3. Start PostgreSQL:
 
@@ -58,205 +55,61 @@ PurchaseApproval.slnx              .NET solution file
    docker compose up -d
    ```
 
-4. Add the database connection string with .NET user secrets:
+4. Store the connection string outside source control:
 
    ```powershell
    dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=purchase_approval_dev;Username=purchase_approval_app;Password=YOUR_PASSWORD" --project src/PurchaseApproval.Web
    ```
 
-5. Create the database tables:
+5. Apply the schema and run the app:
 
    ```powershell
    dotnet ef database update --project src/PurchaseApproval.Web --startup-project src/PurchaseApproval.Web
+   dotnet run --project src/PurchaseApproval.Web --launch-profile https
    ```
 
-6. Run the application:
+The HTTPS development address is `https://localhost:7054`; HTTP uses
+`http://localhost:5083`.
 
-   ```powershell
-   dotnet run --project src/PurchaseApproval.Web
-   ```
+## First administrator
 
-## Tests
-
-Run the automated tests with:
+Set the bootstrap values using configuration or user secrets, then run the explicit one-time
+command:
 
 ```powershell
-dotnet test
+dotnet run --project src/PurchaseApproval.Web -- bootstrap-admin
 ```
 
-## Status
+The bootstrap operation is idempotent and does not update an existing account. Remove the
+bootstrap password from configuration after use.
 
-<<<<<<< HEAD
-### Build
+## Verification
 
-`dotnet build`
+```powershell
+dotnet build PurchaseApproval.slnx --configuration Release --warnaserror
+dotnet test PurchaseApproval.slnx --configuration Release
+```
 
-### Run Tests
+## Delivery progress
 
-`dotnet test`
+- [x] Solution, PostgreSQL, Entity Framework, and Identity foundation
+- [x] Financial domain model and initial migration
+- [x] Administrator/accountant login and authorization policies
+- [x] Employee credential and access management
+- [x] Employee request submission, attachments, tracking, and history
+- [ ] Administrator request dashboard and approval/rejection workflow
+- [ ] Accountant transfer execution and audit workflow
+- [ ] Printable records, exports, reporting, and Persian/Jalali interface
+- [ ] Integration/security testing and production deployment
 
-### Run the Web Application
+See [Day 3 plan](docs/DAY-3-PLAN.md) and
+[Days 1–2 report](docs/DAYS-1-2-MVP-REPORT.md) for implementation detail.
 
-`dotnet run --project src/PurchaseApproval.Web --launch-profile https`
+## Scope boundaries
 
-The development HTTPS profile is configured for:
+This application records internal authorization and execution. It does not initiate bank
+transfers, automatically approve requests, replace accounting software, or provide a general
+accounting ledger.
 
-`https://localhost:7054`
-
-The HTTP profile uses:
-
-`http://localhost:5083`
-
-The current application only provides an initial web foundation. It should not be treated as a functioning payment approval system.
-
-## 10. Development Progress
-
-### Phase 1 — Solution Foundation
-
-- [x] Create the GitHub repository
-- [x] Initialize the ASP.NET Core 10 project
-- [x] Establish the .NET solution structure
-- [x] Add the xUnit test project
-- [x] Configure PostgreSQL support
-- [x] Configure Entity Framework Core
-- [x] Configure ASP.NET Core Identity
-- [x] Define administrator and accountant roles
-- [x] Establish role-based authorization policies
-
-### Phase 2 — Domain & Database
-
-- [x] Define employee and privileged user models
-- [x] Define payment request models
-- [x] Define expense entry models
-- [x] Define management approval records
-- [x] Define financial transfer records
-- [x] Define transaction audit records
-- [x] Define attachment storage metadata
-- [x] Define item catalogue model
-- [x] Configure initial database relationships and constraints
-- [x] Generate the initial database migration
-
-### Phase 3 — Authentication & Employee Management
-
-- [ ] Implement administrator authentication pages
-- [ ] Implement accountant authentication pages
-- [ ] Implement employee access-key generation
-- [ ] Implement employee login and session handling
-- [ ] Implement credential revocation and regeneration
-- [ ] Implement automatic employee profile population
-- [ ] Implement role-management interfaces
-
-### Phase 4 — Payment Requests
-
-- [ ] Develop the Persian RTL submission form
-- [ ] Support adding/removing multiple expense rows
-- [ ] Implement automatic request totals
-- [ ] Enforce the maximum permitted request amount in application logic
-- [ ] Implement attachment upload validation and storage
-- [ ] Implement submission validation and rate limits
-- [ ] Generate unique request numbers and secure tracking links
-- [ ] Implement request persistence and status tracking
-
-### Phase 5 — Management Approval
-
-- [ ] Develop administrator dashboard
-- [ ] Implement request review screens
-- [ ] Implement approval and rejection operations
-- [ ] Record decision attribution and timestamps
-- [ ] Implement administrator-created requests
-- [ ] Implement searchable request history
-
-### Phase 6 — Accounting & Execution
-
-- [ ] Develop accountant dashboard
-- [ ] Implement transfer status management
-- [ ] Implement transaction date/time entry
-- [ ] Implement payment method and reference fields
-- [ ] Support administrator-executed transactions
-- [ ] Highlight unsuccessful transactions
-- [ ] Implement manual closure of unsuccessful transactions
-- [ ] Persist transaction correction and audit history
-
-### Phase 7 — Documents & Reporting
-
-- [ ] Generate printable approval/rejection receipts
-- [ ] Include responsible administrator attribution
-- [ ] Include execution details in updated records
-- [ ] Implement Excel export
-- [ ] Implement date-range accounting reports
-- [ ] Develop the administrator history dashboard
-
-### Phase 8 — Quality Assurance & Deployment
-
-- [ ] Expand unit and integration test coverage
-- [ ] Test authentication and permission boundaries
-- [ ] Test concurrent financial record updates
-- [ ] Verify file-upload security
-- [ ] Test complete request-to-transfer workflows
-- [ ] Finalize responsive Persian interface
-- [ ] Review historical record-retention requirements
-- [ ] Configure production security and backups
-- [ ] Deploy to the company-managed server
-
-## 11. Planned User Interface
-
-The intended application will prioritize simplicity for nontechnical personnel.
-
-Design requirements include:
-
-- Persian-first interface
-- Right-to-left layout
-- Persian/Jalali date presentation
-- Mobile-first responsive pages
-- Clear navigation between employee, administrator, and accountant areas
-- Minimal form input where information is already known
-- Prominent request and payment statuses
-- Appropriate warning indicators for unsuccessful transactions
-
-The interface should remain practical on both office computers and mobile browsers.
-
-## 12. Scope & Limitations
-
-The application is intended as an internal payment authorization and tracking system.
-
-It is not intended to:
-
-- Initiate actual bank transfers
-- Automatically approve financial requests
-- Replace Sepidar or other accounting software
-- Automatically verify company inventory
-- Provide a complete accounting ledger
-- Operate as a general-purpose external payment platform
-
-Additional integrations and reporting capabilities may be considered after the core application is complete.
-
-Historical financial information must be retained according to an agreed company retention policy and applicable legal requirements. Automated deletion rules have not yet been finalized.
-
-## 13. Project Status
-
-**The repository is under active development.**
-
-The foundational project structure, identity configuration, authorization policies, financial domain models, and initial database migration have been established.
-
-The next major stage is implementing the authentication and application-service workflows that connect the existing data model to working Razor Pages interfaces.
-
-No production release is currently available.
-
-## 14. License & Usage
-
-No open-source license is currently provided.
-
-This software is being developed for internal company use. Public availability of source code, if applicable, does not automatically grant permission for redistribution or commercial reuse.
-
-Ownership and distribution permissions remain subject to applicable agreements.
-
----
-
-**Project:** Purchase Approval Program  
-**Organization:** Novin Abzian  
-**Repository:** https://github.com/Alirj81/Purchase-Approval-Program  
-**Documentation Updated:** October 2026  
-**Development Status:** Active Development — Backend Foundation Established
-=======
-This project is under development and is not ready for production use.
->>>>>>> 2a7cd20 (payment request form added to dashboard with the requirements and check details for now, later to submit and work on the saving schema)
+Historical retention, production backup policy, and deployment hardening remain to be agreed
+before release.

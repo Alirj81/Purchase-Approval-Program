@@ -21,5 +21,7 @@ TestResults/
 *.p12
 *.key
 
-# Local development plans and reports (not for repository publication)
-/docs/
+# Keep the delivered milestone documents while ignoring other local planning notes.
+/docs/*
+!/docs/DAY-3-PLAN.md
+!/docs/DAY-3-COMPLETION-REPORT.md
