@@ -9,6 +9,11 @@ public sealed class PaymentRequestSubmissionRulesTests
         42, "Current Employee", "employee42", "09120000000",
         "Operations", "Main", "Coordinator");
 
+    // Represents the signed-in administrator submitting their own internal payment request.
+    private static readonly ApplicationUserProfile AdministratorRequester = new(
+        9, "Approval Admin", "approval.admin", "09121111111",
+        "Management", "Head Office", "Administrator");
+
     [Fact]
     public void CreateRequest_RecalculatesTotalAndSnapshotsRequester()
     {
@@ -32,6 +37,28 @@ public sealed class PaymentRequestSubmissionRulesTests
         Assert.Equal("Supplier", request.PayeeName);
         Assert.Equal(PaymentRequestStatus.Pending, request.Status);
         Assert.Equal([0, 1], request.Lines.Select(line => line.DisplayOrder));
+    }
+
+    [Fact]
+    public void CreateRequest_ForAdministratorLinksApplicationUserAndSnapshotsProfile()
+    {
+        var request = PaymentRequestSubmissionRules.CreateRequest(
+            AdministratorRequester,
+            [new("Urgent supplies", 500_000, true, null)],
+            [],
+            "Supplier",
+            "Office supplies",
+            null,
+            "PR-2026-ADMIN",
+            new string('B', 64),
+            DateTimeOffset.UtcNow);
+
+        Assert.Equal(RequesterType.Administrator, request.RequesterType);
+        Assert.Null(request.EmployeeRequesterId);
+        Assert.Equal(AdministratorRequester.Id, request.ApplicationUserRequesterId);
+        Assert.Equal(AdministratorRequester.FullName, request.RequesterFullNameSnapshot);
+        Assert.Equal(AdministratorRequester.Username, request.RequesterUsernameSnapshot);
+        Assert.Equal(PaymentRequestStatus.Pending, request.Status);
     }
 
     [Fact]

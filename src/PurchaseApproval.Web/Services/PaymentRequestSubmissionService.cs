@@ -18,6 +18,16 @@ public interface IPaymentRequestSubmissionService
         string justification,
         string? requestedAccountOrCardNumber,
         CancellationToken cancellationToken = default);
+
+    /// <summary>Submits a request on behalf of the authenticated administrator.</summary>
+    Task<PaymentRequestSubmissionResult> SubmitAsync(
+        ApplicationUserProfile requester,
+        IReadOnlyList<PaymentRequestLineInput> lines,
+        IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+        string payeeName,
+        string justification,
+        string? requestedAccountOrCardNumber,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record PaymentRequestLineInput(
@@ -35,6 +45,48 @@ public sealed record PaymentRequestSubmissionResult(
     int RequestId,
     string ReferenceNumber,
     string TrackingToken);
+
+/// <summary>Safe profile values copied from a privileged application account into a request snapshot.</summary>
+public sealed record ApplicationUserProfile(
+    int Id,
+    string FullName,
+    string Username,
+    string? PhoneNumber,
+    string? Department,
+    string? Branch,
+    string? JobTitle);
+
+/// <summary>Normalizes employee and administrator profiles for the shared submission rules.</summary>
+public sealed record PaymentRequestRequester(
+    RequesterType Type,
+    int Id,
+    string FullName,
+    string Username,
+    string? PhoneNumber,
+    string? Department,
+    string? Branch,
+    string? JobTitle)
+{
+    public static PaymentRequestRequester FromEmployee(EmployeeProfile profile) => new(
+        RequesterType.Employee,
+        profile.Id,
+        profile.FullName,
+        profile.Username,
+        profile.PhoneNumber,
+        profile.Department,
+        profile.Branch,
+        profile.JobTitle);
+
+    public static PaymentRequestRequester FromApplicationUser(ApplicationUserProfile profile) => new(
+        RequesterType.Administrator,
+        profile.Id,
+        profile.FullName,
+        profile.Username,
+        profile.PhoneNumber,
+        profile.Department,
+        profile.Branch,
+        profile.JobTitle);
+}
 
 public sealed class PaymentRequestValidationException(IReadOnlyList<string> errors)
     : Exception("The payment request is invalid.")
@@ -54,6 +106,42 @@ public sealed class PaymentRequestSubmissionService(
         string justification,
         string? requestedAccountOrCardNumber,
         CancellationToken cancellationToken = default)
+        => await SubmitAsync(
+            PaymentRequestRequester.FromEmployee(requester),
+            lines,
+            attachments,
+            payeeName,
+            justification,
+            requestedAccountOrCardNumber,
+            cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<PaymentRequestSubmissionResult> SubmitAsync(
+        ApplicationUserProfile requester,
+        IReadOnlyList<PaymentRequestLineInput> lines,
+        IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+        string payeeName,
+        string justification,
+        string? requestedAccountOrCardNumber,
+        CancellationToken cancellationToken = default)
+        => await SubmitAsync(
+            PaymentRequestRequester.FromApplicationUser(requester),
+            lines,
+            attachments,
+            payeeName,
+            justification,
+            requestedAccountOrCardNumber,
+            cancellationToken);
+
+    /// <summary>Persists either requester type through one consistent validation path.</summary>
+    private async Task<PaymentRequestSubmissionResult> SubmitAsync(
+        PaymentRequestRequester requester,
+        IReadOnlyList<PaymentRequestLineInput> lines,
+        IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+        string payeeName,
+        string justification,
+        string? requestedAccountOrCardNumber,
+        CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
         var reference = PaymentRequestSubmissionRules.CreateReference(now);
@@ -93,8 +181,58 @@ public static class PaymentRequestSubmissionRules
         string referenceNumber,
         string trackingTokenHash,
         DateTimeOffset submittedAtUtc)
+        => CreateRequest(
+            PaymentRequestRequester.FromEmployee(requester),
+            lines,
+            attachments,
+            payeeName,
+            justification,
+            requestedAccountOrCardNumber,
+            referenceNumber,
+            trackingTokenHash,
+            submittedAtUtc);
+
+    /// <summary>Creates an administrator-owned request while preserving the administrator profile snapshot.</summary>
+    public static PaymentRequest CreateRequest(
+        ApplicationUserProfile requester,
+        IReadOnlyList<PaymentRequestLineInput> lines,
+        IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+        string payeeName,
+        string justification,
+        string? requestedAccountOrCardNumber,
+        string referenceNumber,
+        string trackingTokenHash,
+        DateTimeOffset submittedAtUtc)
+        => CreateRequest(
+            PaymentRequestRequester.FromApplicationUser(requester),
+            lines,
+            attachments,
+            payeeName,
+            justification,
+            requestedAccountOrCardNumber,
+            referenceNumber,
+            trackingTokenHash,
+            submittedAtUtc);
+
+    /// <summary>Creates a validated request entity for an employee or administrator requester.</summary>
+    public static PaymentRequest CreateRequest(
+        PaymentRequestRequester requester,
+        IReadOnlyList<PaymentRequestLineInput> lines,
+        IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+        string payeeName,
+        string justification,
+        string? requestedAccountOrCardNumber,
+        string referenceNumber,
+        string trackingTokenHash,
+        DateTimeOffset submittedAtUtc)
     {
         var errors = new List<string>();
+        if (requester is null || requester.Id <= 0
+            || !Enum.IsDefined(requester.Type))
+        {
+            errors.Add("A valid payment requester is required.");
+        }
+
         var cleanPayee = RequiredText(payeeName, 200, "Payee name", errors);
         var cleanJustification = RequiredText(justification, 2000, "Payment reason", errors);
         var cleanAccount = OptionalText(requestedAccountOrCardNumber, 100,
@@ -147,17 +285,21 @@ public static class PaymentRequestSubmissionRules
             throw new PaymentRequestValidationException(errors);
         }
 
+        // Validation above guarantees the requester profile is present and has a supported type.
+        var validRequester = requester!;
+
         return new PaymentRequest
         {
             ReferenceNumber = referenceNumber,
-            RequesterType = RequesterType.Employee,
-            EmployeeRequesterId = requester.Id,
-            RequesterFullNameSnapshot = requester.FullName,
-            RequesterUsernameSnapshot = requester.Username,
-            RequesterPhoneNumberSnapshot = requester.PhoneNumber,
-            RequesterDepartmentSnapshot = requester.Department,
-            RequesterBranchSnapshot = requester.Branch,
-            RequesterJobTitleSnapshot = requester.JobTitle,
+            RequesterType = validRequester.Type,
+            EmployeeRequesterId = validRequester.Type == RequesterType.Employee ? validRequester.Id : null,
+            ApplicationUserRequesterId = validRequester.Type == RequesterType.Administrator ? validRequester.Id : null,
+            RequesterFullNameSnapshot = validRequester.FullName,
+            RequesterUsernameSnapshot = validRequester.Username,
+            RequesterPhoneNumberSnapshot = validRequester.PhoneNumber,
+            RequesterDepartmentSnapshot = validRequester.Department,
+            RequesterBranchSnapshot = validRequester.Branch,
+            RequesterJobTitleSnapshot = validRequester.JobTitle,
             PayeeName = cleanPayee,
             Justification = cleanJustification,
             RequestedAccountOrCardNumber = cleanAccount,

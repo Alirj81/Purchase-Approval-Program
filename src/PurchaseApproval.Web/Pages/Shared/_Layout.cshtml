@@ -26,6 +26,9 @@
                         @if (User.IsInRole(PurchaseApproval.Security.AppRoles.Administrator))
                         {
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/Requests/Create">New request</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Admin/Requests/Index">Requests</a>
                             </li>
                             <li class="nav-item">

@@ -178,6 +178,17 @@ public sealed class PaymentRequestProfileTests
             string? requestedAccountOrCardNumber,
             CancellationToken cancellationToken = default)
             => Task.FromResult(new PaymentRequestSubmissionResult(1, "PR-TEST", "token"));
+
+        // Satisfies the administrator overload; employee-page tests do not invoke it.
+        public Task<PaymentRequestSubmissionResult> SubmitAsync(
+            ApplicationUserProfile requester,
+            IReadOnlyList<PaymentRequestLineInput> lines,
+            IReadOnlyList<PaymentRequestAttachmentInput> attachments,
+            string payeeName,
+            string justification,
+            string? requestedAccountOrCardNumber,
+            CancellationToken cancellationToken = default)
+            => Task.FromResult(new PaymentRequestSubmissionResult(1, "PR-TEST", "token"));
     }
 
     private sealed class TestTempDataProvider : ITempDataProvider
