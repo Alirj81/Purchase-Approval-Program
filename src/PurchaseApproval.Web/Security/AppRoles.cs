@@ -1,6 +1,6 @@
 namespace PurchaseApproval.Security;
 
-/// <summary>Defines the role names shared by account setup and authorization rules.</summary>
+/// <summary>  Defines the role names shared by account setup and authorization rules.</summary>
 public static class AppRoles
 {
     /// <summary>Management users who can administer access and decide requests.</summary>

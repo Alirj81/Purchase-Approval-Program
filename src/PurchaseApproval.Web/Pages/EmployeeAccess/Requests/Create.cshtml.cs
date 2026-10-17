@@ -22,7 +22,9 @@ public sealed class CreateModel(
     IEmployeeProfileService employeeProfiles,
     IPaymentRequestSubmissionService submissions) : PageModel
 {
-    public EmployeeProfile? Requester { get; private set; }
+    public EmployeeProfile? Requester { get; private set; } /// <summary>
+    /// Gets the profile of the employee making the request.
+    /// </summary>
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
