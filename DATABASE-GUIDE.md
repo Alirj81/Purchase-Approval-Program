@@ -103,7 +103,7 @@ The most important tables are:
 | `PaymentRequestLines` | Expense rows belonging to a payment request. |
 | `PaymentRequestAttachments` | Supporting-file metadata and bytes. |
 | `ApprovalDecisions` | The one final approval or rejection decision per request. |
-| `TransferOutcomes`, `TransferAuditEntries` | Future accountant transfer execution and audit data. |
+| `TransferOutcomes`, `TransferAuditEntries` | External payment outcomes and their immutable audit snapshots. |
 | `ItemCatalogueEntries` | Reusable item names and usage counts. |
 
 The entity definitions are in `src/PurchaseApproval.Web/Models`, the mapping and constraints are

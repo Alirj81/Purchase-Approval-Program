@@ -11,14 +11,16 @@ The project is under active development and is not ready for production use.
 - Separate access-key authentication for employees
 - Administrator employee creation, access rotation, disabling, reactivation, and revocation
 - Employee profile auto-population from the authenticated database record
-- Employee payment requests with multiple expense rows and authoritative server totals
+- Employee and administrator payment requests with multiple expense rows and authoritative totals
 - PDF, JPEG, and PNG attachments with size and file-signature validation
-- Pending-request persistence with requester snapshots
+- Pending-request persistence with requester snapshots and durable duplicate-submit protection
 - Unique request references and private token-based status links
 - Employee request history
-- Administrator request queue with status filters and full request review
-- Atomic approval/rejection decisions with actor snapshots and stale-review protection
-- PostgreSQL schema for approval, transfer, audit, attachment, and catalogue records
+- Administrator general, own-submission, and per-requester histories
+- Explicitly confirmed approval and optional-explanation rejection with stale-review protection
+- Accountant execution queue and transfer history with administrator outcome visibility
+- Cash, bank-transfer, cheque, and other execution records with actor/time snapshots
+- Separate approval and transfer states, unsuccessful-item flags, audit records, and concurrency checks
 
 ## Technology
 
@@ -84,6 +86,18 @@ dotnet run --project src/PurchaseApproval.Web -- bootstrap-admin
 The bootstrap operation is idempotent and does not update an existing account. Remove the
 bootstrap password from configuration after use.
 
+## First accountant
+
+Set `BootstrapAccountant:Username`, `BootstrapAccountant:Password`, and
+`BootstrapAccountant:FullName` using configuration or user secrets, then run:
+
+```powershell
+dotnet run --project src/PurchaseApproval.Web -- bootstrap-accountant
+```
+
+The command creates one Identity account in the Accountant role and refuses to overwrite an
+existing username. Remove the bootstrap password from configuration after use.
+
 ## Verification
 
 ```powershell
@@ -91,18 +105,24 @@ dotnet build PurchaseApproval.slnx --configuration Release --warnaserror
 dotnet test PurchaseApproval.slnx --configuration Release
 ```
 
-## Day 4 test plan
+## Days 2–4 verification coverage
 
 The following decision-rule cases are automated and must remain green:
 
 - Approving a pending request changes its status to `Approved`, records the server time, and
   snapshots the administrator's ID and trimmed full name.
 - Approval ignores text from the rejection-only field.
-- Rejecting a pending request changes its status to `Rejected` and stores a trimmed reason.
-- Rejection fails for a null, empty, or whitespace-only reason.
+- Rejecting a pending request changes its status to `Rejected`; an explanation is optional and
+  trimmed when supplied.
 - Rejection fails when its reason exceeds the 2,000-character database limit.
 - A request already approved or rejected cannot receive another decision.
 - Unknown decision values and invalid administrator details are rejected.
+- Exactly 10,000,000,000 IRR is allowed and a larger total is rejected.
+- Transfer rules keep the request `Approved`, snapshot the executor, preserve reported occurrence
+  time and offset separately from server recording time, and audit each recorded outcome.
+- Accountants may record transferred or unsuccessful outcomes; administrators may record only
+  successful transfers they personally performed.
+- Method-specific details and duplicate/final-outcome protection are validated server-side.
 
 These PostgreSQL and browser integration cases should also pass before production deployment:
 
@@ -121,16 +141,22 @@ These PostgreSQL and browser integration cases should also pass before productio
 - Employee history and private tracking pages show the new final status after a decision.
 - Anti-forgery validation rejects forged decision posts, and invalid rejection input preserves the
   review page with a useful validation message.
+- Accountants can reach execution pages but are denied administrator review and employee-key pages.
+- Transferred requests leave the open queue and appear in history; unsuccessful requests remain
+  red-flagged and open.
+
+The latest audit, verified evidence, deferred policies, and exact run results are recorded in
+`docs/DAY-4-AUDIT-AND-IMPLEMENTATION.md`.
 
 ## What I learned
 
 This project has helped me get more comfortable with ASP.NET Core Razor Pages, dependency
 injection, Entity Framework relationships, Identity authentication, and PostgreSQL migrations.
 I also learned that validation needs to happen on the server, that access keys should be stored as
-hashes, and that request data should keep a snapshot of the employee information used at the time
-of submission. The approval workflow also demonstrates why final decisions need an actor snapshot
-and an optimistic-concurrency check. The next things I want to improve are PostgreSQL integration
-testing, the accountant transfer workflow, and end-to-end browser testing.
+hashes, and that request data should keep a snapshot of the account information used at the time
+of submission. Approval and execution workflows demonstrate why business status, actor snapshots,
+reported occurrence time, server recording time, and optimistic-concurrency tokens must remain
+separate. The next planned milestone is Excel output and reporting.
 
 ## Delivery progress
 
@@ -140,8 +166,10 @@ testing, the accountant transfer workflow, and end-to-end browser testing.
 - [x] Employee credential and access management
 - [x] Employee request submission, attachments, tracking, and history
 - [x] Administrator request dashboard and approval/rejection workflow
-- [ ] Accountant transfer execution and audit workflow
-- [ ] Printable records, exports, reporting, and Persian/Jalali interface
+- [x] Confirmed Day 4 execution recording, queue/history, and audit workflow
+- [ ] Policy-dependent unsuccessful closure and reported-time correction operations
+- [ ] Excel outputs and reporting (Day 5)
+- [ ] Persian RTL/mobile refinement and integrated workflow testing (Day 6)
 - [ ] Integration/security testing and production deployment
 
 ## Scope boundaries
@@ -151,4 +179,6 @@ transfers, automatically approve requests, replace accounting software, or provi
 accounting ledger.
 
 Historical retention, production backup policy, and deployment hardening remain to be agreed
-before release.
+before release. Unsuccessful-item closure permissions, completed-transfer retention, Sepidar
+reference handoff, and permitted reported-time corrections are intentionally not implemented until
+the business rules are decided.
