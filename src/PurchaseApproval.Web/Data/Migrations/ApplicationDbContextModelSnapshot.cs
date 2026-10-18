@@ -486,6 +486,10 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("SubmissionKeyHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset>("SubmittedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -513,6 +517,9 @@ namespace PurchaseApproval.Web.Data.Migrations
                         .IsUnique();
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("SubmissionKeyHash")
+                        .IsUnique();
 
                     b.HasIndex("SubmittedAtUtc");
 

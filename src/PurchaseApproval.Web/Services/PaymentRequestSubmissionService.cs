@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 // URL-safe encoding is used for the private tracking token.
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 // This service writes requests and their child records through the application context.
 using PurchaseApproval.Data;
 // These are the request and attachment entities created during submission.
@@ -17,6 +18,7 @@ public interface IPaymentRequestSubmissionService
         string payeeName,
         string justification,
         string? requestedAccountOrCardNumber,
+        string submissionKey,
         CancellationToken cancellationToken = default);
 
     /// <summary>Submits a request on behalf of the authenticated administrator.</summary>
@@ -27,6 +29,7 @@ public interface IPaymentRequestSubmissionService
         string payeeName,
         string justification,
         string? requestedAccountOrCardNumber,
+        string submissionKey,
         CancellationToken cancellationToken = default);
 }
 
@@ -44,7 +47,8 @@ public sealed record PaymentRequestAttachmentInput(
 public sealed record PaymentRequestSubmissionResult(
     int RequestId,
     string ReferenceNumber,
-    string TrackingToken);
+    string? TrackingToken,
+    bool IsDuplicate = false);
 
 /// <summary>Safe profile values copied from a privileged application account into a request snapshot.</summary>
 public sealed record ApplicationUserProfile(
@@ -105,6 +109,7 @@ public sealed class PaymentRequestSubmissionService(
         string payeeName,
         string justification,
         string? requestedAccountOrCardNumber,
+        string submissionKey,
         CancellationToken cancellationToken = default)
         => await SubmitAsync(
             PaymentRequestRequester.FromEmployee(requester),
@@ -113,6 +118,7 @@ public sealed class PaymentRequestSubmissionService(
             payeeName,
             justification,
             requestedAccountOrCardNumber,
+            submissionKey,
             cancellationToken);
 
     /// <inheritdoc />
@@ -123,6 +129,7 @@ public sealed class PaymentRequestSubmissionService(
         string payeeName,
         string justification,
         string? requestedAccountOrCardNumber,
+        string submissionKey,
         CancellationToken cancellationToken = default)
         => await SubmitAsync(
             PaymentRequestRequester.FromApplicationUser(requester),
@@ -131,6 +138,7 @@ public sealed class PaymentRequestSubmissionService(
             payeeName,
             justification,
             requestedAccountOrCardNumber,
+            submissionKey,
             cancellationToken);
 
     /// <summary>Persists either requester type through one consistent validation path.</summary>
@@ -141,11 +149,28 @@ public sealed class PaymentRequestSubmissionService(
         string payeeName,
         string justification,
         string? requestedAccountOrCardNumber,
+        string submissionKey,
         CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
-        var reference = PaymentRequestSubmissionRules.CreateReference(now);
-        var trackingToken = PaymentRequestSubmissionRules.CreateTrackingToken();
+        var rawSubmissionKeyHash = PaymentRequestSubmissionRules.HashSubmissionKey(submissionKey);
+        var submissionKeyHash = PaymentRequestSubmissionRules.HashSubmissionKey(
+            $"{requester.Type}:{requester.Id}:{rawSubmissionKeyHash}");
+        var existing = await dbContext.PaymentRequests
+            .AsNoTracking()
+            .Where(item => item.SubmissionKeyHash == submissionKeyHash)
+            .Where(item => requester.Type == RequesterType.Employee
+                ? item.EmployeeRequesterId == requester.Id
+                : item.ApplicationUserRequesterId == requester.Id)
+            .Select(item => new { item.Id, item.ReferenceNumber })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (existing is not null)
+        {
+            return new PaymentRequestSubmissionResult(
+                existing.Id, existing.ReferenceNumber, null, IsDuplicate: true);
+        }
+
+        // Validate all business input before allocating a reference or private tracking token.
         var request = PaymentRequestSubmissionRules.CreateRequest(
             requester,
             lines,
@@ -153,12 +178,40 @@ public sealed class PaymentRequestSubmissionService(
             payeeName,
             justification,
             requestedAccountOrCardNumber,
-            reference,
-            PaymentRequestSubmissionRules.HashTrackingToken(trackingToken),
+            string.Empty,
+            string.Empty,
             now);
 
+        var reference = PaymentRequestSubmissionRules.CreateReference(now);
+        var trackingToken = PaymentRequestSubmissionRules.CreateTrackingToken();
+        request.ReferenceNumber = reference;
+        request.TrackingTokenHash = PaymentRequestSubmissionRules.HashTrackingToken(trackingToken);
+        request.SubmissionKeyHash = submissionKeyHash;
+
         dbContext.PaymentRequests.Add(request);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            dbContext.Entry(request).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+            existing = await dbContext.PaymentRequests
+                .AsNoTracking()
+                .Where(item => item.SubmissionKeyHash == submissionKeyHash)
+                .Where(item => requester.Type == RequesterType.Employee
+                    ? item.EmployeeRequesterId == requester.Id
+                    : item.ApplicationUserRequesterId == requester.Id)
+                .Select(item => new { item.Id, item.ReferenceNumber })
+                .SingleOrDefaultAsync(cancellationToken);
+            if (existing is null)
+            {
+                throw;
+            }
+
+            return new PaymentRequestSubmissionResult(
+                existing.Id, existing.ReferenceNumber, null, IsDuplicate: true);
+        }
 
         return new PaymentRequestSubmissionResult(request.Id, reference, trackingToken);
     }
@@ -317,6 +370,22 @@ public static class PaymentRequestSubmissionRules
 
     public static string CreateTrackingToken()
         => WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+
+    public static string CreateSubmissionKey()
+        => WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+
+    public static string HashSubmissionKey(string submissionKey)
+    {
+        if (string.IsNullOrWhiteSpace(submissionKey)
+            || submissionKey.Length is < 32 or > 128)
+        {
+            throw new PaymentRequestValidationException(
+                ["This submission form is invalid or expired. Reload it and try again."]);
+        }
+
+        return Convert.ToHexString(SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(submissionKey)));
+    }
 
     public static string HashTrackingToken(string token)
         => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));

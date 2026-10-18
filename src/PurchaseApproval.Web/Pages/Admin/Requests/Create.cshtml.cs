@@ -27,6 +27,9 @@ public sealed class CreateModel(
     [BindProperty]
     public List<IFormFile> Attachments { get; set; } = [];
 
+    [BindProperty]
+    public string SubmissionKey { get; set; } = string.Empty;
+
     /// <summary>Loads the signed-in administrator and starts the form with one expense row.</summary>
     public async Task<IActionResult> OnGetAsync()
     {
@@ -35,6 +38,7 @@ public sealed class CreateModel(
             return Forbid();
         }
 
+        SubmissionKey = PaymentRequestSubmissionRules.CreateSubmissionKey();
         Input.Lines.Add(new LineInput());
         return Page();
     }
@@ -93,9 +97,12 @@ public sealed class CreateModel(
                 Input.PayeeName,
                 Input.Justification,
                 Input.RequestedAccountOrCardNumber,
+                SubmissionKey,
                 HttpContext.RequestAborted);
 
-            TempData["StatusMessage"] = "Your payment request was submitted for review.";
+            TempData["StatusMessage"] = result.IsDuplicate
+                ? "This form was already submitted; no duplicate request was created."
+                : "Your payment request was submitted for review.";
             return RedirectToPage("Details", new { id = result.RequestId });
         }
         catch (PaymentRequestValidationException exception)

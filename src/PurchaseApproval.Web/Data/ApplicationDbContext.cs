@@ -237,6 +237,14 @@ private static void ConfigurePaymentRequests(ModelBuilder modelBuilder)
         .IsUnique();
 
     request
+        .Property(item => item.SubmissionKeyHash)
+        .HasMaxLength(64);
+
+    request
+        .HasIndex(item => item.SubmissionKeyHash)
+        .IsUnique();
+
+    request
         .HasIndex(item => item.Status);
 
     request

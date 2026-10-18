@@ -90,15 +90,15 @@ public sealed class CreateModel(
         [Display(Name = "Phone number")]
         public string? PhoneNumber { get; set; }
 
-        [StringLength(200)]
+        [StringLength(100)]
         [Display(Name = "Department")]
         public string? Department { get; set; }
 
-        [StringLength(200)]
+        [StringLength(100)]
         [Display(Name = "Branch")]
         public string? Branch { get; set; }
 
-        [StringLength(200)]
+        [StringLength(100)]
         [Display(Name = "Job title")]
         public string? JobTitle { get; set; }
     }

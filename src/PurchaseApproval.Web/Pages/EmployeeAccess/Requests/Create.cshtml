@@ -26,6 +26,7 @@
         }
 
         <form method="post" enctype="multipart/form-data" asp-page="Create" id="request-form">
+            <input type="hidden" asp-for="SubmissionKey" />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="row">
                 <div class="col-md-6 mb-3">

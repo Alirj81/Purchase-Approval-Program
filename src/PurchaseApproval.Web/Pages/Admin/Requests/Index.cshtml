@@ -11,7 +11,19 @@
             <h1 id="request-queue-heading" class="h3 mb-1">Payment request review</h1>
             <p class="text-secondary mb-0">Review submitted requests and record one final decision.</p>
         </div>
+        <div class="d-flex gap-2">
+            <a asp-page="Index" asp-route-status="all" asp-route-mine="true" class="btn btn-outline-primary">My submitted requests</a>
+            @if (Model.ShowingMyRequests || Model.RequesterFilterLabel is not null)
+            {
+                <a asp-page="Index" asp-route-status="all" class="btn btn-outline-secondary">Clear requester filter</a>
+            }
+        </div>
     </div>
+
+    @if (Model.RequesterFilterLabel is not null)
+    {
+        <div class="alert alert-info py-2">@Model.RequesterFilterLabel</div>
+    }
 
     <div class="row g-3 mb-4" aria-label="Request totals">
         <div class="col-6 col-lg-3">
@@ -61,7 +73,7 @@
                     <tr>
                         <td><strong>@request.ReferenceNumber</strong></td>
                         <td>
-                            @request.RequesterName
+                            <a asp-page="Index" asp-route-status="all" asp-route-requesterType="@request.RequesterType" asp-route-requesterId="@request.RequesterId">@request.RequesterName</a>
                             @if (!string.IsNullOrWhiteSpace(request.Department))
                             {
                                 <div class="small text-secondary">@request.Department</div>

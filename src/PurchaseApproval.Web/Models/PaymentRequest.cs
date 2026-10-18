@@ -54,6 +54,9 @@ public class PaymentRequest
     // Only the hash is stored; the private tracking token is not
     public string TrackingTokenHash { get; set; } = string.Empty;
 
+    // Idempotency key generated for one rendered submission form. Legacy rows may be null.
+    public string? SubmissionKeyHash { get; set; }
+
     public ICollection<PaymentRequestLine> Lines { get; set; }
     = new List<PaymentRequestLine>();
 

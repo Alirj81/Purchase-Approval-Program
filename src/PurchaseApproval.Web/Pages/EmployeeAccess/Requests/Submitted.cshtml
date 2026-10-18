@@ -5,6 +5,10 @@
 }
 
 <section class="mx-auto" style="max-width: 48rem" aria-labelledby="submitted-heading">
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-info">@statusMessage</div>
+    }
     <div class="alert alert-success">
         <h1 id="submitted-heading" class="h4">Payment request submitted</h1>
         <p class="mb-0">Your request is pending management review.</p>

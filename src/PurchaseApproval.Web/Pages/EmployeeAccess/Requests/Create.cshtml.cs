@@ -32,9 +32,13 @@ public sealed class CreateModel(
     [BindProperty]
     public List<IFormFile> Attachments { get; set; } = [];
 
+    [BindProperty]
+    public string SubmissionKey { get; set; } = string.Empty;
+
     public async Task<IActionResult> OnGetAsync()
     {
         if (!await LoadRequesterAsync()) return EndEmployeeSession();
+        SubmissionKey = PaymentRequestSubmissionRules.CreateSubmissionKey();
         Input.Lines.Add(new LineInput());
         return Page();
     }
@@ -83,9 +87,17 @@ public sealed class CreateModel(
                 Input.PayeeName,
                 Input.Justification,
                 Input.RequestedAccountOrCardNumber,
+                SubmissionKey,
                 HttpContext.RequestAborted);
 
-            TempData["TrackingToken"] = result.TrackingToken;
+            if (result.TrackingToken is not null)
+            {
+                TempData["TrackingToken"] = result.TrackingToken;
+            }
+            if (result.IsDuplicate)
+            {
+                TempData["StatusMessage"] = "This form was already submitted; no duplicate request was created.";
+            }
             return RedirectToPage("Submitted", new { id = result.RequestId });
         }
         catch (PaymentRequestValidationException exception)

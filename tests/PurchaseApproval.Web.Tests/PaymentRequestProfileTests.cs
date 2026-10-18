@@ -176,6 +176,7 @@ public sealed class PaymentRequestProfileTests
             string payeeName,
             string justification,
             string? requestedAccountOrCardNumber,
+            string submissionKey,
             CancellationToken cancellationToken = default)
             => Task.FromResult(new PaymentRequestSubmissionResult(1, "PR-TEST", "token"));
 
@@ -187,6 +188,7 @@ public sealed class PaymentRequestProfileTests
             string payeeName,
             string justification,
             string? requestedAccountOrCardNumber,
+            string submissionKey,
             CancellationToken cancellationToken = default)
             => Task.FromResult(new PaymentRequestSubmissionResult(1, "PR-TEST", "token"));
     }

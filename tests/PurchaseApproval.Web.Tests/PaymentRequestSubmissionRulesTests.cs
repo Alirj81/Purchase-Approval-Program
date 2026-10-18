@@ -71,6 +71,17 @@ public sealed class PaymentRequestSubmissionRulesTests
     }
 
     [Fact]
+    public void CreateRequest_AllowsExactMaximumWithNoAttachments()
+    {
+        var request = Create(
+            [new("Expense", PaymentRequestSubmissionRules.MaximumTotalRials, false, null)],
+            []);
+
+        Assert.Equal(PaymentRequestSubmissionRules.MaximumTotalRials, request.TotalAmountRials);
+        Assert.Empty(request.Attachments);
+    }
+
+    [Fact]
     public void CreateRequest_RejectsMissingAndInvalidLines()
     {
         var noLines = Assert.Throws<PaymentRequestValidationException>(() => Create([]));
@@ -137,6 +148,27 @@ public sealed class PaymentRequestSubmissionRulesTests
         Assert.All(references, value => Assert.StartsWith("PR-2026-", value, StringComparison.Ordinal));
         Assert.Equal(100, tokens.Count);
         Assert.All(tokens, value => Assert.DoesNotContain("=", value, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void SubmissionKey_IsHighEntropyAndHashesDeterministically()
+    {
+        var key = PaymentRequestSubmissionRules.CreateSubmissionKey();
+
+        Assert.DoesNotContain("=", key, StringComparison.Ordinal);
+        Assert.Equal(64, PaymentRequestSubmissionRules.HashSubmissionKey(key).Length);
+        Assert.Equal(
+            PaymentRequestSubmissionRules.HashSubmissionKey(key),
+            PaymentRequestSubmissionRules.HashSubmissionKey(key));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("too-short")]
+    public void SubmissionKey_RejectsInvalidValue(string key)
+    {
+        Assert.Throws<PaymentRequestValidationException>(() =>
+            PaymentRequestSubmissionRules.HashSubmissionKey(key));
     }
 
     private static PaymentRequest Create(
