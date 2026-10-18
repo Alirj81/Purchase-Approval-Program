@@ -114,20 +114,45 @@
                     <div class="row g-4">
                         <div class="col-md-5">
                             <p>Approve this request when its details and supporting evidence are complete.</p>
-                            <form method="post" asp-page-handler="Approve">
-                                <input type="hidden" asp-for="Input.Version" />
-                                <button type="submit" class="btn btn-success">Approve request</button>
-                            </form>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approve-confirmation">Approve request</button>
                         </div>
                         <div class="col-md-7 border-start-md">
                             <form method="post" asp-page-handler="Reject">
                                 <input type="hidden" asp-for="Input.Version" />
                                 <div class="mb-3">
                                     <label asp-for="Input.RejectionReason" class="form-label">Rejection reason</label>
-                                    <textarea asp-for="Input.RejectionReason" class="form-control" rows="4" maxlength="2000" required></textarea>
-                                    <div class="form-text">Give the requester a clear reason they can act on.</div>
+                                    <textarea asp-for="Input.RejectionReason" class="form-control" rows="4" maxlength="2000"></textarea>
+                                    <div class="form-text">Optional. Add an explanation when it will help the requester.</div>
                                 </div>
                                 <button type="submit" class="btn btn-danger">Reject request</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="approve-confirmation" tabindex="-1" aria-labelledby="approve-confirmation-title" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title fs-5" id="approve-confirmation-title">Confirm approval</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-2">Confirm the saved payment request:</p>
+                            <dl class="row mb-0">
+                                <dt class="col-4">Reference</dt><dd class="col-8"><strong>@request.ReferenceNumber</strong></dd>
+                                <dt class="col-4">Amount</dt><dd class="col-8"><strong>@request.TotalAmountRials.ToString("N0")</strong></dd>
+                                <dt class="col-4">Currency</dt><dd class="col-8"><strong>Iranian rials (IRR)</strong></dd>
+                            </dl>
+                            <p class="small text-secondary mt-3 mb-0">Approval authorizes the request; it does not execute a bank transfer.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form method="post" asp-page-handler="Approve" class="d-inline">
+                                <input type="hidden" asp-for="Input.Version" />
+                                <input type="hidden" asp-for="Input.ApprovalConfirmed" value="true" />
+                                <button type="submit" class="btn btn-success">Confirm approval</button>
                             </form>
                         </div>
                     </div>

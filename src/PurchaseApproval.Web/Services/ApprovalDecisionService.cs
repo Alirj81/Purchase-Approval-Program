@@ -54,6 +54,7 @@ public sealed class ApprovalDecisionService(
     {
         var request = await dbContext.PaymentRequests
             .Include(item => item.Decision)
+            .Include(item => item.TransferOutcome)
             .SingleOrDefaultAsync(item => item.Id == requestId, cancellationToken);
 
         if (request is null)
@@ -72,15 +73,26 @@ public sealed class ApprovalDecisionService(
             return ApprovalDecisionResult.ConcurrencyConflict;
         }
 
+        var decidedAtUtc = timeProvider.GetUtcNow();
         var decision = ApprovalDecisionRules.CreateDecision(
             request,
             administratorId,
             administratorFullName,
             decisionType,
             rejectionReason,
-            timeProvider.GetUtcNow());
+            decidedAtUtc);
 
         dbContext.ApprovalDecisions.Add(decision);
+        if (decisionType == ApprovalDecisionType.Approved)
+        {
+            var transfer = TransferExecutionRules.CreateAwaitingTransfer(
+                request,
+                administratorId,
+                administratorFullName,
+                PurchaseApproval.Security.AppRoles.Administrator,
+                decidedAtUtc);
+            dbContext.TransferOutcomes.Add(transfer);
+        }
         dbContext.Entry(request).Property(item => item.Version).OriginalValue = expectedVersion;
 
         try
@@ -131,11 +143,6 @@ public static class ApprovalDecisionRules
         if (administratorId <= 0 || cleanAdministratorName.Length is 0 or > 200)
         {
             errors.Add("A valid administrator is required.");
-        }
-
-        if (decisionType == ApprovalDecisionType.Rejected && cleanReason is null)
-        {
-            errors.Add("A rejection reason is required.");
         }
 
         if (cleanReason?.Length > MaximumRejectionReasonLength)

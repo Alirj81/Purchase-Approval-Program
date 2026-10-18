@@ -47,6 +47,21 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.Name = "PurchaseApproval.PrivilegedSession";
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
+    options.Events.OnValidatePrincipal = async context =>
+    {
+        var userManager = context.HttpContext.RequestServices
+            .GetRequiredService<UserManager<ApplicationUser>>();
+        var user = context.Principal is null
+            ? null
+            : await userManager.GetUserAsync(context.Principal);
+        if (user is null || !user.IsActive)
+        {
+            context.RejectPrincipal();
+            return;
+        }
+
+        await SecurityStampValidator.ValidatePrincipalAsync(context);
+    };
 });
 
 builder.Services
@@ -73,9 +88,11 @@ builder.Services.AddScoped<IEmployeeProfileService, EmployeeProfileService>();
 builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmissionService>();
 // The approval service keeps status changes and decision records in one database save.
 builder.Services.AddScoped<IApprovalDecisionService, ApprovalDecisionService>();
+builder.Services.AddScoped<ITransferExecutionService, TransferExecutionService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ApplicationRoleInitializer>();
 builder.Services.AddScoped<AdministratorBootstrapper>();
+builder.Services.AddScoped<AccountantBootstrapper>();
 
 builder.Services.AddAuthorization(options => // Configure authorization policies for the application
 {
@@ -124,6 +141,14 @@ await using (var startupScope = app.Services.CreateAsyncScope())
     {
         var bootstrapper = startupScope.ServiceProvider
             .GetRequiredService<AdministratorBootstrapper>();
+        await bootstrapper.RunAsync();
+        return;
+    }
+
+    if (args.Contains("bootstrap-accountant", StringComparer.OrdinalIgnoreCase))
+    {
+        var bootstrapper = startupScope.ServiceProvider
+            .GetRequiredService<AccountantBootstrapper>();
         await bootstrapper.RunAsync();
         return;
     }

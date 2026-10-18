@@ -1,0 +1,54 @@
+@page "/execution"
+@model PurchaseApproval.Web.Pages.Execution.IndexModel
+@{
+    ViewData["Title"] = "Payment execution records";
+}
+
+<section aria-labelledby="execution-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h1 id="execution-heading" class="h3 mb-1">Payment execution records</h1>
+            <p class="text-secondary mb-0">Record the outcome of payments performed outside this application.</p>
+        </div>
+        <div class="btn-group" role="group" aria-label="Execution queue filters">
+            <a asp-page="Index" asp-route-status="open" class="btn @(Model.CurrentFilter == "open" ? "btn-primary" : "btn-outline-primary")">Open</a>
+            <a asp-page="Index" asp-route-status="history" class="btn @(Model.CurrentFilter == "history" ? "btn-primary" : "btn-outline-primary")">History</a>
+            <a asp-page="Index" asp-route-status="all" class="btn @(Model.CurrentFilter == "all" ? "btn-primary" : "btn-outline-primary")">All</a>
+        </div>
+    </div>
+
+    <div class="alert alert-secondary py-2">This programme records an external payment outcome. It does not send money or connect to a bank.</div>
+
+    @if (Model.Requests.Count == 0)
+    {
+        <div class="alert alert-info">There are no requests in this view.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead><tr><th>Reference</th><th>Requester</th><th>Payee / requested destination</th><th class="text-end">Approved amount</th><th>Transfer outcome</th><th>Recorded</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var request in Model.Requests)
+                {
+                    <tr class="@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed ? "table-danger" : "")">
+                        <td><strong>@request.ReferenceNumber</strong></td>
+                        <td>@request.RequesterName</td>
+                        <td>@request.PayeeName@if (!string.IsNullOrWhiteSpace(request.RequestedDestination)) {<div class="small text-secondary">Requested: @request.RequestedDestination</div>}</td>
+                        <td class="text-end text-nowrap">@request.TotalAmountRials.ToString("N0") IRR</td>
+                        <td>
+                            <span class="badge text-bg-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful ? "danger" : "warning")">@request.TransferStatus</span>
+                            @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed)
+                            {
+                                <span class="text-danger fw-semibold ms-1">Open</span>
+                            }
+                        </td>
+                        <td class="text-nowrap">@(request.RecordedAtUtc?.ToString("u") ?? "—")</td>
+                        <td><a asp-page="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

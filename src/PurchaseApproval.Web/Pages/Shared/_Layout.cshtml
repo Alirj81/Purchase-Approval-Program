@@ -32,7 +32,17 @@
                                 <a class="nav-link text-dark" asp-page="/Admin/Requests/Index">Requests</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-mine="true">My requests</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-page="/Admin/Employees/Index">Employees</a>
+                            </li>
+                        }
+                        @if (User.IsInRole(PurchaseApproval.Security.AppRoles.Administrator)
+                            || User.IsInRole(PurchaseApproval.Security.AppRoles.Accountant))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-page="/Execution/Index">Execution records</a>
                             </li>
                         }
                     </ul>
@@ -57,7 +67,7 @@
                         }
                         else
                         {
-                            <a class="btn btn-sm btn-outline-secondary" href="/account/login">Admin sign in</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="/account/login">Staff sign in</a>
                         }
                     </div>
                 </div>

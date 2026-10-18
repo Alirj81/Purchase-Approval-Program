@@ -1,0 +1,143 @@
+@page "/execution/{id:int}"
+@model PurchaseApproval.Web.Pages.Execution.DetailsModel
+@{
+    ViewData["Title"] = "Payment execution record";
+}
+
+@if (Model.Review is { } request)
+{
+    <section aria-labelledby="execution-detail-heading">
+        <a asp-page="Index" class="text-decoration-none">&larr; Back to execution queue</a>
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+            <div>
+                <h1 id="execution-detail-heading" class="h3 mb-1">@request.ReferenceNumber</h1>
+                <span class="badge text-bg-success">Approved</span>
+                <span class="badge text-bg-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful ? "danger" : "warning")">@request.TransferStatus</span>
+            </div>
+            <div class="text-end"><strong>@request.TotalAmountRials.ToString("N0") IRR</strong><div class="small text-secondary">Approved amount</div></div>
+        </div>
+
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-success">@statusMessage</div>
+        }
+        <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+        @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed)
+        {
+            <div class="alert alert-danger"><strong>Open unsuccessful item.</strong> It remains in the open queue. Closure is unavailable until the responsible role and required closure evidence are agreed.</div>
+        }
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card h-100"><div class="card-header fw-semibold">Approved request</div><div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Requester</dt><dd class="col-sm-8">@request.RequesterName</dd>
+                        <dt class="col-sm-4">Department</dt><dd class="col-sm-8">@(request.RequesterDepartment ?? "—")</dd>
+                        <dt class="col-sm-4">Payee</dt><dd class="col-sm-8">@request.PayeeName</dd>
+                        <dt class="col-sm-4">Requested destination</dt><dd class="col-sm-8">@(request.RequestedDestination ?? "—")</dd>
+                        <dt class="col-sm-4">Reason</dt><dd class="col-sm-8">@request.Justification</dd>
+                    </dl>
+                </div></div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100"><div class="card-header fw-semibold">Expense rows</div><div class="card-body p-0">
+                    <div class="table-responsive"><table class="table table-sm mb-0">
+                        <thead><tr><th>Description</th><th>Invoice</th><th class="text-end">Amount</th></tr></thead>
+                        <tbody>@foreach (var line in request.Lines) {<tr><td>@line.Description@if (!string.IsNullOrWhiteSpace(line.Remarks)) {<div class="small text-secondary">@line.Remarks</div>}</td><td>@(line.HasInvoice ? "Yes" : "No")</td><td class="text-end text-nowrap">@line.AmountRials.ToString("N0")</td></tr>}</tbody>
+                    </table></div>
+                </div></div>
+            </div>
+        </div>
+
+        <h2 class="h5">Supporting files</h2>
+        @if (request.Attachments.Count == 0)
+        {
+            <p class="text-secondary">No supporting files were attached.</p>
+        }
+        else
+        {
+            <ul class="list-group mb-4">@foreach (var attachment in request.Attachments) {<li class="list-group-item d-flex justify-content-between align-items-center"><span>@attachment.FileName <span class="small text-secondary">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span><a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">Download</a></li>}</ul>
+        }
+
+        @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.AwaitingTransfer)
+        {
+            <div class="card mt-4">
+                <div class="card-header fw-semibold">Record an external payment outcome</div>
+                <div class="card-body">
+                    <p class="alert alert-secondary py-2">Use this form only after a payment or attempt occurred outside the programme. Saving this form does not send funds.</p>
+                    <form method="post" id="outcome-form">
+                        <input type="hidden" asp-for="Input.Version" />
+                        <input type="hidden" asp-for="Input.UtcOffsetMinutes" id="utc-offset-minutes" />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.Method" class="form-label">Execution method</label>
+                                <select asp-for="Input.Method" asp-items="Html.GetEnumSelectList<PurchaseApproval.Models.TransferMethod>()" class="form-select" id="transfer-method"><option value="">Choose a method</option></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.ReportedLocalDateTime" class="form-label">Occurred at (your device time)</label>
+                                <input asp-for="Input.ReportedLocalDateTime" type="datetime-local" step="60" class="form-control" id="reported-local-time" data-device-local-default="true" />
+                            </div>
+                            <div class="col-12 method-fields" data-method="2">
+                                <div class="row g-3">
+                                    <div class="col-md-6"><label asp-for="Input.DestinationAccountOrCardNumber" class="form-label">Actual destination account/card</label><input asp-for="Input.DestinationAccountOrCardNumber" class="form-control" maxlength="100" /><div class="form-text">Kept separate from the destination originally requested.</div></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 method-fields" data-methods="2,3"><label asp-for="Input.BankName" class="form-label">Bank name</label><input asp-for="Input.BankName" class="form-control" maxlength="200" /><div class="form-text">Optional for bank transfer; required for cheque.</div></div>
+                            <div class="col-12 method-fields" data-method="3">
+                                <div class="row g-3">
+                                    <div class="col-md-3"><label asp-for="Input.ChequeNumber" class="form-label">Cheque number</label><input asp-for="Input.ChequeNumber" class="form-control" maxlength="100" /></div>
+                                    <div class="col-md-3"><label asp-for="Input.ChequeDate" class="form-label">Cheque date</label><input asp-for="Input.ChequeDate" type="date" class="form-control" /></div>
+                                    <div class="col-md-3"><label asp-for="Input.ChequePayeeName" class="form-label">Cheque payee</label><input asp-for="Input.ChequePayeeName" class="form-control" maxlength="200" /></div>
+                                </div>
+                            </div>
+                            <div class="col-12 method-fields" data-method="4"><label asp-for="Input.OtherMethodDescription" class="form-label">Describe the other method</label><input asp-for="Input.OtherMethodDescription" class="form-control" maxlength="500" /></div>
+                            @if (Model.CanRecordUnsuccessful)
+                            {
+                                <div class="col-12"><label asp-for="Input.FailureReason" class="form-label">Failure explanation (optional)</label><textarea asp-for="Input.FailureReason" class="form-control" rows="3" maxlength="2000"></textarea></div>
+                            }
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" asp-page-handler="Transferred" class="btn btn-success">Record as transferred</button>
+                            @if (Model.CanRecordUnsuccessful)
+                            {
+                                <button type="submit" asp-page-handler="Unsuccessful" class="btn btn-danger">Record unsuccessful attempt</button>
+                            }
+                            <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mt-4 border-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : "danger")">
+                <div class="card-header fw-semibold">Recorded outcome</div>
+                <div class="card-body"><dl class="row mb-0">
+                    <dt class="col-sm-4">Outcome</dt><dd class="col-sm-8">@request.TransferStatus</dd>
+                    <dt class="col-sm-4">Method</dt><dd class="col-sm-8">@request.Method @request.OtherMethodDescription</dd>
+                    <dt class="col-sm-4">Actual destination</dt><dd class="col-sm-8">@(request.ActualDestination ?? "—")</dd>
+                    <dt class="col-sm-4">Bank</dt><dd class="col-sm-8">@(request.BankName ?? "—")</dd>
+                    <dt class="col-sm-4">Cheque</dt><dd class="col-sm-8">@(request.ChequeNumber is null ? "—" : $"{request.ChequeNumber}, {request.ChequeDate}, {request.ChequePayeeName}")</dd>
+                    <dt class="col-sm-4">Executor</dt><dd class="col-sm-8">@request.PerformedByName (@request.PerformedByRole)</dd>
+                    <dt class="col-sm-4">Reported occurrence</dt><dd class="col-sm-8">@request.OccurredAtUtc?.ToString("u") (stored offset: @request.UtcOffsetMinutes minutes)</dd>
+                    <dt class="col-sm-4">Server recorded</dt><dd class="col-sm-8">@request.RecordedAtUtc?.ToString("u")</dd>
+                    @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful) {<dt class="col-sm-4">Failure explanation</dt><dd class="col-sm-8">@(request.FailureReason ?? "—")</dd>}
+                </dl></div>
+            </div>
+        }
+
+        <h2 class="h5 mt-4">Execution audit trail</h2>
+        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Action</th><th>Status</th><th>Actor</th><th>Reported occurrence</th><th>Server recorded</th></tr></thead><tbody>
+        @foreach (var audit in request.AuditEntries)
+        {
+            <tr><td>@audit.Action</td><td>@audit.Status</td><td>@audit.ActorName (@audit.ActorRole)</td><td>@(audit.OccurredAtUtc?.ToString("u") ?? "—")</td><td>@audit.RecordedAtUtc.ToString("u")</td></tr>
+        }
+        </tbody></table></div>
+    </section>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/transfer-outcome.js" asp-append-version="true"></script>
+}

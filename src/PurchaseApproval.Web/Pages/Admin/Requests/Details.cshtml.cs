@@ -70,6 +70,14 @@ public sealed class DetailsModel(
         int id,
         ApprovalDecisionType decisionType)
     {
+        if (decisionType == ApprovalDecisionType.Approved && !Input.ApprovalConfirmed)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "Confirm the saved reference, amount, and currency before approving.");
+            return await ReloadPageAsync(id);
+        }
+
         var administrator = await userManager.GetUserAsync(User);
         if (administrator is null || !administrator.IsActive)
         {
@@ -199,6 +207,8 @@ public sealed class DetailsModel(
     public sealed class DecisionInput
     {
         public uint Version { get; set; }
+
+        public bool ApprovalConfirmed { get; set; }
 
         public string? RejectionReason { get; set; }
     }

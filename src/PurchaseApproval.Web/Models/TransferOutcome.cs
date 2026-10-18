@@ -51,8 +51,8 @@ public class TransferOutcome
     // Bank reference, Sepidar reference, or similar identifier
     public string? ExternalReference { get; set; }
 
-    // Transferred is closed automatically.
-    // Unsuccessful can be closed manually.
+    // Transferred is closed automatically. Unsuccessful closure is reserved in the
+    // schema but deliberately unavailable until its authorization policy is agreed.
     public bool IsClosed { get; set; }
 
     public DateTimeOffset? ClosedAtUtc { get; set; }

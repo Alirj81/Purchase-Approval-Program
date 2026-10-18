@@ -28,7 +28,7 @@ public sealed class ApprovalDecisionRulesTests
     }
 
     [Fact]
-    public void Reject_RequiresAndTrimsReason()
+    public void Reject_TrimsOptionalReason()
     {
         var request = CreatePendingRequest();
 
@@ -44,15 +44,15 @@ public sealed class ApprovalDecisionRulesTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Reject_RejectsMissingReason(string? reason)
+    public void Reject_AllowsMissingReason(string? reason)
     {
-        var exception = Assert.Throws<ApprovalDecisionValidationException>(() =>
-            ApprovalDecisionRules.CreateDecision(
-                CreatePendingRequest(), 7, "Mina Manager",
-                ApprovalDecisionType.Rejected, reason, DecisionTime));
+        var request = CreatePendingRequest();
+        var decision = ApprovalDecisionRules.CreateDecision(
+            request, 7, "Mina Manager",
+            ApprovalDecisionType.Rejected, reason, DecisionTime);
 
-        Assert.Contains(exception.Errors,
-            error => error.Contains("reason is required", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(PaymentRequestStatus.Rejected, request.Status);
+        Assert.Null(decision.RejectionReason);
     }
 
     [Fact]
