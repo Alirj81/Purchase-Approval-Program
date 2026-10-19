@@ -89,6 +89,9 @@ builder.Services.AddScoped<IPaymentRequestSubmissionService, PaymentRequestSubmi
 // The approval service keeps status changes and decision records in one database save.
 builder.Services.AddScoped<IApprovalDecisionService, ApprovalDecisionService>();
 builder.Services.AddScoped<ITransferExecutionService, TransferExecutionService>();
+// Reporting reads retained snapshots and creates XLSX files without changing workflow state.
+builder.Services.AddScoped<IExcelReportService, ExcelReportService>();
+builder.Services.AddSingleton<IExcelWorkbookBuilder, ExcelWorkbookBuilder>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<ApplicationRoleInitializer>();
 builder.Services.AddScoped<AdministratorBootstrapper>();
