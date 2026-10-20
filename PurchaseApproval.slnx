@@ -4,5 +4,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PurchaseApproval.Web.Tests/PurchaseApproval.Web.Tests.csproj" />
+    <Project Path="tests/PurchaseApproval.Web.IntegrationTests/PurchaseApproval.Web.IntegrationTests.csproj" />
+    <Project Path="tests/PurchaseApproval.Web.BrowserTests/PurchaseApproval.Web.BrowserTests.csproj" />
   </Folder>
 </Solution>

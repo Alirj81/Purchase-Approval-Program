@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Playwright browser checks against a real Kestrel instance of the application and the
+       disposable test database. Browsers are installed under <repo>/.playwright (gitignored):
+         pwsh bin/Release/net10.0/playwright.ps1 install chromium
+       Tests are skipped (reported, not passed) when PURCHASE_APPROVAL_TEST_CONNECTION is unset. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.63.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PurchaseApproval.Web.IntegrationTests\PurchaseApproval.Web.IntegrationTests.csproj" />
+  </ItemGroup>
+
+</Project>

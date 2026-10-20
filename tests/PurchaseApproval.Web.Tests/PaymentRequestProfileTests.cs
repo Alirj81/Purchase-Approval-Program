@@ -139,7 +139,11 @@ public sealed class PaymentRequestProfileTests
         {
             User = new ClaimsPrincipal(new ClaimsIdentity(claims, authenticationType))
         };
-        var page = new CreateModel(profiles, new TestSubmissionService())
+        var page = new CreateModel(
+            profiles,
+            new TestSubmissionService(),
+            TestSupport.Limits(),
+            new PassThroughLocalizer())
         {
             PageContext = new PageContext { HttpContext = context }
         };
