@@ -1,8 +1,11 @@
 // This file owns the business rules and database transaction for approving or rejecting a request.
 // Entity Framework Core supplies the tracked request and detects stale concurrent updates.
+// Each decision also writes an AuditEntry (see AuditRecorder) and, when the deciding administrator
+// is the request's own administrator requester, sets the persisted self-approval indicator.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
+using PurchaseApproval.Security;
 
 namespace PurchaseApproval.Services;
 
@@ -29,11 +32,8 @@ public enum ApprovalDecisionResult
 }
 
 /// <summary>Contains validation messages that can safely be shown on the review page.</summary>
-public sealed class ApprovalDecisionValidationException(IReadOnlyList<string> errors)
-    : Exception("The approval decision is invalid.")
-{
-    public IReadOnlyList<string> Errors { get; } = errors;
-}
+public sealed class ApprovalDecisionValidationException(IReadOnlyList<LocalizableMessage> messages)
+    : ValidationMessagesException("The approval decision is invalid.", messages);
 
 /// <summary>Loads a request, applies the domain rules, and saves the request and decision atomically.</summary>
 public sealed class ApprovalDecisionService(
@@ -89,10 +89,12 @@ public sealed class ApprovalDecisionService(
                 request,
                 administratorId,
                 administratorFullName,
-                PurchaseApproval.Security.AppRoles.Administrator,
+                AppRoles.Administrator,
                 decidedAtUtc);
             dbContext.TransferOutcomes.Add(transfer);
         }
+
+        dbContext.AuditEntries.Add(ApprovalDecisionRules.CreateAudit(request, decision));
         dbContext.Entry(request).Property(item => item.Version).OriginalValue = expectedVersion;
 
         try
@@ -100,10 +102,24 @@ public sealed class ApprovalDecisionService(
             await dbContext.SaveChangesAsync(cancellationToken);
             return ApprovalDecisionResult.Success;
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateException exception)
         {
-            // A second administrator completed the request between the read and the save.
-            return ApprovalDecisionResult.ConcurrencyConflict;
+            var failure = DatabaseErrorClassifier.Classify(exception);
+            switch (failure.Kind)
+            {
+                // A second administrator completed the request between the read and the save.
+                case DatabaseFailureKind.ConcurrencyConflict:
+                    return ApprovalDecisionResult.ConcurrencyConflict;
+                // The one-decision-per-request index fired: the other decision won.
+                case DatabaseFailureKind.UniqueViolation:
+                    return ApprovalDecisionResult.AlreadyDecided;
+                case DatabaseFailureKind.ConstraintViolation:
+                    throw new ApprovalDecisionValidationException(
+                        [DatabaseErrorClassifier.DescribeConstraintViolation()]);
+                default:
+                    // Unexpected failures reach the global error handler, which logs a correlation ID.
+                    throw;
+            }
         }
     }
 }
@@ -124,7 +140,7 @@ public static class ApprovalDecisionRules
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var errors = new List<string>();
+        var errors = new List<LocalizableMessage>();
         var cleanAdministratorName = administratorFullName?.Trim() ?? string.Empty;
         var cleanReason = string.IsNullOrWhiteSpace(rejectionReason)
             ? null
@@ -147,7 +163,8 @@ public static class ApprovalDecisionRules
 
         if (cleanReason?.Length > MaximumRejectionReasonLength)
         {
-            errors.Add($"The rejection reason cannot exceed {MaximumRejectionReasonLength:N0} characters.");
+            errors.Add(new LocalizableMessage(
+                "The rejection reason cannot exceed {0} characters.", MaximumRejectionReasonLength));
         }
 
         if (errors.Count != 0)
@@ -172,10 +189,44 @@ public static class ApprovalDecisionRules
             DecidedByUserId = administratorId,
             DecidedByFullNameSnapshot = cleanAdministratorName,
             RejectionReason = cleanReason,
+            // Determined from authenticated identities only; the browser never supplies it.
+            IsSelfApproval = IsSelfDecision(request, administratorId),
             DecidedAtUtc = decidedAtUtc
         };
 
         request.Decision = decision;
         return decision;
+    }
+
+    /// <summary>True when an administrator decides a request they submitted themselves.</summary>
+    public static bool IsSelfDecision(PaymentRequest request, int administratorId)
+        => request.RequesterType == RequesterType.Administrator
+            && request.ApplicationUserRequesterId == administratorId;
+
+    /// <summary>Builds the accountability row saved together with the decision.</summary>
+    public static AuditEntry CreateAudit(PaymentRequest request, ApprovalDecision decision)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(decision);
+
+        var action = decision.IsSelfApproval && decision.DecisionType == ApprovalDecisionType.Approved
+            ? AuditAction.RequestSelfApproved
+            : decision.DecisionType == ApprovalDecisionType.Approved
+                ? AuditAction.RequestApproved
+                : AuditAction.RequestRejected;
+
+        var details = decision.IsSelfApproval
+            ? $"{decision.DecisionType}; the deciding administrator is also the request's requester (self-approval)."
+            : $"{decision.DecisionType}; requester type {request.RequesterType}.";
+
+        return AuditRecorder.Create(
+            AuditCategory.ApprovalDecision,
+            action,
+            nameof(PaymentRequest),
+            request.Id,
+            request.ReferenceNumber,
+            new AuditActor(decision.DecidedByUserId, decision.DecidedByFullNameSnapshot, AppRoles.Administrator),
+            decision.DecidedAtUtc,
+            details);
     }
 }
