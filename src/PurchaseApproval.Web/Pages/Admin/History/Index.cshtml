@@ -1,0 +1,182 @@
+@* Administrator-wide history with explicit timestamp/timezone filters and separate lifecycle times. *@
+@page "/admin/history"
+@model PurchaseApproval.Web.Pages.Admin.History.IndexModel
+@{
+    ViewData["Title"] = L["Administrator history"];
+}
+
+<section aria-labelledby="history-heading">
+    <div class="mb-3">
+        <h1 id="history-heading" class="h3 mb-1">@L["Administrator history"]</h1>
+        <p class="text-secondary mb-0">@L["All request statuses, execution outcomes, and closure states for employee and administrator requesters."]</p>
+    </div>
+
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <form method="get" class="card mb-4" id="history-filter-form">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <label asp-for="Search" class="form-label">@L["Reference, requester or payee"]</label>
+                    <input asp-for="Search" class="form-control" maxlength="200" dir="auto" />
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label asp-for="ApprovalStatus" class="form-label">@L["Decision"]</label>
+                    <select asp-for="ApprovalStatus" class="form-select">
+                        <option value="">@L["All"]</option>
+                        @foreach (var value in Enum.GetValues<PaymentRequestStatus>())
+                        {
+                            <option value="@value" selected="@(Model.ApprovalStatus == value)">@L[Labels.Status(value)]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label asp-for="ExecutionOutcome" class="form-label">@L["Execution outcome"]</label>
+                    <select asp-for="ExecutionOutcome" class="form-select">
+                        <option value="">@L["All / not applicable"]</option>
+                        @foreach (var value in Enum.GetValues<TransferStatus>())
+                        {
+                            <option value="@value" selected="@(Model.ExecutionOutcome == value)">@L[Labels.Transfer(value)]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label asp-for="Closure" class="form-label">@L["Open/closed state"]</label>
+                    <select asp-for="Closure" class="form-select">
+                        @foreach (var value in Enum.GetValues<PurchaseApproval.Services.HistoryClosureFilter>())
+                        {
+                            <option value="@value" selected="@(Model.Closure == value)">@L[Labels.ClosureFilter(value)]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label asp-for="Sort" class="form-label">@L["Chronological order"]</label>
+                    <select asp-for="Sort" class="form-select">
+                        @foreach (var value in Enum.GetValues<PurchaseApproval.Services.HistorySortDirection>())
+                        {
+                            <option value="@value" selected="@(Model.Sort == value)">@L[Labels.Sort(value)]</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="RequesterType" class="form-label">@L["Requester type"]</label>
+                    <select asp-for="RequesterType" class="form-select">
+                        <option value="">@L["All"]</option>
+                        @foreach (var value in Enum.GetValues<RequesterType>())
+                        {
+                            <option value="@value" selected="@(Model.RequesterType == value)">@L[Labels.RequesterType(value)]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="RequesterId" class="form-label">@L["Requester ID (per-person history)"]</label>
+                    <input asp-for="RequesterId" type="number" min="1" class="form-control ltr-value" dir="ltr" />
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check">
+                        <input asp-for="SelfApprovedOnly" class="form-check-input" />
+                        <label asp-for="SelfApprovedOnly" class="form-check-label">@L["Self-approved only"]</label>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="TimestampField" class="form-label">@L["Date filter and sort timestamp"]</label>
+                    <select asp-for="TimestampField" class="form-select">
+                        @foreach (var value in Enum.GetValues<PurchaseApproval.Services.HistoryTimestampField>())
+                        {
+                            <option value="@value" selected="@(Model.TimestampField == value)">@L[Labels.TimestampField(value)]</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="TimeZoneId" class="form-label">@L["Date-boundary timezone (IANA)"]</label>
+                    <input asp-for="TimeZoneId" class="form-control ltr-value" maxlength="200" id="history-timezone" placeholder="Europe/Berlin, UTC" dir="ltr" />
+                    <div class="form-text">@L["Filled from this device when available; visible and editable before filtering."]</div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <div class="form-check">
+                        <input asp-for="AllDates" class="form-check-input" />
+                        <label asp-for="AllDates" class="form-check-label">@L["All dates (lift the recent-months window)"]</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Date" class="form-label">@L["Specific date"]</label>
+                    <input asp-for="Date" type="date" class="form-control ltr-value" dir="ltr" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="From" class="form-label">@L["From date (inclusive)"]</label>
+                    <input asp-for="From" type="date" class="form-control ltr-value" dir="ltr" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="To" class="form-label">@L["To date (inclusive)"]</label>
+                    <input asp-for="To" type="date" class="form-control ltr-value" dir="ltr" />
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary">@L["Apply history filters"]</button>
+            <a asp-page="Index" class="btn btn-outline-secondary">@L["Clear"]</a>
+        </div>
+    </form>
+
+    <div class="alert alert-secondary py-2"><strong>@L["Date basis"]:</strong> @L[Model.DateFilterLabelKey, Model.DateFilterLabelArgs]</div>
+
+    @if (Model.Result.Rows.Count == 0)
+    {
+        <div class="alert alert-info">@L["No history records match these filters."]</div>
+    }
+    else
+    {
+        <p class="small text-secondary">@L["{0} matching records", Model.Result.TotalCount]</p>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle table-stack">
+                <thead><tr>
+                    <th>@L["Reference / requester"]</th>
+                    <th>@L["Decision"]</th>
+                    <th>@L["Execution"]</th>
+                    <th>@L["Closure"]</th>
+                    <th>@L["Submitted"]</th>
+                    <th>@L["Decided"]</th>
+                    <th>@L["Reported occurrence (entered device time)"]</th>
+                    <th>@L["Server execution recording"]</th>
+                    <th>@L["Closed"]</th>
+                    <th>@L["External accounting reference"]</th>
+                    <th><span class="visually-hidden">@L["Actions"]</span></th>
+                </tr></thead>
+                <tbody>
+                @foreach (var row in Model.Result.Rows)
+                {
+                    <tr>
+                        <td data-label="@L["Reference / requester"]"><strong class="reference">@row.ReferenceNumber</strong><div dir="auto">@row.RequesterName</div><div class="small text-secondary">@L[Labels.RequesterType(row.RequesterType)] · <span class="ltr-value">@row.RequesterUsername</span></div><div class="small wrap-anywhere" dir="auto">@row.PayeeName · <span class="amount ltr-value">@row.TotalAmountRials.ToString("N0")</span> @L["IRR"]</div></td>
+                        <td data-label="@L["Decision"]">@L[Labels.Status(row.ApprovalStatus)]@if (row.DecidedByName is not null) {<div class="small text-secondary" dir="auto">@row.DecidedByName</div>}@if (row.IsSelfApproval) {<div class="small text-info">@L["Self-approved"]</div>}</td>
+                        <td data-label="@L["Execution"]">@(row.ExecutionOutcome is { } outcome ? L[Labels.Transfer(outcome)] : L["Not applicable"])@if (row.ExecutorName is not null) {<div class="small text-secondary" dir="auto">@row.ExecutorName</div>}@if (row.FailureReason is not null) {<div class="small text-danger wrap-anywhere" dir="auto">@row.FailureReason</div>}</td>
+                        <td data-label="@L["Closure"]">@(row.IsClosed is null ? L["Not applicable"] : row.IsClosed.Value ? L["Closed"] : L["Open"])@if (row.ClosureType is { } closureType) {<div class="small text-secondary">@L[Labels.Closure(closureType)]</div>}@if (row.ClosureReason is not null) {<div class="small wrap-anywhere" dir="auto">@row.ClosureReason</div>}</td>
+                        <td data-label="@L["Submitted"]"><timestamp utc="@row.SubmittedAtUtc" /></td>
+                        <td data-label="@L["Decided"]"><timestamp utc="@row.DecidedAtUtc" /></td>
+                        <td data-label="@L["Reported occurrence (entered device time)"]">
+                            @if (row.TransactionOccurredAtUtc is { } occurredAt && row.TransactionUtcOffsetMinutes is { } offsetMinutes)
+                            {
+                                <span class="ltr-value">@occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes)).ToString("yyyy-MM-dd HH:mm zzz")</span>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
+                        <td data-label="@L["Server execution recording"]"><timestamp utc="@row.ExecutionRecordedAtUtc" /></td>
+                        <td data-label="@L["Closed"]"><timestamp utc="@row.ClosedAtUtc" />@if (row.ClosedByName is not null) {<div class="small text-secondary" dir="auto">@row.ClosedByName</div>}</td>
+                        <td data-label="@L["External accounting reference"]"><span class="ltr-value">@(row.ExternalReference ?? "—")</span></td>
+                        <td data-label="@L["Actions"]" class="text-nowrap"><a asp-page="/Admin/Requests/Details" asp-route-id="@row.RequestId" class="btn btn-sm btn-outline-primary">@L["Request"]</a>@if (row.ApprovalStatus == PaymentRequestStatus.Approved) {<a asp-page="/Execution/Details" asp-route-id="@row.RequestId" class="btn btn-sm btn-outline-secondary ms-1">@L["Execution"]</a>}</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pager" model="Model.Pager" />
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/history-timezone.js" asp-append-version="true"></script>
+}

@@ -1,9 +1,15 @@
+// Shows immutable outcome details, device-entered occurrence time, closure state, and audit history.
+// Administrators and accountants may record a Transferred or Unsuccessful outcome for a payment
+// they personally attempted; only administrators may close a recorded item early, with a reason.
+// The reported time is resolved server-side from the entered date and the device zone; when a
+// local time is ambiguous (clocks moved back) the page asks which UTC offset applied.
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
@@ -16,14 +22,21 @@ namespace PurchaseApproval.Web.Pages.Execution;
 public sealed class DetailsModel(
     ApplicationDbContext dbContext,
     ITransferExecutionService transferService,
-    UserManager<ApplicationUser> userManager) : PageModel
+    UserManager<ApplicationUser> userManager,
+    IStringLocalizer<SharedResource> localizer) : PageModel
 {
     public ExecutionReview? Review { get; private set; }
 
-    public bool CanRecordUnsuccessful { get; private set; }
+    public bool CanCloseEarly { get; private set; }
+
+    /// <summary>Offsets offered when the entered local time occurred twice; empty otherwise.</summary>
+    public IReadOnlyList<short> AmbiguousOffsetChoices { get; private set; } = [];
 
     [BindProperty]
     public OutcomeInput Input { get; set; } = new();
+
+    [BindProperty]
+    public ClosureInput CloseInput { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
@@ -33,6 +46,7 @@ public sealed class DetailsModel(
         }
 
         Input.Version = Review!.TransferVersion;
+        CloseInput.Version = Review.TransferVersion;
         return Page();
     }
 
@@ -41,6 +55,61 @@ public sealed class DetailsModel(
 
     public Task<IActionResult> OnPostUnsuccessfulAsync(int id)
         => SaveAsync(id, TransferStatus.Unsuccessful);
+
+    public async Task<IActionResult> OnPostCloseAsync(int id)
+    {
+        // The outcome form's validation attributes must not block the closure form.
+        ModelState.Clear();
+        var actor = await userManager.GetUserAsync(User);
+        if (actor is null || !actor.IsActive
+            || !await userManager.IsInRoleAsync(actor, AppRoles.Administrator))
+        {
+            return Forbid();
+        }
+
+        TransferClosureResult result;
+        try
+        {
+            result = await transferService.CloseByAdministratorAsync(
+                id,
+                CloseInput.Version,
+                actor.Id,
+                actor.FullName,
+                AppRoles.Administrator,
+                CloseInput.Reason ?? string.Empty,
+                HttpContext.RequestAborted);
+        }
+        catch (ValidationMessagesException exception)
+        {
+            foreach (var message in exception.Messages)
+            {
+                ModelState.AddModelError(string.Empty, localizer[message.Key, message.Args]);
+            }
+            return await ReloadAsync(id);
+        }
+
+        if (result == TransferClosureResult.RequestNotFound)
+        {
+            return NotFound();
+        }
+        if (result == TransferClosureResult.OutcomeNotRecorded)
+        {
+            ModelState.AddModelError(string.Empty, localizer["Record an execution outcome before closing the item."]);
+            return await ReloadAsync(id);
+        }
+        if (result is TransferClosureResult.AlreadyClosed
+            or TransferClosureResult.ConcurrencyConflict)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                localizer["This closure state changed while you were working. The latest record is shown below."]);
+            return await ReloadAsync(id);
+        }
+
+        TempData["StatusMessage"] =
+            "The execution item was closed by an administrator. Its outcome and history were preserved.";
+        return RedirectToPage(new { id });
+    }
 
     public async Task<IActionResult> OnGetAttachmentAsync(int id, int attachmentId)
     {
@@ -71,18 +140,28 @@ public sealed class DetailsModel(
         }
 
         var roles = await userManager.GetRolesAsync(actor);
-        var isAccountant = roles.Contains(AppRoles.Accountant, StringComparer.Ordinal);
         var isAdministrator = roles.Contains(AppRoles.Administrator, StringComparer.Ordinal);
-        if ((!isAccountant && !isAdministrator)
-            || (status == TransferStatus.Unsuccessful && !isAccountant))
+        var isAccountant = roles.Contains(AppRoles.Accountant, StringComparer.Ordinal);
+        if (!isAccountant && !isAdministrator)
         {
             return Forbid();
         }
 
-        var actorRole = isAccountant ? AppRoles.Accountant : AppRoles.Administrator;
+        // The authenticated role is the executor's role; a typed name is never accepted.
+        var actorRole = isAdministrator ? AppRoles.Administrator : AppRoles.Accountant;
         if (!ModelState.IsValid)
         {
             return await ReloadAsync(id);
+        }
+
+        var time = new TransactionTimeInput(Input.ReportedLocalDateTime ?? default, Input.TimeZoneId, Input.ExplicitOffsetMinutes);
+        var resolution = TransactionTimeRules.Resolve(time);
+        if (resolution.Status == TransactionTimeResolution.AmbiguousLocalTime)
+        {
+            // Ask the executor which of the two offsets applied instead of guessing.
+            AmbiguousOffsetChoices = resolution.OffsetChoices;
+            ModelState.AddModelError(string.Empty, localizer[TransactionTimeRules.Describe(resolution).Key]);
+            return await ReloadAsync(id, keepInput: true);
         }
 
         var outcome = new TransferOutcomeInput(
@@ -94,9 +173,9 @@ public sealed class DetailsModel(
             Input.ChequeNumber,
             Input.ChequeDate,
             Input.ChequePayeeName,
-            Input.ReportedLocalDateTime,
-            Input.UtcOffsetMinutes,
-            Input.FailureReason);
+            time,
+            Input.FailureReason,
+            Input.ExternalReference);
 
         TransferExecutionResult result;
         try
@@ -110,13 +189,13 @@ public sealed class DetailsModel(
                 outcome,
                 HttpContext.RequestAborted);
         }
-        catch (TransferExecutionValidationException exception)
+        catch (ValidationMessagesException exception)
         {
-            foreach (var error in exception.Errors)
+            foreach (var message in exception.Messages)
             {
-                ModelState.AddModelError(string.Empty, error);
+                ModelState.AddModelError(string.Empty, localizer[message.Key, message.Args]);
             }
-            return await ReloadAsync(id);
+            return await ReloadAsync(id, keepInput: true);
         }
 
         if (result == TransferExecutionResult.RequestNotFound)
@@ -132,23 +211,29 @@ public sealed class DetailsModel(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "This execution record changed while you were working. The latest outcome is shown below.");
+                localizer["This execution record changed while you were working. The latest outcome is shown below."]);
             return await ReloadAsync(id);
         }
 
         TempData["StatusMessage"] = status == TransferStatus.Transferred
-            ? "The externally performed transfer was recorded."
-            : "The unsuccessful transfer attempt was recorded and remains open.";
+            ? "The transfer was recorded and awaits automatic closure after 24 hours."
+            : "The unsuccessful attempt was recorded and awaits automatic closure after 48 hours.";
         return RedirectToPage(new { id });
     }
 
-    private async Task<IActionResult> ReloadAsync(int id)
+    private async Task<IActionResult> ReloadAsync(int id, bool keepInput = false)
     {
         if (!await LoadAsync(id))
         {
             return NotFound();
         }
-        Input.Version = Review!.TransferVersion;
+
+        if (!keepInput)
+        {
+            Input.Version = Review!.TransferVersion;
+        }
+
+        CloseInput.Version = Review!.TransferVersion;
         return Page();
     }
 
@@ -160,7 +245,7 @@ public sealed class DetailsModel(
             return false;
         }
         var roles = await userManager.GetRolesAsync(actor);
-        CanRecordUnsuccessful = roles.Contains(AppRoles.Accountant, StringComparer.Ordinal);
+        var isAdministrator = roles.Contains(AppRoles.Administrator, StringComparer.Ordinal);
 
         var request = await dbContext.PaymentRequests
             .AsNoTracking()
@@ -175,6 +260,7 @@ public sealed class DetailsModel(
                 item.Justification,
                 item.TotalAmountRials,
                 item.SubmittedAtUtc,
+                item.Decision == null ? null : item.Decision.DecidedAtUtc,
                 0,
                 item.TransferOutcome == null
                     ? TransferStatus.AwaitingTransfer
@@ -191,8 +277,16 @@ public sealed class DetailsModel(
                 item.TransferOutcome == null ? null : item.TransferOutcome.PerformedByRoleSnapshot,
                 item.TransferOutcome == null ? null : item.TransferOutcome.TransactionOccurredAtUtc,
                 item.TransferOutcome == null ? null : item.TransferOutcome.TransactionUtcOffsetMinutes,
+                item.TransferOutcome == null ? null : item.TransferOutcome.TransactionTimeZoneId,
+                item.TransferOutcome == null ? null : item.TransferOutcome.TransactionEnteredLocalDateTime,
                 item.TransferOutcome == null ? null : item.TransferOutcome.RecordedAtUtc,
                 item.TransferOutcome == null ? null : item.TransferOutcome.FailureReason,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ExternalReference,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ClosedAtUtc,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ClosureType,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ClosedByFullNameSnapshot,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ClosedByRoleSnapshot,
+                item.TransferOutcome == null ? null : item.TransferOutcome.ClosureReason,
                 Array.Empty<RequestLine>(),
                 Array.Empty<AttachmentSummary>(),
                 Array.Empty<AuditRow>()))
@@ -225,22 +319,37 @@ public sealed class DetailsModel(
         var audits = await dbContext.TransferAuditEntries.AsNoTracking()
             .Where(item => item.TransferOutcome.PaymentRequestId == id)
             .OrderBy(item => item.RecordedAtUtc)
+            .ThenBy(item => item.Id)
             .Select(item => new AuditRow(
                 item.Action,
                 item.StatusAfterAction,
                 item.ActorFullNameSnapshot,
                 item.ActorRoleSnapshot,
                 item.TransactionOccurredAtUtc,
+                item.TransactionUtcOffsetMinutes,
+                item.TransactionTimeZoneId,
+                item.ClosureReason,
                 item.RecordedAtUtc))
             .ToListAsync(HttpContext.RequestAborted);
 
         Review = request with
         {
             TransferVersion = transferVersion,
+            AutomaticClosureDueAtUtc = request.RecordedAtUtc is null
+                || request.TransferStatus == TransferStatus.AwaitingTransfer
+                || request.IsClosed
+                    ? null
+                    : request.RecordedAtUtc.Value.Add(
+                        request.TransferStatus == TransferStatus.Transferred
+                            ? TransferExecutionRules.TransferredClosureDelay
+                            : TransferExecutionRules.UnsuccessfulClosureDelay),
             Lines = lines,
             Attachments = attachments,
             AuditEntries = audits
         };
+        CanCloseEarly = isAdministrator
+            && Review.TransferStatus is TransferStatus.Transferred or TransferStatus.Unsuccessful
+            && !Review.IsClosed;
         return true;
     }
 
@@ -248,7 +357,7 @@ public sealed class DetailsModel(
     {
         public uint Version { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Choose a valid execution method.")]
         public TransferMethod Method { get; set; }
 
         [StringLength(500)]
@@ -268,14 +377,31 @@ public sealed class DetailsModel(
         [StringLength(200)]
         public string? ChequePayeeName { get; set; }
 
-        [Required]
-        public DateTime ReportedLocalDateTime { get; set; }
+        // Nullable so an empty field is a validation message, not DateTime.MinValue.
+        [Required(ErrorMessage = "Enter when the transfer or attempt occurred.")]
+        public DateTime? ReportedLocalDateTime { get; set; }
 
+        /// <summary>IANA zone detected by the device or typed by the executor; may be empty.</summary>
+        [StringLength(100)]
+        public string? TimeZoneId { get; set; }
+
+        /// <summary>Explicit UTC offset, used when no zone is available or the local time is ambiguous.</summary>
         [Range(-840, 840)]
-        public short UtcOffsetMinutes { get; set; }
+        public short? ExplicitOffsetMinutes { get; set; }
 
         [StringLength(2000)]
         public string? FailureReason { get; set; }
+
+        [StringLength(200)]
+        public string? ExternalReference { get; set; }
+    }
+
+    public sealed class ClosureInput
+    {
+        public uint Version { get; set; }
+
+        [StringLength(2000)]
+        public string? Reason { get; set; }
     }
 
     public sealed record ExecutionReview(
@@ -288,6 +414,7 @@ public sealed class DetailsModel(
         string Justification,
         long TotalAmountRials,
         DateTimeOffset SubmittedAtUtc,
+        DateTimeOffset? ApprovedAtUtc,
         uint TransferVersion,
         TransferStatus TransferStatus,
         bool IsClosed,
@@ -302,11 +429,22 @@ public sealed class DetailsModel(
         string? PerformedByRole,
         DateTimeOffset? OccurredAtUtc,
         short? UtcOffsetMinutes,
+        string? TimeZoneId,
+        DateTime? EnteredLocalDateTime,
         DateTimeOffset? RecordedAtUtc,
         string? FailureReason,
+        string? ExternalReference,
+        DateTimeOffset? ClosedAtUtc,
+        TransferClosureType? ClosureType,
+        string? ClosedByName,
+        string? ClosedByRole,
+        string? ClosureReason,
         IReadOnlyList<RequestLine> Lines,
         IReadOnlyList<AttachmentSummary> Attachments,
-        IReadOnlyList<AuditRow> AuditEntries);
+        IReadOnlyList<AuditRow> AuditEntries)
+    {
+        public DateTimeOffset? AutomaticClosureDueAtUtc { get; init; }
+    }
 
     public sealed record RequestLine(
         string Description, long AmountRials, bool HasInvoice, string? Remarks);
@@ -319,5 +457,8 @@ public sealed class DetailsModel(
         string ActorName,
         string ActorRole,
         DateTimeOffset? OccurredAtUtc,
+        short? UtcOffsetMinutes,
+        string? TimeZoneId,
+        string? ClosureReason,
         DateTimeOffset RecordedAtUtc);
 }

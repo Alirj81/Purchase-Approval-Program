@@ -1,54 +1,63 @@
 @page "/execution"
 @model PurchaseApproval.Web.Pages.Execution.IndexModel
 @{
-    ViewData["Title"] = "Payment execution records";
+    ViewData["Title"] = L["Payment execution records"];
 }
 
 <section aria-labelledby="execution-heading">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <div>
-            <h1 id="execution-heading" class="h3 mb-1">Payment execution records</h1>
-            <p class="text-secondary mb-0">Record the outcome of payments performed outside this application.</p>
+            <h1 id="execution-heading" class="h3 mb-1">@L["Payment execution records"]</h1>
+            <p class="text-secondary mb-0">@L["Record the outcome of payments performed outside this application."]</p>
         </div>
-        <div class="btn-group" role="group" aria-label="Execution queue filters">
-            <a asp-page="Index" asp-route-status="open" class="btn @(Model.CurrentFilter == "open" ? "btn-primary" : "btn-outline-primary")">Open</a>
-            <a asp-page="Index" asp-route-status="history" class="btn @(Model.CurrentFilter == "history" ? "btn-primary" : "btn-outline-primary")">History</a>
-            <a asp-page="Index" asp-route-status="all" class="btn @(Model.CurrentFilter == "all" ? "btn-primary" : "btn-outline-primary")">All</a>
+        <div class="btn-group" role="group" aria-label="@L["Execution queue filters"]">
+            <a asp-page="Index" asp-route-status="open" class="btn @(Model.CurrentFilter == "open" ? "btn-primary" : "btn-outline-primary")">@L["Open"]</a>
+            <a asp-page="Index" asp-route-status="history" class="btn @(Model.CurrentFilter == "history" ? "btn-primary" : "btn-outline-primary")">@L["History"]</a>
+            <a asp-page="Index" asp-route-status="all" class="btn @(Model.CurrentFilter == "all" ? "btn-primary" : "btn-outline-primary")">@L["All"]</a>
         </div>
     </div>
 
-    <div class="alert alert-secondary py-2">This programme records an external payment outcome. It does not send money or connect to a bank.</div>
+    <div class="alert alert-secondary py-2">@L["This programme records an external payment outcome. It does not send money or connect to a bank."]</div>
 
     @if (Model.Requests.Count == 0)
     {
-        <div class="alert alert-info">There are no requests in this view.</div>
+        <div class="alert alert-info">@L["There are no requests in this view."]</div>
     }
     else
     {
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead><tr><th>Reference</th><th>Requester</th><th>Payee / requested destination</th><th class="text-end">Approved amount</th><th>Transfer outcome</th><th>Recorded</th><th></th></tr></thead>
+            <table class="table table-hover align-middle table-stack">
+                <thead><tr><th>@L["Reference"]</th><th>@L["Requester"]</th><th>@L["Payee / requested destination"]</th><th class="text-end">@L["Approved amount"]</th><th>@L["Transfer outcome"]</th><th>@L["Recorded"]</th><th><span class="visually-hidden">@L["Actions"]</span></th></tr></thead>
                 <tbody>
                 @foreach (var request in Model.Requests)
                 {
-                    <tr class="@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed ? "table-danger" : "")">
-                        <td><strong>@request.ReferenceNumber</strong></td>
-                        <td>@request.RequesterName</td>
-                        <td>@request.PayeeName@if (!string.IsNullOrWhiteSpace(request.RequestedDestination)) {<div class="small text-secondary">Requested: @request.RequestedDestination</div>}</td>
-                        <td class="text-end text-nowrap">@request.TotalAmountRials.ToString("N0") IRR</td>
-                        <td>
-                            <span class="badge text-bg-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful ? "danger" : "warning")">@request.TransferStatus</span>
-                            @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed)
+                    <tr>
+                        <td data-label="@L["Reference"]"><strong class="reference">@request.ReferenceNumber</strong></td>
+                        <td data-label="@L["Requester"]" dir="auto">@request.RequesterName</td>
+                        <td data-label="@L["Payee / requested destination"]" class="wrap-anywhere"><span dir="auto">@request.PayeeName</span>@if (!string.IsNullOrWhiteSpace(request.RequestedDestination)) {<div class="small text-secondary">@L["Requested"]: <span class="ltr-value">@request.RequestedDestination</span></div>}</td>
+                        <td data-label="@L["Approved amount"]" class="text-end"><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span> @L["IRR"]</td>
+                        <td data-label="@L["Transfer outcome"]">
+                            <span class="badge status-badge text-bg-@(request.TransferStatus == TransferStatus.Transferred ? "success" : request.TransferStatus == TransferStatus.Unsuccessful ? "danger" : "warning")" data-marker="@(request.TransferStatus == TransferStatus.Transferred ? "✓" : request.TransferStatus == TransferStatus.Unsuccessful ? "✕" : "○")">@L[Labels.Transfer(request.TransferStatus)]</span>
+                            @if (request.TransferStatus == TransferStatus.Unsuccessful && !request.IsClosed)
                             {
-                                <span class="text-danger fw-semibold ms-1">Open</span>
+                                <div class="small text-danger fw-semibold">@L["Unsuccessful; awaiting 48-hour automatic closure"]</div>
+                            }
+                            else if (request.TransferStatus == TransferStatus.Transferred && !request.IsClosed)
+                            {
+                                <div class="small text-success fw-semibold">@L["Paid; awaiting 24-hour automatic closure"]</div>
+                            }
+                            else if (request.IsClosed)
+                            {
+                                <div class="small text-secondary">@L["Closed"] (@L[Labels.Transfer(request.TransferStatus)])</div>
                             }
                         </td>
-                        <td class="text-nowrap">@(request.RecordedAtUtc?.ToString("u") ?? "—")</td>
-                        <td><a asp-page="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        <td data-label="@L["Recorded"]"><timestamp utc="@request.RecordedAtUtc" /></td>
+                        <td data-label="@L["Actions"]"><a asp-page="Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-primary">@L["View"]</a></td>
                     </tr>
                 }
                 </tbody>
             </table>
         </div>
+        <partial name="_Pager" model="Model.Pager" />
     }
 </section>

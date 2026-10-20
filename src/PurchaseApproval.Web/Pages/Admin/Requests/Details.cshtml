@@ -1,8 +1,8 @@
-@* This view shows all request evidence and the administrator's final decision controls. *@
+@* This view shows all request evidence, the execution state and the administrator's final decision controls. *@
 @page "/admin/requests/{id:int}"
 @model PurchaseApproval.Web.Pages.Admin.Requests.DetailsModel
 @{
-    ViewData["Title"] = "Review payment request";
+    ViewData["Title"] = L["Review payment request"];
 }
 
 @if (Model.Review is { } request)
@@ -10,75 +10,79 @@
     <section aria-labelledby="request-heading">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
             <div>
-                <a asp-page="Index" class="text-decoration-none">&larr; Back to request queue</a>
-                <h1 id="request-heading" class="h3 mt-2 mb-1">@request.ReferenceNumber</h1>
-                <span class="badge text-bg-@(request.Status == PurchaseApproval.Models.PaymentRequestStatus.Pending ? "warning" : request.Status == PurchaseApproval.Models.PaymentRequestStatus.Approved ? "success" : "danger")">@request.Status</span>
+                <a asp-page="Index" class="text-decoration-none">&larr; @L["Back to review queue"]</a>
+                <h1 id="request-heading" class="h3 mt-2 mb-1"><span class="reference">@request.ReferenceNumber</span></h1>
+                <span class="badge status-badge text-bg-@(request.Status == PaymentRequestStatus.Pending ? "warning" : request.Status == PaymentRequestStatus.Approved ? "success" : "danger")" data-marker="@(request.Status == PaymentRequestStatus.Pending ? "○" : request.Status == PaymentRequestStatus.Approved ? "✓" : "✕")">@L["Decision"]: @L[Labels.Status(request.Status)]</span>
+                @if (request.Execution is { } executionBadge)
+                {
+                    <span class="badge text-bg-light border">@L["Execution"]: @L[Labels.Transfer(executionBadge.Status)]@(executionBadge.IsClosed ? " · " + L["Closed"] : "")</span>
+                }
+                @if (request.Decision?.IsSelfApproval == true)
+                {
+                    <span class="badge text-bg-info">@L["Self-approved"]</span>
+                }
             </div>
             <div class="text-end">
-                <div class="fw-semibold">@request.TotalAmountRials.ToString("N0") rials</div>
-                <div class="small text-secondary">Submitted @request.SubmittedAtUtc.ToString("u")</div>
+                <div class="fw-semibold"><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span> @L["IRR"]</div>
+                <div class="small text-secondary">@L["Submitted"] <timestamp utc="@request.SubmittedAtUtc" /></div>
             </div>
         </div>
 
-        @if (TempData["StatusMessage"] is string statusMessage)
-        {
-            <div class="alert alert-success">@statusMessage</div>
-        }
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
         <div class="row g-4">
             <div class="col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header fw-semibold">Requester</div>
+                    <div class="card-header fw-semibold">@L["Requester"] (@L[Labels.RequesterType(request.RequesterType)])</div>
                     <div class="card-body">
                         <dl class="row mb-0">
-                            <dt class="col-sm-5">Name</dt><dd class="col-sm-7">@request.RequesterName</dd>
-                            <dt class="col-sm-5">Username</dt><dd class="col-sm-7"><code>@request.RequesterUsername</code></dd>
-                            <dt class="col-sm-5">Phone</dt><dd class="col-sm-7">@(request.RequesterPhone ?? "—")</dd>
-                            <dt class="col-sm-5">Department</dt><dd class="col-sm-7">@(request.Department ?? "—")</dd>
-                            <dt class="col-sm-5">Branch</dt><dd class="col-sm-7">@(request.Branch ?? "—")</dd>
-                            <dt class="col-sm-5">Job title</dt><dd class="col-sm-7">@(request.JobTitle ?? "—")</dd>
+                            <dt class="col-sm-5">@L["Name"]</dt><dd class="col-sm-7" dir="auto">@request.RequesterName</dd>
+                            <dt class="col-sm-5">@L["Username"]</dt><dd class="col-sm-7"><code>@request.RequesterUsername</code></dd>
+                            <dt class="col-sm-5">@L["Phone"]</dt><dd class="col-sm-7"><span class="ltr-value">@(request.RequesterPhone ?? "—")</span></dd>
+                            <dt class="col-sm-5">@L["Department"]</dt><dd class="col-sm-7" dir="auto">@(request.Department ?? "—")</dd>
+                            <dt class="col-sm-5">@L["Branch"]</dt><dd class="col-sm-7" dir="auto">@(request.Branch ?? "—")</dd>
+                            <dt class="col-sm-5">@L["Job title"]</dt><dd class="col-sm-7" dir="auto">@(request.JobTitle ?? "—")</dd>
                         </dl>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="card h-100">
-                    <div class="card-header fw-semibold">Payment</div>
+                    <div class="card-header fw-semibold">@L["Payment"]</div>
                     <div class="card-body">
                         <dl class="row mb-0">
-                            <dt class="col-sm-5">Payee</dt><dd class="col-sm-7">@request.PayeeName</dd>
-                            <dt class="col-sm-5">Account/card</dt><dd class="col-sm-7">@(request.RequestedAccountOrCardNumber ?? "—")</dd>
-                            <dt class="col-sm-5">Reason</dt><dd class="col-sm-7" style="white-space: pre-wrap">@request.Justification</dd>
+                            <dt class="col-sm-5">@L["Payee"]</dt><dd class="col-sm-7" dir="auto">@request.PayeeName</dd>
+                            <dt class="col-sm-5">@L["Account or card number"]</dt><dd class="col-sm-7"><span class="ltr-value">@(request.RequestedAccountOrCardNumber ?? "—")</span></dd>
+                            <dt class="col-sm-5">@L["Payment reason"]</dt><dd class="col-sm-7 wrap-anywhere" dir="auto" style="white-space: pre-wrap">@request.Justification</dd>
                         </dl>
                     </div>
                 </div>
             </div>
         </div>
 
-        <h2 class="h5 mt-4">Expense rows</h2>
+        <h2 class="h5 mt-4">@L["Expense rows"]</h2>
         <div class="table-responsive">
-            <table class="table table-sm align-middle">
-                <thead><tr><th>Description</th><th>Invoice</th><th>Remarks</th><th class="text-end">Amount</th></tr></thead>
+            <table class="table table-sm align-middle table-stack">
+                <thead><tr><th>@L["Description"]</th><th>@L["Invoice"]</th><th>@L["Remarks"]</th><th class="text-end">@L["Amount (IRR)"]</th></tr></thead>
                 <tbody>
                 @foreach (var line in request.Lines)
                 {
                     <tr>
-                        <td>@line.Description</td>
-                        <td>@(line.HasInvoice ? "Yes" : "No")</td>
-                        <td>@(line.Remarks ?? "—")</td>
-                        <td class="text-end text-nowrap">@line.AmountRials.ToString("N0") rials</td>
+                        <td data-label="@L["Description"]" class="wrap-anywhere" dir="auto">@line.Description</td>
+                        <td data-label="@L["Invoice"]">@(line.HasInvoice ? L["Yes"] : L["No"])</td>
+                        <td data-label="@L["Remarks"]" class="wrap-anywhere" dir="auto">@(line.Remarks ?? "—")</td>
+                        <td data-label="@L["Amount (IRR)"]" class="text-end"><span class="amount ltr-value">@line.AmountRials.ToString("N0")</span></td>
                     </tr>
                 }
                 </tbody>
-                <tfoot><tr class="fw-semibold"><td colspan="3">Total</td><td class="text-end text-nowrap">@request.TotalAmountRials.ToString("N0") rials</td></tr></tfoot>
+                <tfoot><tr class="fw-semibold"><td colspan="3">@L["Total"]</td><td class="text-end"><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span></td></tr></tfoot>
             </table>
         </div>
 
-        <h2 class="h5 mt-4">Attachments</h2>
+        <h2 class="h5 mt-4">@L["Supporting files"]</h2>
         @if (request.Attachments.Count == 0)
         {
-            <p class="text-secondary">No supporting files were attached.</p>
+            <p class="text-secondary">@L["No supporting files were attached."]</p>
         }
         else
         {
@@ -86,8 +90,8 @@
             @foreach (var attachment in request.Attachments)
             {
                 <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <span>@attachment.FileName <span class="small text-secondary">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span>
-                    <a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">Download</a>
+                    <span class="wrap-anywhere" dir="auto">@attachment.FileName <span class="small text-secondary ltr-value">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span>
+                    <a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">@L["Download"]</a>
                 </li>
             }
             </ul>
@@ -95,36 +99,74 @@
 
         @if (request.Decision is { } decision)
         {
-            <div class="card mt-4 border-@(decision.DecisionType == PurchaseApproval.Models.ApprovalDecisionType.Approved ? "success" : "danger")">
-                <div class="card-header fw-semibold">Final decision: @decision.DecisionType</div>
+            <div class="card mt-4 border-@(decision.DecisionType == ApprovalDecisionType.Approved ? "success" : "danger")">
+                <div class="card-header fw-semibold">@L["Final decision"]: @L[Labels.Decision(decision.DecisionType)]</div>
                 <div class="card-body">
-                    <p class="mb-1">Recorded by @decision.AdministratorName on @decision.DecidedAtUtc.ToString("u").</p>
-                    @if (decision.RejectionReason is not null)
+                    <p class="mb-1">@L["Recorded by {0} on", decision.AdministratorName] <timestamp utc="@decision.DecidedAtUtc" /></p>
+                    @if (decision.IsSelfApproval)
                     {
-                        <p class="mb-0"><strong>Reason:</strong> @decision.RejectionReason</p>
+                        <p class="mb-1"><strong>@L["Self-approved"]:</strong> @L["The deciding administrator is also the request's requester. This is permitted and recorded."]</p>
                     }
+                    @if (decision.DecisionType == ApprovalDecisionType.Rejected)
+                    {
+                        <p class="mb-0"><strong>@L["Explanation shown to the requester"]:</strong> <span dir="auto">@(decision.RejectionReason ?? L["No explanation was supplied."])</span></p>
+                    }
+                    <a asp-page-handler="Excel" asp-route-id="@request.Id" class="btn btn-outline-primary mt-3">
+                        @L["Download decision record (Excel, English)"]
+                    </a>
                 </div>
             </div>
+
+            @if (request.Execution is { } execution)
+            {
+                <div class="card mt-3">
+                    <div class="card-header fw-semibold">@L["Execution state"]</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">@L["Transfer outcome"]</dt><dd class="col-sm-8">@L[Labels.Transfer(execution.Status)]@if (execution.ExecutorName is not null) { <span> · <span dir="auto">@execution.ExecutorName</span></span> }</dd>
+                            <dt class="col-sm-4">@L["Server recording time"]</dt><dd class="col-sm-8"><timestamp utc="@execution.RecordedAtUtc" /></dd>
+                            @if (execution.Status == TransferStatus.Unsuccessful)
+                            {
+                                <dt class="col-sm-4">@L["Failure explanation"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto">@(execution.FailureReason ?? "—")</dd>
+                            }
+                            <dt class="col-sm-4">@L["Operational state"]</dt>
+                            <dd class="col-sm-8">
+                                @(execution.IsClosed ? L["Closed"] : L["Open"])
+                                @if (execution.IsClosed && execution.ClosureType is { } closureType)
+                                {
+                                    <div class="small text-secondary">@L[Labels.Closure(closureType)] · <timestamp utc="@execution.ClosedAtUtc" /></div>
+                                    <div class="small wrap-anywhere" dir="auto">@execution.ClosureReason</div>
+                                }
+                            </dd>
+                        </dl>
+                        <a asp-page="/Execution/Details" asp-route-id="@request.Id" class="btn btn-sm btn-outline-secondary mt-3">@L["Open execution record"]</a>
+                    </div>
+                </div>
+            }
         }
         else
         {
             <div class="card mt-4">
-                <div class="card-header fw-semibold">Record final decision</div>
+                <div class="card-header fw-semibold">@L["Record final decision"]</div>
                 <div class="card-body">
+                    @if (Model.IsOwnRequest)
+                    {
+                        <div class="alert alert-info py-2">@L["You submitted this request yourself. Approving it is permitted and will be recorded as self-approved."]</div>
+                    }
                     <div class="row g-4">
                         <div class="col-md-5">
-                            <p>Approve this request when its details and supporting evidence are complete.</p>
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approve-confirmation">Approve request</button>
+                            <p>@L["Approve this request when its details and supporting evidence are complete."]</p>
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approve-confirmation">@L["Approve request"]</button>
                         </div>
-                        <div class="col-md-7 border-start-md">
+                        <div class="col-md-7">
                             <form method="post" asp-page-handler="Reject">
                                 <input type="hidden" asp-for="Input.Version" />
                                 <div class="mb-3">
-                                    <label asp-for="Input.RejectionReason" class="form-label">Rejection reason</label>
-                                    <textarea asp-for="Input.RejectionReason" class="form-control" rows="4" maxlength="2000"></textarea>
-                                    <div class="form-text">Optional. Add an explanation when it will help the requester.</div>
+                                    <label asp-for="Input.RejectionReason" class="form-label">@L["Explanation for the requester (optional)"]</label>
+                                    <textarea asp-for="Input.RejectionReason" class="form-control" rows="4" maxlength="2000" dir="auto" aria-describedby="rejection-help"></textarea>
+                                    <div id="rejection-help" class="form-text">@L["Visible to the requester in their request history. This is not an internal note."]</div>
                                 </div>
-                                <button type="submit" class="btn btn-danger">Reject request</button>
+                                <button type="submit" class="btn btn-danger">@L["Reject request"]</button>
                             </form>
                         </div>
                     </div>
@@ -135,24 +177,28 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h2 class="modal-title fs-5" id="approve-confirmation-title">Confirm approval</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancel"></button>
+                            <h2 class="modal-title fs-5" id="approve-confirmation-title">@L["Confirm approval"]</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@L["Cancel"]"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="mb-2">Confirm the saved payment request:</p>
+                            <p class="mb-2">@L["Confirm the saved payment request:"]</p>
                             <dl class="row mb-0">
-                                <dt class="col-4">Reference</dt><dd class="col-8"><strong>@request.ReferenceNumber</strong></dd>
-                                <dt class="col-4">Amount</dt><dd class="col-8"><strong>@request.TotalAmountRials.ToString("N0")</strong></dd>
-                                <dt class="col-4">Currency</dt><dd class="col-8"><strong>Iranian rials (IRR)</strong></dd>
+                                <dt class="col-4">@L["Reference"]</dt><dd class="col-8"><strong class="reference">@request.ReferenceNumber</strong></dd>
+                                <dt class="col-4">@L["Amount"]</dt><dd class="col-8"><strong class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</strong></dd>
+                                <dt class="col-4">@L["Currency"]</dt><dd class="col-8"><strong>@L["Iranian rials (IRR)"]</strong></dd>
                             </dl>
-                            <p class="small text-secondary mt-3 mb-0">Approval authorizes the request; it does not execute a bank transfer.</p>
+                            @if (Model.IsOwnRequest)
+                            {
+                                <p class="small mt-3 mb-0"><strong>@L["Self-approval"]:</strong> @L["You are approving your own request."]</p>
+                            }
+                            <p class="small text-secondary mt-3 mb-0">@L["Approval authorizes the request; it does not execute a bank transfer."]</p>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@L["Cancel"]</button>
                             <form method="post" asp-page-handler="Approve" class="d-inline">
                                 <input type="hidden" asp-for="Input.Version" />
                                 <input type="hidden" asp-for="Input.ApprovalConfirmed" value="true" />
-                                <button type="submit" class="btn btn-success">Confirm approval</button>
+                                <button type="submit" class="btn btn-success">@L["Confirm approval"]</button>
                             </form>
                         </div>
                     </div>

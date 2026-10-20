@@ -1,10 +1,15 @@
 // This file lets an authenticated administrator submit a payment request using their own profile.
+// Identity retrieves the trusted administrator record instead of accepting requester fields from
+// the browser. Validation, the daily quota and the burst guard apply exactly as for employees.
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
-// Identity retrieves the trusted administrator record instead of accepting requester fields from the browser.
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using PurchaseApproval.Configuration;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
@@ -13,13 +18,18 @@ namespace PurchaseApproval.Web.Pages.Admin.Requests;
 
 /// <summary>Creates administrator-owned payment requests that are stored separately from employee requests.</summary>
 [Authorize(Policy = AppPolicies.CanDecideRequests)]
+[EnableRateLimiting("submission-burst")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class CreateModel(
     UserManager<ApplicationUser> userManager,
-    IPaymentRequestSubmissionService submissions) : PageModel
+    IPaymentRequestSubmissionService submissions,
+    IOptions<ApplicationLimitsOptions> limits,
+    IStringLocalizer<SharedResource> localizer) : PageModel
 {
     /// <summary>Trusted profile shown as read-only requester information.</summary>
     public ApplicationUserProfile? Requester { get; private set; }
+
+    public ApplicationLimitsOptions Limits => limits.Value;
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -53,12 +63,12 @@ public sealed class CreateModel(
 
         if (Input.Lines.Count > PaymentRequestSubmissionRules.MaximumLines)
         {
-            ModelState.AddModelError("Input.Lines", "Too many expense rows were submitted.");
+            ModelState.AddModelError("Input.Lines", localizer["Too many expense rows were submitted."]);
         }
 
-        if (Attachments.Count > PaymentRequestSubmissionRules.MaximumAttachments)
+        if (Attachments.Count > Limits.MaximumAttachmentCount)
         {
-            ModelState.AddModelError(nameof(Attachments), "Attach no more than five files.");
+            ModelState.AddModelError(nameof(Attachments), localizer["Attach no more than {0} files.", Limits.MaximumAttachmentCount]);
         }
 
         if (!ModelState.IsValid)
@@ -66,22 +76,8 @@ public sealed class CreateModel(
             return Page();
         }
 
-        var uploadedFiles = new List<PaymentRequestAttachmentInput>(Attachments.Count);
-        foreach (var file in Attachments)
-        {
-            if (file.Length is < 1 or > PaymentRequestSubmissionRules.MaximumAttachmentBytes)
-            {
-                ModelState.AddModelError(nameof(Attachments),
-                    $"{file.FileName}: each file must be between 1 byte and 5 MiB.");
-                continue;
-            }
-
-            await using var stream = new MemoryStream((int)file.Length);
-            await file.CopyToAsync(stream, HttpContext.RequestAborted);
-            uploadedFiles.Add(new PaymentRequestAttachmentInput(
-                file.FileName, file.ContentType, stream.ToArray()));
-        }
-
+        var uploadedFiles = await RequestFormFiles.ReadAsync(
+            Attachments, Limits.MaximumAttachmentBytes, ModelState, localizer, HttpContext.RequestAborted);
         if (!ModelState.IsValid)
         {
             return Page();
@@ -105,11 +101,11 @@ public sealed class CreateModel(
                 : "Your payment request was submitted for review.";
             return RedirectToPage("Details", new { id = result.RequestId });
         }
-        catch (PaymentRequestValidationException exception)
+        catch (ValidationMessagesException exception)
         {
-            foreach (var error in exception.Errors)
+            foreach (var message in exception.Messages)
             {
-                ModelState.AddModelError(string.Empty, error);
+                ModelState.AddModelError(string.Empty, localizer[message.Key, message.Args]);
             }
 
             return Page();

@@ -1,17 +1,17 @@
 @page "/employee"
 @model PurchaseApproval.Web.Pages.EmployeeAccess.IndexModel
 @{
-    ViewData["Title"] = "Employee dashboard";
+    ViewData["Title"] = L["Employee dashboard"];
 }
 
 <section>
-    <h1 class="h3">Employee dashboard</h1>
-    <p>Welcome, @Model.FullName</p>
-    <p>
-        <a asp-page="/EmployeeAccess/Requests/Create" class="btn btn-primary">New payment request</a>
-        <a asp-page="/EmployeeAccess/Requests/Index" class="btn btn-outline-primary">My requests</a>
-    </p>
+    <h1 class="h3">@L["Employee dashboard"]</h1>
+    <p>@L["Welcome, {0}", Model.FullName]</p>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a asp-page="/EmployeeAccess/Requests/Create" class="btn btn-primary">@L["New payment request"]</a>
+        <a asp-page="/EmployeeAccess/Requests/Index" class="btn btn-outline-primary">@L["My requests"]</a>
+    </div>
     <form method="post" asp-page="/EmployeeAccess/Logout">
-        <button type="submit" class="btn btn-outline-secondary">Sign out</button>
+        <button type="submit" class="btn btn-outline-secondary">@L["Sign out"]</button>
     </form>
 </section>

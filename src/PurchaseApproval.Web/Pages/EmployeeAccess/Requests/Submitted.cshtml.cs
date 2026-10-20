@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 // Loads the submitted request without tracking it for changes.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
+using PurchaseApproval.Models;
 using PurchaseApproval.Security;
 
 namespace PurchaseApproval.Web.Pages.EmployeeAccess.Requests;
@@ -26,10 +27,11 @@ public sealed class SubmittedModel(ApplicationDbContext dbContext) : PageModel
         Receipt = await dbContext.PaymentRequests.AsNoTracking()
             .Where(item => item.Id == id && item.EmployeeRequesterId == employeeId)
             .Select(item => new RequestReceipt(
-                item.ReferenceNumber, item.TotalAmountRials, item.Status.ToString(), item.SubmittedAtUtc))
+                item.ReferenceNumber, item.TotalAmountRials, item.Status, item.SubmittedAtUtc))
             .SingleOrDefaultAsync(HttpContext.RequestAborted);
         if (Receipt is null) return NotFound();
 
+        // The token lives only in TempData for one redirect; it is never stored in the database.
         if (TempData["TrackingToken"] is string token)
         {
             TrackingUrl = Url.PageLink("/Track", values: new
@@ -53,6 +55,6 @@ public sealed class SubmittedModel(ApplicationDbContext dbContext) : PageModel
     public sealed record RequestReceipt(
         string ReferenceNumber,
         long TotalAmountRials,
-        string Status,
+        PaymentRequestStatus Status,
         DateTimeOffset SubmittedAtUtc);
 }

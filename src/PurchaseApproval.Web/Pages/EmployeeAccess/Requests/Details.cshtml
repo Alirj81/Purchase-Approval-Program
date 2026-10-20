@@ -1,0 +1,111 @@
+@page "/employee/requests/{id:int}"
+@model PurchaseApproval.Web.Pages.EmployeeAccess.Requests.DetailsModel
+@{
+    ViewData["Title"] = L["Request details"];
+}
+
+@if (Model.Detail is { } request)
+{
+    <section aria-labelledby="detail-heading">
+        <a asp-page="Index" class="text-decoration-none">&larr; @L["Back to my requests"]</a>
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+            <div>
+                <h1 id="detail-heading" class="h3 mb-1"><span class="reference">@request.ReferenceNumber</span></h1>
+                <span class="badge text-bg-light border">@L["Decision"]: @L[Labels.Status(request.Status)]</span>
+                @if (request.Payment is { } payment)
+                {
+                    <span class="badge text-bg-light border">@L["Payment"]: @L[Labels.PaymentForRequester(payment)]</span>
+                    @if (request.IsClosed)
+                    {
+                        <span class="badge text-bg-light border">@L["Execution item closed"]</span>
+                    }
+                }
+            </div>
+            <div class="text-end">
+                <div class="fw-semibold"><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span> @L["IRR"]</div>
+                <div class="small text-secondary">@L["Submitted"] <timestamp utc="@request.SubmittedAtUtc" /></div>
+            </div>
+        </div>
+
+        @if (request.DecisionType is { } decisionType)
+        {
+            <div class="card mb-3">
+                <div class="card-header fw-semibold">@L["Decision"]: @L[Labels.Decision(decisionType)]</div>
+                <div class="card-body">
+                    <p class="mb-1">@L["Decided"] <timestamp utc="@request.DecidedAtUtc" /></p>
+                    @if (decisionType == ApprovalDecisionType.Rejected)
+                    {
+                        <p class="mb-0"><strong>@L["Explanation from the administrator"]:</strong>
+                            <span dir="auto">@(request.RejectionReason ?? L["No explanation was supplied."])</span></p>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">@L["Your request is pending management review."]</div>
+        }
+
+        @if (request.Payment is { } paymentState)
+        {
+            <div class="card mb-3">
+                <div class="card-header fw-semibold">@L["Payment"]</div>
+                <div class="card-body">
+                    <p class="mb-1">@L[Labels.PaymentForRequester(paymentState)]</p>
+                    @if (request.IsClosed)
+                    {
+                        <p class="mb-0 small text-secondary">@L["Execution item closed"]: @L["Closure is an operational state; it does not confirm that a payment succeeded."]</p>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">@L["Payment details as submitted"]</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">@L["Payee"]</dt><dd class="col-sm-8" dir="auto">@request.PayeeName</dd>
+                    <dt class="col-sm-4">@L["Account or card number"]</dt><dd class="col-sm-8"><span class="ltr-value">@(request.RequestedAccountOrCardNumber ?? "—")</span></dd>
+                    <dt class="col-sm-4">@L["Payment reason"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto" style="white-space: pre-wrap">@request.Justification</dd>
+                </dl>
+            </div>
+        </div>
+
+        <h2 class="h5">@L["Expense rows"]</h2>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle table-stack">
+                <thead><tr><th>@L["Description"]</th><th>@L["Invoice"]</th><th>@L["Remarks"]</th><th class="text-end">@L["Amount (IRR)"]</th></tr></thead>
+                <tbody>
+                @foreach (var line in request.Lines)
+                {
+                    <tr>
+                        <td data-label="@L["Description"]" class="wrap-anywhere" dir="auto">@line.Description</td>
+                        <td data-label="@L["Invoice"]">@(line.HasInvoice ? L["Yes"] : L["No"])</td>
+                        <td data-label="@L["Remarks"]" class="wrap-anywhere" dir="auto">@(line.Remarks ?? "—")</td>
+                        <td data-label="@L["Amount (IRR)"]" class="text-end"><span class="amount ltr-value">@line.AmountRials.ToString("N0")</span></td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot><tr class="fw-semibold"><td colspan="3">@L["Total"]</td><td class="text-end"><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span></td></tr></tfoot>
+            </table>
+        </div>
+
+        <h2 class="h5 mt-3">@L["Supporting files"]</h2>
+        @if (request.Attachments.Count == 0)
+        {
+            <p class="text-secondary">@L["No supporting files were attached."]</p>
+        }
+        else
+        {
+            <ul class="list-group mb-3">
+            @foreach (var attachment in request.Attachments)
+            {
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span class="wrap-anywhere" dir="auto">@attachment.FileName <span class="small text-secondary ltr-value">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span>
+                    <a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">@L["Download"]</a>
+                </li>
+            }
+            </ul>
+        }
+    </section>
+}

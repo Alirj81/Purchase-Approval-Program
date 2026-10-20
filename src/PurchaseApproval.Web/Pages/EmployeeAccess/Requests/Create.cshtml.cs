@@ -1,30 +1,35 @@
+// Employee payment-request form. The page re-checks the employee session on every call, copies
+// uploaded files into memory within the configured size, and hands everything to the submission
+// service, which validates, enforces the daily quota and saves atomically. Rule messages come
+// back as localizable keys and are translated here before display.
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-// Selects the employee cookie and checks the current session before the form runs.
 using Microsoft.AspNetCore.Authentication;
-// Restricts this page to authenticated employees.
 using Microsoft.AspNetCore.Authorization;
-// Supplies page results, binding, and form response types.
 using Microsoft.AspNetCore.Mvc;
-// Provides the Razor Page base class used by this request form.
 using Microsoft.AspNetCore.Mvc.RazorPages;
-// Limits repeated submissions from the same employee.
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using PurchaseApproval.Configuration;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages.EmployeeAccess.Requests;
 
 [Authorize(AuthenticationSchemes = EmployeeAuthenticationDefaults.AuthenticationScheme)]
-[EnableRateLimiting("employee-submission")]
+[EnableRateLimiting("submission-burst")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class CreateModel(
     IEmployeeProfileService employeeProfiles,
-    IPaymentRequestSubmissionService submissions) : PageModel
+    IPaymentRequestSubmissionService submissions,
+    IOptions<ApplicationLimitsOptions> limits,
+    IStringLocalizer<SharedResource> localizer) : PageModel
 {
-    public EmployeeProfile? Requester { get; private set; } /// <summary>
-    /// Gets the profile of the employee making the request.
-    /// </summary>
+    /// <summary>Profile of the employee making the request, read from the database each time.</summary>
+    public EmployeeProfile? Requester { get; private set; }
+
+    public ApplicationLimitsOptions Limits => limits.Value;
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -48,33 +53,13 @@ public sealed class CreateModel(
         if (!await LoadRequesterAsync()) return EndEmployeeSession();
 
         if (Input.Lines.Count > PaymentRequestSubmissionRules.MaximumLines)
-            ModelState.AddModelError("Input.Lines", "Too many expense rows were submitted.");
-        if (Attachments.Count > PaymentRequestSubmissionRules.MaximumAttachments)
-            ModelState.AddModelError(nameof(Attachments), "Attach no more than five files.");
+            ModelState.AddModelError("Input.Lines", localizer["Too many expense rows were submitted."]);
+        if (Attachments.Count > Limits.MaximumAttachmentCount)
+            ModelState.AddModelError(nameof(Attachments), localizer["Attach no more than {0} files.", Limits.MaximumAttachmentCount]);
         if (!ModelState.IsValid) return Page();
 
-        var uploadedFiles = new List<PaymentRequestAttachmentInput>(Attachments.Count);
-        foreach (var file in Attachments)
-        {
-            if (file.Length is < 1 or > PaymentRequestSubmissionRules.MaximumAttachmentBytes)
-            {
-                ModelState.AddModelError(nameof(Attachments),
-                    $"{file.FileName}: each file must be between 1 byte and 5 MiB.");
-                continue;
-            }
-
-            await using var stream = new MemoryStream((int)file.Length);
-            await file.CopyToAsync(stream, HttpContext.RequestAborted);
-            if (stream.Length > PaymentRequestSubmissionRules.MaximumAttachmentBytes)
-            {
-                ModelState.AddModelError(nameof(Attachments), $"{file.FileName}: file is too large.");
-                continue;
-            }
-
-            uploadedFiles.Add(new PaymentRequestAttachmentInput(
-                file.FileName, file.ContentType, stream.ToArray()));
-        }
-
+        var uploadedFiles = await RequestFormFiles.ReadAsync(
+            Attachments, Limits.MaximumAttachmentBytes, ModelState, localizer, HttpContext.RequestAborted);
         if (!ModelState.IsValid) return Page();
 
         try
@@ -100,9 +85,13 @@ public sealed class CreateModel(
             }
             return RedirectToPage("Submitted", new { id = result.RequestId });
         }
-        catch (PaymentRequestValidationException exception)
+        catch (ValidationMessagesException exception)
         {
-            foreach (var error in exception.Errors) ModelState.AddModelError(string.Empty, error);
+            foreach (var message in exception.Messages)
+            {
+                ModelState.AddModelError(string.Empty, localizer[message.Key, message.Args]);
+            }
+
             return Page();
         }
     }

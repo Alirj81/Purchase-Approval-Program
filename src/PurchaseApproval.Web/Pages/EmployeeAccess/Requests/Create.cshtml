@@ -1,25 +1,32 @@
 @page "/employee/requests/create"
 @model PurchaseApproval.Web.Pages.EmployeeAccess.Requests.CreateModel
 @{
-    ViewData["Title"] = "New payment request";
+    ViewData["Title"] = L["New payment request"];
+    var form = new PurchaseApproval.Web.Pages.RequestFormViewModel(
+        Model.Input.PayeeName,
+        Model.Input.Justification,
+        Model.Input.RequestedAccountOrCardNumber,
+        Model.Input.Lines.Select(line => new PurchaseApproval.Web.Pages.RequestFormLine(line.Description, line.AmountRials, line.HasInvoice, line.Remarks)).ToList(),
+        Model.Limits.MaximumAttachmentCount,
+        Model.Limits.MaximumAttachmentBytes);
 }
 
 <div class="row justify-content-center">
     <section class="col-xl-9" aria-labelledby="request-heading">
-        <h1 id="request-heading" class="h3">New payment request</h1>
-        <p>Enter the payment details. The server will verify the total before saving.</p>
+        <h1 id="request-heading" class="h3">@L["New payment request"]</h1>
+        <p>@L["Enter the payment details. The server will verify the total before saving."]</p>
 
-        @if (Model.Requester is { } requester) /// @if checks if the Requester property of the model is not null and assigns it to the local variable 'requester'. This allows the subsequent code block to safely access the requester's details.
+        @if (Model.Requester is { } requester)
         {
             <section class="card mb-4" aria-labelledby="requester-heading">
                 <div class="card-body">
-                    <h2 id="requester-heading" class="h5">Your details</h2>
+                    <h2 id="requester-heading" class="h5">@L["Your details"]</h2>
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">Full name</dt><dd class="col-sm-8">@requester.FullName</dd>
-                        <dt class="col-sm-4">Username</dt><dd class="col-sm-8">@requester.Username</dd>
-                        <dt class="col-sm-4">Department</dt><dd class="col-sm-8">@(requester.Department ?? "Not provided")</dd>
-                        <dt class="col-sm-4">Branch</dt><dd class="col-sm-8">@(requester.Branch ?? "Not provided")</dd>
-                        <dt class="col-sm-4">Job title</dt><dd class="col-sm-8">@(requester.JobTitle ?? "Not provided")</dd>
+                        <dt class="col-sm-4">@L["Full name"]</dt><dd class="col-sm-8" dir="auto">@requester.FullName</dd>
+                        <dt class="col-sm-4">@L["Username"]</dt><dd class="col-sm-8"><span class="ltr-value">@requester.Username</span></dd>
+                        <dt class="col-sm-4">@L["Department"]</dt><dd class="col-sm-8" dir="auto">@(requester.Department ?? L["Not provided"])</dd>
+                        <dt class="col-sm-4">@L["Branch"]</dt><dd class="col-sm-8" dir="auto">@(requester.Branch ?? L["Not provided"])</dd>
+                        <dt class="col-sm-4">@L["Job title"]</dt><dd class="col-sm-8" dir="auto">@(requester.JobTitle ?? L["Not provided"])</dd>
                     </dl>
                 </div>
             </section>
@@ -27,70 +34,16 @@
 
         <form method="post" enctype="multipart/form-data" asp-page="Create" id="request-form">
             <input type="hidden" asp-for="SubmissionKey" />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Input.PayeeName" class="form-label"></label>
-                    <input asp-for="Input.PayeeName" class="form-control" maxlength="200" />
-                    <span asp-validation-for="Input.PayeeName" class="text-danger"></span>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label asp-for="Input.RequestedAccountOrCardNumber" class="form-label"></label>
-                    <input asp-for="Input.RequestedAccountOrCardNumber" class="form-control" maxlength="100" autocomplete="off" />
-                    <span asp-validation-for="Input.RequestedAccountOrCardNumber" class="text-danger"></span>
-                </div>
+            <partial name="_RequestForm" model="form" />
+            <div class="form-actions d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary" id="submit-request" data-busy-text="@L["Submitting…"]">@L["Submit request"]</button>
+                <a asp-page="/EmployeeAccess/Index" class="btn btn-outline-secondary">@L["Back to dashboard"]</a>
             </div>
-            <div class="mb-4">
-                <label asp-for="Input.Justification" class="form-label"></label>
-                <textarea asp-for="Input.Justification" class="form-control" rows="3" maxlength="2000"></textarea>
-                <span asp-validation-for="Input.Justification" class="text-danger"></span>
-            </div>
-
-            <section aria-labelledby="expenses-heading">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h2 id="expenses-heading" class="h5 mb-0">Expenses</h2>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-line">Add row</button>
-                </div>
-                <span asp-validation-for="Input.Lines" class="text-danger"></span>
-                <div id="expense-lines">
-                    @for (var index = 0; index < Model.Input.Lines.Count; index++)
-                    {
-                        <div class="card mb-3 expense-line">
-                            <div class="card-body row g-3">
-                                <div class="col-md-5"><label asp-for="Input.Lines[index].Description" class="form-label">Description</label><input asp-for="Input.Lines[index].Description" class="form-control line-description" maxlength="500" /><span asp-validation-for="Input.Lines[index].Description" class="text-danger"></span></div>
-                                <div class="col-md-3"><label asp-for="Input.Lines[index].AmountRials" class="form-label">Amount (rials)</label><input asp-for="Input.Lines[index].AmountRials" class="form-control line-amount" min="1" max="10000000000" /><span asp-validation-for="Input.Lines[index].AmountRials" class="text-danger"></span></div>
-                                <div class="col-md-4"><label asp-for="Input.Lines[index].Remarks" class="form-label">Remarks</label><input asp-for="Input.Lines[index].Remarks" class="form-control line-remarks" maxlength="1000" /><span asp-validation-for="Input.Lines[index].Remarks" class="text-danger"></span></div>
-                                <div class="col d-flex gap-3 align-items-center"><div class="form-check"><input type="checkbox" name="Input.Lines[@index].HasInvoice" value="true" checked="@Model.Input.Lines[index].HasInvoice" class="form-check-input line-invoice" id="line-invoice-@index" /><label class="form-check-label" for="line-invoice-@index">Invoice available</label></div><button type="button" class="btn btn-sm btn-outline-danger remove-line">Remove</button></div>
-                            </div>
-                        </div>
-                    }
-                </div>
-                <p class="fw-semibold">Estimated total: <span id="request-total">0</span> rials</p>
-                <p class="form-text">Maximum request total: 10,000,000,000 rials. The saved total is recalculated by the server.</p>
-            </section>
-
-            <div class="mb-4">
-                <label asp-for="Attachments" class="form-label">Supporting files (optional)</label>
-                <input asp-for="Attachments" class="form-control" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
-                <div class="form-text">Up to five PDF, JPEG, or PNG files; 5 MiB each.</div>
-                <span asp-validation-for="Attachments" class="text-danger"></span>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit request</button>
-            <a asp-page="/EmployeeAccess/Index" class="btn btn-outline-secondary">Back to dashboard</a>
         </form>
     </section>
 </div>
 
-<template id="expense-line-template">
-    <div class="card mb-3 expense-line"><div class="card-body row g-3">
-        <div class="col-md-5"><label class="form-label">Description</label><input class="form-control line-description" maxlength="500" /></div>
-        <div class="col-md-3"><label class="form-label">Amount (rials)</label><input class="form-control line-amount" type="number" min="1" max="10000000000" /></div>
-        <div class="col-md-4"><label class="form-label">Remarks</label><input class="form-control line-remarks" maxlength="1000" /></div>
-        <div class="col d-flex gap-3 align-items-center"><div class="form-check"><input class="form-check-input line-invoice" type="checkbox" value="true" /><label class="form-check-label">Invoice available</label></div><button type="button" class="btn btn-sm btn-outline-danger remove-line">Remove</button></div>
-    </div></div>
-</template>
-
-@section Scripts { // Scripts for handling dynamic expense lines and validation
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/payment-request.js" asp-append-version="true"></script>
 }

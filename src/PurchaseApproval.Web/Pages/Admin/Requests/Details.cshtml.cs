@@ -1,11 +1,14 @@
 // This file loads one complete request for administrators and handles its final decision.
+// It also shows the execution state (outcome and closure) so reviewers see the whole life cycle
+// here, flags self-approval before and after the decision, and offers the decision-record
+// workbook. Identity resolves the signed-in administrator whose identity is snapshotted with
+// the decision; the browser never supplies it.
 using Microsoft.AspNetCore.Authorization;
-// Identity resolves the signed-in administrator whose identity is snapshotted with the decision.
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-// Entity Framework Core loads only the attachment bytes requested for an authorized download.
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using PurchaseApproval.Data;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
@@ -19,9 +22,14 @@ namespace PurchaseApproval.Web.Pages.Admin.Requests;
 public sealed class DetailsModel(
     ApplicationDbContext dbContext,
     IApprovalDecisionService decisionService,
-    UserManager<ApplicationUser> userManager) : PageModel
+    IExcelReportService excelReportService,
+    UserManager<ApplicationUser> userManager,
+    IStringLocalizer<SharedResource> localizer) : PageModel
 {
     public RequestReview? Review { get; private set; }
+
+    /// <summary>True when the signed-in administrator submitted this request themselves.</summary>
+    public bool IsOwnRequest { get; private set; }
 
     [BindProperty]
     public DecisionInput Input { get; set; } = new();
@@ -42,7 +50,7 @@ public sealed class DetailsModel(
     public Task<IActionResult> OnPostApproveAsync(int id) =>
         SaveDecisionAsync(id, ApprovalDecisionType.Approved);
 
-    /// <summary>Rejects a pending request when the administrator supplies a reason.</summary>
+    /// <summary>Rejects a pending request; the explanation is optional and requester-visible.</summary>
     public Task<IActionResult> OnPostRejectAsync(int id) =>
         SaveDecisionAsync(id, ApprovalDecisionType.Rejected);
 
@@ -65,6 +73,18 @@ public sealed class DetailsModel(
             : File(attachment.Content, attachment.ContentType, attachment.OriginalFileName);
     }
 
+    /// <summary>Downloads an approved or rejected decision record for authorized administrators.</summary>
+    public async Task<IActionResult> OnGetExcelAsync(int id)
+    {
+        var report = await excelReportService.CreateIndividualAsync(
+            id,
+            HttpContext.RequestAborted);
+
+        return report is null
+            ? NotFound()
+            : File(report.Content, ExcelReportFile.ContentType, report.DownloadName);
+    }
+
     /// <summary>Validates the actor and maps service outcomes to safe page responses.</summary>
     private async Task<IActionResult> SaveDecisionAsync(
         int id,
@@ -74,7 +94,7 @@ public sealed class DetailsModel(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "Confirm the saved reference, amount, and currency before approving.");
+                localizer["Confirm the saved reference, amount, and currency before approving."]);
             return await ReloadPageAsync(id);
         }
 
@@ -96,11 +116,11 @@ public sealed class DetailsModel(
                 Input.RejectionReason,
                 HttpContext.RequestAborted);
         }
-        catch (ApprovalDecisionValidationException exception)
+        catch (ValidationMessagesException exception)
         {
-            foreach (var error in exception.Errors)
+            foreach (var message in exception.Messages)
             {
-                ModelState.AddModelError(string.Empty, error);
+                ModelState.AddModelError(string.Empty, localizer[message.Key, message.Args]);
             }
 
             return await ReloadPageAsync(id);
@@ -116,7 +136,7 @@ public sealed class DetailsModel(
         {
             ModelState.AddModelError(
                 string.Empty,
-                "This request changed while you were reviewing it. The latest decision is shown below.");
+                localizer["This request changed while you were reviewing it. The latest decision is shown below."]);
             return await ReloadPageAsync(id);
         }
 
@@ -149,6 +169,8 @@ public sealed class DetailsModel(
                 item.ReferenceNumber,
                 item.Status,
                 item.Version,
+                item.RequesterType,
+                item.ApplicationUserRequesterId,
                 item.RequesterFullNameSnapshot,
                 item.RequesterUsernameSnapshot,
                 item.RequesterPhoneNumberSnapshot,
@@ -166,7 +188,19 @@ public sealed class DetailsModel(
                         item.Decision.DecisionType,
                         item.Decision.DecidedByFullNameSnapshot,
                         item.Decision.RejectionReason,
+                        item.Decision.IsSelfApproval,
                         item.Decision.DecidedAtUtc),
+                item.TransferOutcome == null
+                    ? null
+                    : new ExecutionSummary(
+                        item.TransferOutcome.Status,
+                        item.TransferOutcome.IsClosed,
+                        item.TransferOutcome.PerformedByFullNameSnapshot,
+                        item.TransferOutcome.RecordedAtUtc,
+                        item.TransferOutcome.ClosedAtUtc,
+                        item.TransferOutcome.ClosureType,
+                        item.TransferOutcome.ClosureReason,
+                        item.TransferOutcome.FailureReason),
                 Array.Empty<RequestLine>(),
                 Array.Empty<AttachmentSummary>()))
             .SingleOrDefaultAsync(HttpContext.RequestAborted);
@@ -200,6 +234,11 @@ public sealed class DetailsModel(
             .ToListAsync(HttpContext.RequestAborted);
 
         Review = request with { Lines = lines, Attachments = attachments };
+
+        var currentUserId = userManager.GetUserId(User);
+        IsOwnRequest = request.RequesterType == RequesterType.Administrator
+            && int.TryParse(currentUserId, out var administratorId)
+            && request.ApplicationUserRequesterId == administratorId;
         return true;
     }
 
@@ -219,6 +258,8 @@ public sealed class DetailsModel(
         string ReferenceNumber,
         PaymentRequestStatus Status,
         uint Version,
+        RequesterType RequesterType,
+        int? ApplicationUserRequesterId,
         string RequesterName,
         string RequesterUsername,
         string? RequesterPhone,
@@ -231,6 +272,7 @@ public sealed class DetailsModel(
         long TotalAmountRials,
         DateTimeOffset SubmittedAtUtc,
         DecisionSummary? Decision,
+        ExecutionSummary? Execution,
         IReadOnlyList<RequestLine> Lines,
         IReadOnlyList<AttachmentSummary> Attachments);
 
@@ -251,5 +293,16 @@ public sealed class DetailsModel(
         ApprovalDecisionType DecisionType,
         string AdministratorName,
         string? RejectionReason,
+        bool IsSelfApproval,
         DateTimeOffset DecidedAtUtc);
+
+    public sealed record ExecutionSummary(
+        TransferStatus Status,
+        bool IsClosed,
+        string? ExecutorName,
+        DateTimeOffset? RecordedAtUtc,
+        DateTimeOffset? ClosedAtUtc,
+        TransferClosureType? ClosureType,
+        string? ClosureReason,
+        string? FailureReason);
 }

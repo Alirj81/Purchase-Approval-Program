@@ -1,109 +1,156 @@
 @page "/execution/{id:int}"
 @model PurchaseApproval.Web.Pages.Execution.DetailsModel
 @{
-    ViewData["Title"] = "Payment execution record";
+    ViewData["Title"] = L["Payment execution record"];
 }
 
 @if (Model.Review is { } request)
 {
     <section aria-labelledby="execution-detail-heading">
-        <a asp-page="Index" class="text-decoration-none">&larr; Back to execution queue</a>
+        <a asp-page="Index" class="text-decoration-none">&larr; @L["Back to execution queue"]</a>
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
             <div>
-                <h1 id="execution-detail-heading" class="h3 mb-1">@request.ReferenceNumber</h1>
-                <span class="badge text-bg-success">Approved</span>
-                <span class="badge text-bg-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful ? "danger" : "warning")">@request.TransferStatus</span>
+                <h1 id="execution-detail-heading" class="h3 mb-1"><span class="reference">@request.ReferenceNumber</span></h1>
+                <span class="badge status-badge text-bg-success" data-marker="✓">@L["Approved"]</span>
+                <span class="badge status-badge text-bg-@(request.TransferStatus == TransferStatus.Transferred ? "success" : request.TransferStatus == TransferStatus.Unsuccessful ? "danger" : "warning")" data-marker="@(request.TransferStatus == TransferStatus.Transferred ? "✓" : request.TransferStatus == TransferStatus.Unsuccessful ? "✕" : "○")">@L[Labels.Transfer(request.TransferStatus)]</span>
+                @if (request.IsClosed)
+                {
+                    <span class="badge text-bg-light border">@L["Closed"]</span>
+                }
             </div>
-            <div class="text-end"><strong>@request.TotalAmountRials.ToString("N0") IRR</strong><div class="small text-secondary">Approved amount</div></div>
+            <div class="text-end"><strong><span class="amount ltr-value">@request.TotalAmountRials.ToString("N0")</span> @L["IRR"]</strong><div class="small text-secondary">@L["Approved amount"]</div></div>
         </div>
 
-        @if (TempData["StatusMessage"] is string statusMessage)
-        {
-            <div class="alert alert-success">@statusMessage</div>
-        }
-        <div asp-validation-summary="All" class="alert alert-danger"></div>
+        <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
-        @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful && !request.IsClosed)
+        @if (request.TransferStatus == TransferStatus.Unsuccessful && !request.IsClosed)
         {
-            <div class="alert alert-danger"><strong>Open unsuccessful item.</strong> It remains in the open queue. Closure is unavailable until the responsible role and required closure evidence are agreed.</div>
+            <div class="alert alert-danger" role="status">
+                <strong>@L["Unsuccessful, awaiting automatic closure."]</strong>
+                @L["The recorded outcome and reason remain final. Automatic closure is due"]
+                <timestamp utc="@request.AutomaticClosureDueAtUtc" />.
+            </div>
+        }
+        else if (request.TransferStatus == TransferStatus.Transferred && !request.IsClosed)
+        {
+            <div class="alert alert-success" role="status">
+                <strong>@L["Transferred, awaiting automatic closure."]</strong>
+                @L["This item is paid and cannot be executed again. Automatic closure is due"]
+                <timestamp utc="@request.AutomaticClosureDueAtUtc" />.
+            </div>
         }
 
         <div class="row g-3 mb-4">
             <div class="col-lg-6">
-                <div class="card h-100"><div class="card-header fw-semibold">Approved request</div><div class="card-body">
+                <div class="card h-100"><div class="card-header fw-semibold">@L["Approved request"]</div><div class="card-body">
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">Requester</dt><dd class="col-sm-8">@request.RequesterName</dd>
-                        <dt class="col-sm-4">Department</dt><dd class="col-sm-8">@(request.RequesterDepartment ?? "—")</dd>
-                        <dt class="col-sm-4">Payee</dt><dd class="col-sm-8">@request.PayeeName</dd>
-                        <dt class="col-sm-4">Requested destination</dt><dd class="col-sm-8">@(request.RequestedDestination ?? "—")</dd>
-                        <dt class="col-sm-4">Reason</dt><dd class="col-sm-8">@request.Justification</dd>
+                        <dt class="col-sm-4">@L["Requester"]</dt><dd class="col-sm-8" dir="auto">@request.RequesterName</dd>
+                        <dt class="col-sm-4">@L["Department"]</dt><dd class="col-sm-8" dir="auto">@(request.RequesterDepartment ?? "—")</dd>
+                        <dt class="col-sm-4">@L["Payee"]</dt><dd class="col-sm-8" dir="auto">@request.PayeeName</dd>
+                        <dt class="col-sm-4">@L["Requested destination"]</dt><dd class="col-sm-8"><span class="ltr-value">@(request.RequestedDestination ?? "—")</span></dd>
+                        <dt class="col-sm-4">@L["Payment reason"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto">@request.Justification</dd>
+                        <dt class="col-sm-4">@L["Approved"]</dt><dd class="col-sm-8"><timestamp utc="@request.ApprovedAtUtc" /></dd>
                     </dl>
                 </div></div>
             </div>
             <div class="col-lg-6">
-                <div class="card h-100"><div class="card-header fw-semibold">Expense rows</div><div class="card-body p-0">
+                <div class="card h-100"><div class="card-header fw-semibold">@L["Expense rows"]</div><div class="card-body p-0">
                     <div class="table-responsive"><table class="table table-sm mb-0">
-                        <thead><tr><th>Description</th><th>Invoice</th><th class="text-end">Amount</th></tr></thead>
-                        <tbody>@foreach (var line in request.Lines) {<tr><td>@line.Description@if (!string.IsNullOrWhiteSpace(line.Remarks)) {<div class="small text-secondary">@line.Remarks</div>}</td><td>@(line.HasInvoice ? "Yes" : "No")</td><td class="text-end text-nowrap">@line.AmountRials.ToString("N0")</td></tr>}</tbody>
+                        <thead><tr><th>@L["Description"]</th><th>@L["Invoice"]</th><th class="text-end">@L["Amount (IRR)"]</th></tr></thead>
+                        <tbody>@foreach (var line in request.Lines) {<tr><td class="wrap-anywhere" dir="auto">@line.Description@if (!string.IsNullOrWhiteSpace(line.Remarks)) {<div class="small text-secondary">@line.Remarks</div>}</td><td>@(line.HasInvoice ? L["Yes"] : L["No"])</td><td class="text-end"><span class="amount ltr-value">@line.AmountRials.ToString("N0")</span></td></tr>}</tbody>
                     </table></div>
                 </div></div>
             </div>
         </div>
 
-        <h2 class="h5">Supporting files</h2>
+        <h2 class="h5">@L["Supporting files"]</h2>
         @if (request.Attachments.Count == 0)
         {
-            <p class="text-secondary">No supporting files were attached.</p>
+            <p class="text-secondary">@L["No supporting files were attached."]</p>
         }
         else
         {
-            <ul class="list-group mb-4">@foreach (var attachment in request.Attachments) {<li class="list-group-item d-flex justify-content-between align-items-center"><span>@attachment.FileName <span class="small text-secondary">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span><a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">Download</a></li>}</ul>
+            <ul class="list-group mb-4">@foreach (var attachment in request.Attachments) {<li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2"><span class="wrap-anywhere" dir="auto">@attachment.FileName <span class="small text-secondary ltr-value">(@((attachment.FileSizeBytes / 1024d).ToString("N1")) KiB)</span></span><a asp-page-handler="Attachment" asp-route-id="@request.Id" asp-route-attachmentId="@attachment.Id" class="btn btn-sm btn-outline-secondary">@L["Download"]</a></li>}</ul>
         }
 
-        @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.AwaitingTransfer)
+        @if (request.TransferStatus == TransferStatus.AwaitingTransfer)
         {
             <div class="card mt-4">
-                <div class="card-header fw-semibold">Record an external payment outcome</div>
+                <div class="card-header fw-semibold">@L["Record an external payment outcome"]</div>
                 <div class="card-body">
-                    <p class="alert alert-secondary py-2">Use this form only after a payment or attempt occurred outside the programme. Saving this form does not send funds.</p>
+                    <p class="alert alert-secondary py-2">@L["Use this form only after you personally made a payment or attempt outside the programme. Saving this form does not send funds. You are recorded as the executor."]</p>
+                    <p class="form-text">@L["Fields marked with * are required."]</p>
                     <form method="post" id="outcome-form">
                         <input type="hidden" asp-for="Input.Version" />
-                        <input type="hidden" asp-for="Input.UtcOffsetMinutes" id="utc-offset-minutes" />
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label asp-for="Input.Method" class="form-label">Execution method</label>
-                                <select asp-for="Input.Method" asp-items="Html.GetEnumSelectList<PurchaseApproval.Models.TransferMethod>()" class="form-select" id="transfer-method"><option value="">Choose a method</option></select>
+                                <label asp-for="Input.Method" class="form-label">@L["Execution method"] <span class="required-marker" aria-hidden="true">*</span></label>
+                                <select asp-for="Input.Method" class="form-select" id="transfer-method" required>
+                                    <option value="">@L["Choose a method"]</option>
+                                    @foreach (var method in Enum.GetValues<TransferMethod>())
+                                    {
+                                        <option value="@((int)method)" selected="@(Model.Input.Method == method)">@L[Labels.Method(method)]</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-6">
-                                <label asp-for="Input.ReportedLocalDateTime" class="form-label">Occurred at (your device time)</label>
-                                <input asp-for="Input.ReportedLocalDateTime" type="datetime-local" step="60" class="form-control" id="reported-local-time" data-device-local-default="true" />
+                                <label asp-for="Input.ReportedLocalDateTime" class="form-label">@L["Occurred at (your device time)"] <span class="required-marker" aria-hidden="true">*</span></label>
+                                @* No step attribute: jQuery Validation throws on step for datetime-local inputs. *@
+                                <input asp-for="Input.ReportedLocalDateTime" type="datetime-local" class="form-control ltr-value" id="reported-local-time" dir="ltr" required />
+                                <div class="form-text">@L["Editable before saving. The server resolves the offset for this date in the timezone below."]</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.TimeZoneId" class="form-label">@L["Timezone of the entered time (IANA)"]</label>
+                                <input asp-for="Input.TimeZoneId" class="form-control ltr-value" id="transaction-time-zone" maxlength="100" placeholder="Europe/Berlin, UTC" dir="ltr" />
+                                <div id="transaction-time-zone-status" class="form-text" aria-live="polite" data-detected="@L["Detected from this device: {0}. Edit it if the payment happened elsewhere.", "{0}"]" data-missing="@L["Timezone detection failed. Enter an IANA timezone or choose a UTC offset below."]"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.ExplicitOffsetMinutes" class="form-label">@L["UTC offset (only if no timezone, or when asked)"]</label>
+                                @if (Model.AmbiguousOffsetChoices.Count > 0)
+                                {
+                                    <div class="border rounded p-2" role="radiogroup" aria-labelledby="offset-choice-label">
+                                        <div id="offset-choice-label" class="fw-semibold small mb-1">@L["This local time occurred twice. Which offset applied?"]</div>
+                                        @foreach (var choice in Model.AmbiguousOffsetChoices)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="Input.ExplicitOffsetMinutes" id="offset-@choice" value="@choice" required />
+                                                <label class="form-check-label ltr-value" for="offset-@choice">UTC@(PurchaseApproval.Services.TransactionTimeRules.FormatOffset(choice))</label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <select asp-for="Input.ExplicitOffsetMinutes" class="form-select ltr-value" dir="ltr">
+                                        <option value="">@L["Use the timezone"]</option>
+                                        @for (short minutes = -720; minutes <= 840; minutes += 30)
+                                        {
+                                            <option value="@minutes" selected="@(Model.Input.ExplicitOffsetMinutes == minutes)">UTC@(PurchaseApproval.Services.TransactionTimeRules.FormatOffset(minutes))</option>
+                                        }
+                                    </select>
+                                }
                             </div>
                             <div class="col-12 method-fields" data-method="2">
                                 <div class="row g-3">
-                                    <div class="col-md-6"><label asp-for="Input.DestinationAccountOrCardNumber" class="form-label">Actual destination account/card</label><input asp-for="Input.DestinationAccountOrCardNumber" class="form-control" maxlength="100" /><div class="form-text">Kept separate from the destination originally requested.</div></div>
+                                    <div class="col-md-6"><label asp-for="Input.DestinationAccountOrCardNumber" class="form-label">@L["Actual destination account/card"] <span class="required-marker" aria-hidden="true">*</span></label><input asp-for="Input.DestinationAccountOrCardNumber" class="form-control ltr-value" maxlength="100" dir="ltr" inputmode="numeric" /><div class="form-text">@L["Kept separate from the destination originally requested."]</div></div>
                                 </div>
                             </div>
-                            <div class="col-md-6 method-fields" data-methods="2,3"><label asp-for="Input.BankName" class="form-label">Bank name</label><input asp-for="Input.BankName" class="form-control" maxlength="200" /><div class="form-text">Optional for bank transfer; required for cheque.</div></div>
+                            <div class="col-md-6 method-fields" data-methods="2,3"><label asp-for="Input.BankName" class="form-label">@L["Bank name"]</label><input asp-for="Input.BankName" class="form-control" maxlength="200" dir="auto" /><div class="form-text">@L["Optional for bank transfer; required for cheque."]</div></div>
                             <div class="col-12 method-fields" data-method="3">
                                 <div class="row g-3">
-                                    <div class="col-md-3"><label asp-for="Input.ChequeNumber" class="form-label">Cheque number</label><input asp-for="Input.ChequeNumber" class="form-control" maxlength="100" /></div>
-                                    <div class="col-md-3"><label asp-for="Input.ChequeDate" class="form-label">Cheque date</label><input asp-for="Input.ChequeDate" type="date" class="form-control" /></div>
-                                    <div class="col-md-3"><label asp-for="Input.ChequePayeeName" class="form-label">Cheque payee</label><input asp-for="Input.ChequePayeeName" class="form-control" maxlength="200" /></div>
+                                    <div class="col-md-4"><label asp-for="Input.ChequeNumber" class="form-label">@L["Cheque number"] <span class="required-marker" aria-hidden="true">*</span></label><input asp-for="Input.ChequeNumber" class="form-control ltr-value" maxlength="100" dir="ltr" /></div>
+                                    <div class="col-md-4"><label asp-for="Input.ChequeDate" class="form-label">@L["Cheque date"] <span class="required-marker" aria-hidden="true">*</span></label><input asp-for="Input.ChequeDate" type="date" class="form-control ltr-value" dir="ltr" /><div class="form-text">@L["A date only; it never shifts with timezones."]</div></div>
+                                    <div class="col-md-4"><label asp-for="Input.ChequePayeeName" class="form-label">@L["Cheque payee"] <span class="required-marker" aria-hidden="true">*</span></label><input asp-for="Input.ChequePayeeName" class="form-control" maxlength="200" dir="auto" /></div>
                                 </div>
                             </div>
-                            <div class="col-12 method-fields" data-method="4"><label asp-for="Input.OtherMethodDescription" class="form-label">Describe the other method</label><input asp-for="Input.OtherMethodDescription" class="form-control" maxlength="500" /></div>
-                            @if (Model.CanRecordUnsuccessful)
-                            {
-                                <div class="col-12"><label asp-for="Input.FailureReason" class="form-label">Failure explanation (optional)</label><textarea asp-for="Input.FailureReason" class="form-control" rows="3" maxlength="2000"></textarea></div>
-                            }
+                            <div class="col-12 method-fields" data-method="4"><label asp-for="Input.OtherMethodDescription" class="form-label">@L["Describe the other method"] <span class="required-marker" aria-hidden="true">*</span></label><input asp-for="Input.OtherMethodDescription" class="form-control" maxlength="500" dir="auto" /></div>
+                            <div class="col-12"><label asp-for="Input.ExternalReference" class="form-label">@L["External accounting reference (optional)"]</label><input asp-for="Input.ExternalReference" class="form-control ltr-value" maxlength="200" dir="ltr" /><div class="form-text">@L["A manual reference from any accounting or external system; no synchronization is performed."]</div></div>
+                            <div class="col-12"><label asp-for="Input.FailureReason" class="form-label">@L["Unsuccessful-attempt reason"] <span class="small text-secondary">(@L["required for an unsuccessful outcome"])</span></label><textarea asp-for="Input.FailureReason" id="failure-reason" class="form-control" rows="3" maxlength="2000" dir="auto" aria-describedby="failure-reason-help"></textarea><div id="failure-reason-help" class="form-text">@L["Required when recording an unsuccessful outcome; ignored for a transferred outcome."]</div></div>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 mt-4">
-                            <button type="submit" asp-page-handler="Transferred" class="btn btn-success">Record as transferred</button>
-                            @if (Model.CanRecordUnsuccessful)
-                            {
-                                <button type="submit" asp-page-handler="Unsuccessful" class="btn btn-danger">Record unsuccessful attempt</button>
-                            }
-                            <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                        <div class="form-actions d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" asp-page-handler="Transferred" class="btn btn-success">@L["Record as transferred"]</button>
+                            <button type="submit" asp-page-handler="Unsuccessful" id="record-unsuccessful" class="btn btn-danger">@L["Record unsuccessful attempt"]</button>
+                            <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
                         </div>
                     </form>
                 </div>
@@ -111,27 +158,68 @@
         }
         else
         {
-            <div class="card mt-4 border-@(request.TransferStatus == PurchaseApproval.Models.TransferStatus.Transferred ? "success" : "danger")">
-                <div class="card-header fw-semibold">Recorded outcome</div>
+            <div class="card mt-4 border-@(request.TransferStatus == TransferStatus.Transferred ? "success" : "danger")">
+                <div class="card-header fw-semibold">@L["Recorded outcome"]</div>
                 <div class="card-body"><dl class="row mb-0">
-                    <dt class="col-sm-4">Outcome</dt><dd class="col-sm-8">@request.TransferStatus</dd>
-                    <dt class="col-sm-4">Method</dt><dd class="col-sm-8">@request.Method @request.OtherMethodDescription</dd>
-                    <dt class="col-sm-4">Actual destination</dt><dd class="col-sm-8">@(request.ActualDestination ?? "—")</dd>
-                    <dt class="col-sm-4">Bank</dt><dd class="col-sm-8">@(request.BankName ?? "—")</dd>
-                    <dt class="col-sm-4">Cheque</dt><dd class="col-sm-8">@(request.ChequeNumber is null ? "—" : $"{request.ChequeNumber}, {request.ChequeDate}, {request.ChequePayeeName}")</dd>
-                    <dt class="col-sm-4">Executor</dt><dd class="col-sm-8">@request.PerformedByName (@request.PerformedByRole)</dd>
-                    <dt class="col-sm-4">Reported occurrence</dt><dd class="col-sm-8">@request.OccurredAtUtc?.ToString("u") (stored offset: @request.UtcOffsetMinutes minutes)</dd>
-                    <dt class="col-sm-4">Server recorded</dt><dd class="col-sm-8">@request.RecordedAtUtc?.ToString("u")</dd>
-                    @if (request.TransferStatus == PurchaseApproval.Models.TransferStatus.Unsuccessful) {<dt class="col-sm-4">Failure explanation</dt><dd class="col-sm-8">@(request.FailureReason ?? "—")</dd>}
+                    <dt class="col-sm-4">@L["Outcome"]</dt><dd class="col-sm-8">@L[Labels.Transfer(request.TransferStatus)]</dd>
+                    <dt class="col-sm-4">@L["Method"]</dt><dd class="col-sm-8">@(request.Method is { } method ? L[Labels.Method(method)] : "—") <span dir="auto">@request.OtherMethodDescription</span></dd>
+                    <dt class="col-sm-4">@L["Actual destination"]</dt><dd class="col-sm-8"><span class="ltr-value">@(request.ActualDestination ?? "—")</span></dd>
+                    <dt class="col-sm-4">@L["Bank"]</dt><dd class="col-sm-8" dir="auto">@(request.BankName ?? "—")</dd>
+                    <dt class="col-sm-4">@L["Cheque"]</dt><dd class="col-sm-8">@(request.ChequeNumber is null ? "—" : $"{request.ChequeNumber}, {request.ChequeDate:yyyy-MM-dd}, {request.ChequePayeeName}")</dd>
+                    <dt class="col-sm-4">@L["Executor"]</dt><dd class="col-sm-8"><span dir="auto">@request.PerformedByName</span> (@L[Labels.Role(request.PerformedByRole ?? string.Empty)])</dd>
+                    <dt class="col-sm-4">@L["Reported occurrence (entered device time)"]</dt>
+                    <dd class="col-sm-8">
+                        @if (request.OccurredAtUtc is { } occurredAt && request.UtcOffsetMinutes is { } offsetMinutes)
+                        {
+                            <span class="ltr-value">@occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes)).ToString("yyyy-MM-dd HH:mm zzz")</span>
+                            @if (request.TimeZoneId is not null) { <span class="small text-secondary ltr-value">(@request.TimeZoneId)</span> }
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </dd>
+                    <dt class="col-sm-4">@L["Immutable server recording time (UTC)"]</dt><dd class="col-sm-8"><timestamp utc="@request.RecordedAtUtc" mode="utc" /></dd>
+                    <dt class="col-sm-4">@L["External accounting reference"]</dt><dd class="col-sm-8"><span class="ltr-value">@(request.ExternalReference ?? "—")</span></dd>
+                    @if (request.TransferStatus == TransferStatus.Unsuccessful) {<dt class="col-sm-4">@L["Failure explanation"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto">@(request.FailureReason ?? "—")</dd>}
+                    <dt class="col-sm-4">@L["Operational state"]</dt><dd class="col-sm-8">@(request.IsClosed ? L["Closed"] : L["Open"])</dd>
+                    @if (request.IsClosed)
+                    {
+                        <dt class="col-sm-4">@L["Closure type"]</dt><dd class="col-sm-8">@(request.ClosureType is { } closureType ? L[Labels.Closure(closureType)] : "—")</dd>
+                        <dt class="col-sm-4">@L["Closed at"]</dt><dd class="col-sm-8"><timestamp utc="@request.ClosedAtUtc" /></dd>
+                        <dt class="col-sm-4">@L["Closed by"]</dt><dd class="col-sm-8">@(request.ClosureType == TransferClosureType.Automatic ? L["Automatic closure service"] : $"{request.ClosedByName} ({L[Labels.Role(request.ClosedByRole ?? string.Empty)]})")</dd>
+                        <dt class="col-sm-4">@L["Closure reason"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto">@(request.ClosureReason ?? "—")</dd>
+                    }
                 </dl></div>
             </div>
+
+            @if (Model.CanCloseEarly)
+            {
+                <form method="post" asp-page-handler="Close" class="card mt-3">
+                    <div class="card-body">
+                        <h2 class="h6">@L["Close this execution item early"]</h2>
+                        <p class="form-text">@L["Administrator closure preserves the recorded outcome and audit history. Closure never changes whether a payment succeeded."]</p>
+                        <input type="hidden" asp-for="CloseInput.Version" />
+                        <label asp-for="CloseInput.Reason" class="form-label">@L["Closure reason"] <span class="required-marker" aria-hidden="true">*</span></label>
+                        <textarea asp-for="CloseInput.Reason" class="form-control" rows="2" maxlength="2000" required dir="auto"></textarea>
+                    </div>
+                    <div class="card-footer"><button type="submit" class="btn btn-outline-secondary">@L["Close item now"]</button></div>
+                </form>
+            }
         }
 
-        <h2 class="h5 mt-4">Execution audit trail</h2>
-        <div class="table-responsive"><table class="table table-sm"><thead><tr><th>Action</th><th>Status</th><th>Actor</th><th>Reported occurrence</th><th>Server recorded</th></tr></thead><tbody>
+        <h2 class="h5 mt-4">@L["Execution audit trail"]</h2>
+        <p class="small text-secondary">@L["Server recording times are shown in UTC."]</p>
+        <div class="table-responsive"><table class="table table-sm table-stack"><thead><tr><th>@L["Action"]</th><th>@L["Status"]</th><th>@L["Actor"]</th><th>@L["Reported occurrence"]</th><th>@L["Server recorded (UTC)"]</th></tr></thead><tbody>
         @foreach (var audit in request.AuditEntries)
         {
-            <tr><td>@audit.Action</td><td>@audit.Status</td><td>@audit.ActorName (@audit.ActorRole)</td><td>@(audit.OccurredAtUtc?.ToString("u") ?? "—")</td><td>@audit.RecordedAtUtc.ToString("u")</td></tr>
+            <tr>
+                <td data-label="@L["Action"]">@L[Labels.TransferAudit(audit.Action)]@if (audit.ClosureReason is not null) {<div class="small wrap-anywhere" dir="auto">@audit.ClosureReason</div>}</td>
+                <td data-label="@L["Status"]">@L[Labels.Transfer(audit.Status)]</td>
+                <td data-label="@L["Actor"]"><span dir="auto">@audit.ActorName</span> (@L[Labels.Role(audit.ActorRole)])</td>
+                <td data-label="@L["Reported occurrence"]">@if (audit.OccurredAtUtc is { } occurred && audit.UtcOffsetMinutes is { } offset) {<span class="ltr-value">@occurred.ToOffset(TimeSpan.FromMinutes(offset)).ToString("yyyy-MM-dd HH:mm zzz")</span>@if (audit.TimeZoneId is not null) {<span class="small text-secondary ltr-value"> (@audit.TimeZoneId)</span>}} else {<span>—</span>}</td>
+                <td data-label="@L["Server recorded (UTC)"]"><timestamp utc="@audit.RecordedAtUtc" mode="utc" /></td>
+            </tr>
         }
         </tbody></table></div>
     </section>
