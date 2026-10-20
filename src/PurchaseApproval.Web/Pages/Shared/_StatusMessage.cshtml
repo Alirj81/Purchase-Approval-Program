@@ -1,0 +1,6 @@
+@* One-time success/info banner. Pages set TempData["StatusMessage"] (English key) before a
+   redirect; the message is localized here so services and handlers never need the localizer. *@
+@if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="alert alert-success" role="status">@L[statusMessage]</div>
+}

@@ -1,27 +1,34 @@
 ﻿@page
 @model ErrorModel
-@* Displays error information supplied by ErrorModel, including the request ID. *@
 @{
-    ViewData["Title"] = "Error";
+    ViewData["Title"] = L["Error"];
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<section class="mx-auto" style="max-width: 42rem">
+    @if (Model.HttpStatus == 404)
+    {
+        <h1 class="h3">@L["Page not found"]</h1>
+        <p>@L["The address you opened does not exist or is no longer available."]</p>
+    }
+    else if (Model.HttpStatus is 403 or 401)
+    {
+        <h1 class="h3">@L["Access denied"]</h1>
+        <p>@L["Your account does not have permission to perform this action."]</p>
+    }
+    else if (Model.HttpStatus == 429)
+    {
+        <h1 class="h3">@L["Too many requests"]</h1>
+        <p>@L["You have sent too many requests in a short time. Wait a few minutes and try again."]</p>
+    }
+    else
+    {
+        <h1 class="h3">@L["Something went wrong"]</h1>
+        <p>@L["The request could not be completed. Nothing was saved. If the problem continues, give the reference below to the administrator."]</p>
+    }
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
-
-<h3>Development Mode</h3>
-<p>
-    Swapping to the <strong>Development</strong> environment displays detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="small text-secondary">@L["Error reference"]: <code>@Model.RequestId</code></p>
+    }
+    <a asp-page="/Index" class="btn btn-outline-primary">@L["Back to start"]</a>
+</section>

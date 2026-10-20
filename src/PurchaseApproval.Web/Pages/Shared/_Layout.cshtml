@@ -1,73 +1,93 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@* Shared page frame: language/direction attributes, role-aware navigation, language switch,
+   status messages and the scripts every page needs. Bootstrap's RTL build is loaded for Persian;
+   the layout itself uses logical (start/end) utilities so both directions share one markup. *@
+@using System.Globalization
+@{
+    var uiCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var isRtl = uiCulture == "fa";
+    var isAdministrator = User.IsInRole(PurchaseApproval.Security.AppRoles.Administrator);
+    var isAccountant = User.IsInRole(PurchaseApproval.Security.AppRoles.Accountant);
+    var isEmployee = User.HasClaim(
+        PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKindClaim,
+        PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKind);
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+<!DOCTYPE html>
+<html lang="@uiCulture" dir="@(isRtl ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Purchase Approval</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - @L["Purchase Approval"]</title>
+    @if (isRtl)
+    {
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    }
+    else
+    {
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    }
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PurchaseApproval.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
+    <a class="visually-hidden-focusable skip-link" href="#main-content">@L["Skip to main content"]</a>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3" aria-label="@L["Main navigation"]">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Purchase Approval</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-page="/Index">@L["Purchase Approval"]</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation" aria-controls="main-navigation"
+                        aria-expanded="false" aria-label="@L["Toggle navigation"]">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        @if (User.IsInRole(PurchaseApproval.Security.AppRoles.Administrator))
+                <div class="navbar-collapse collapse" id="main-navigation">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        @if (isEmployee)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Admin/Requests/Create">New request</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Admin/Requests/Index">Requests</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-mine="true">My requests</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Admin/Employees/Index">Employees</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Index">@L["Dashboard"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Requests/Create">@L["New request"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Requests/Index">@L["My requests"]</a></li>
                         }
-                        @if (User.IsInRole(PurchaseApproval.Security.AppRoles.Administrator)
-                            || User.IsInRole(PurchaseApproval.Security.AppRoles.Accountant))
+                        @if (isAdministrator)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Execution/Index">Execution records</a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Index">@L["Review queue"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Create">@L["New request"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-mine="true">@L["My requests"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/History/Index">@L["History"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Reports/Index">@L["Reports"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Employees/Index">@L["Employees"]</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Staff/Index">@L["Staff accounts"]</a></li>
+                        }
+                        @if (isAdministrator || isAccountant)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-page="/Execution/Index">@L["Execution records"]</a></li>
                         }
                     </ul>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2 navbar-actions">
+                        <form method="post" asp-page="/Language" class="d-flex align-items-center gap-1" aria-label="@L["Language"]">
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <input type="hidden" name="code" value="@(isRtl ? "en" : "fa")" />
+                            <button class="btn btn-sm btn-outline-secondary" type="submit" lang="@(isRtl ? "en" : "fa")">@(isRtl ? "English" : "فارسی")</button>
+                        </form>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <span class="navbar-text">@User.Identity.Name</span>
-                            @if (User.HasClaim(
-                                PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKindClaim,
-                                PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKind))
+                            <span class="navbar-text" dir="ltr">@User.Identity.Name</span>
+                            @if (isEmployee)
                             {
                                 <form method="post" asp-page="/EmployeeAccess/Logout">
-                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Sign out</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">@L["Sign out"]</button>
                                 </form>
                             }
                             else
                             {
+                                <a class="btn btn-sm btn-outline-secondary" asp-page="/Account/ChangePassword">@L["Change password"]</a>
                                 <form method="post" asp-page="/Account/Logout">
-                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Sign out</button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">@L["Sign out"]</button>
                                 </form>
                             }
                         }
                         else
                         {
-                            <a class="btn btn-sm btn-outline-secondary" href="/account/login">Staff sign in</a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-page="/Account/Login">@L["Staff sign in"]</a>
                         }
                     </div>
                 </div>
@@ -75,20 +95,22 @@
         </nav>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-3" id="main-content">
+            <partial name="_StatusMessage" />
             @RenderBody()
         </main>
     </div>
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Purchase Approval Program
+            &copy; 2026 - @L["Purchase Approval Program"]
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/local-time.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

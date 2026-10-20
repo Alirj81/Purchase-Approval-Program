@@ -1,5 +1,10 @@
-﻿@* Shares common namespaces and tag helpers across Razor pages.
- *   Razor comments use these delimiters so explanations are not rendered as page text. *@
+﻿@* Shares common namespaces, tag helpers and the string localizer across Razor pages.
+   L["English text"] returns the Persian translation when the UI culture is fa, otherwise the key. *@
 @using PurchaseApproval.Web
+@using PurchaseApproval.Web.Localization
+@using PurchaseApproval.Models
+@using Microsoft.Extensions.Localization
 @namespace PurchaseApproval.Web.Pages
+@inject IStringLocalizer<SharedResource> L
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, PurchaseApproval.Web

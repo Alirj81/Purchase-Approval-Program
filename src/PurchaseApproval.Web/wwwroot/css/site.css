@@ -1,3 +1,7 @@
+/* Site-wide presentation rules. Bootstrap (LTR or RTL build, chosen by _Layout) supplies the
+   layout system; this file adds the few rules the application needs for Persian/English
+   bidirectional text, mobile tables, accessible focus and non-breaking financial values. */
+
 html {
   font-size: 14px;
 }
@@ -8,8 +12,26 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Persian renders well with the system UI stack on Windows, iOS and Android; no web font is
+   bundled so the application works on an intranet without internet access. */
+body {
+  font-family: "Segoe UI", Tahoma, "Vazirmatn", "Noto Sans Arabic", Roboto, system-ui, sans-serif;
+}
+
+/* Visible focus for keyboard users in both colour schemes. */
+.btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible, .form-check-input:focus-visible, a:focus-visible {
+  outline: 3px solid #258cfb;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 0.5rem;
+  top: 0.5rem;
+  z-index: 1100;
+  background: #fff;
+  padding: 0.5rem 1rem;
 }
 
 html {
@@ -21,6 +43,79 @@ body {
   margin-bottom: 60px;
 }
 
+/* Direction-sensitive values (references, usernames, account numbers, amounts, timestamps) are
+   isolated so they keep their internal order inside Persian sentences. */
+.ltr-value, code, .reference, time {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+/* dir="auto" marks user text whose script is unknown (names, payees, descriptions). "isolate"
+   keeps such a run from reordering its neighbours while the block stays aligned with the page
+   direction, so a Latin department name inside a Persian page does not jump to the far edge. */
+[dir="auto"] {
+  unicode-bidi: isolate;
+  direction: inherit;
+}
+
+/* Long user text (descriptions, filenames, reasons) wraps instead of pushing tables sideways. */
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+td, dd {
+  overflow-wrap: anywhere;
+}
+
+/* Amount cells never wrap; they are already isolated LTR via .ltr-value. */
+.amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status badges are text plus icon, never colour alone. */
+.status-badge::before {
+  content: attr(data-marker) " ";
+}
+
+/* Responsive tables: on narrow screens each cell shows its column name. */
+@media (max-width: 767.98px) {
+  table.table-stack thead {
+    display: none;
+  }
+  table.table-stack tbody tr {
+    display: block;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+  table.table-stack tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border: 0;
+    padding: 0.35rem 0;
+  }
+  table.table-stack tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--bs-secondary-color);
+    flex: 0 0 40%;
+  }
+  table.table-stack tbody td.text-end {
+    text-align: start !important;
+  }
+  .navbar-actions {
+    margin-top: 0.75rem;
+  }
+  .card-footer .btn, .form-actions .btn {
+    width: 100%;
+  }
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
   color: var(--bs-secondary-color);
   text-align: end;
@@ -28,4 +123,16 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+/* The validation-summary tag helper always renders its container; hide it while it is empty so
+   pages do not show an empty red box. */
+.validation-summary-valid {
+  display: none;
+}
+
+/* Required-field marker next to labels. */
+.required-marker {
+  color: #b02a37;
+  margin-inline-start: 0.2rem;
 }

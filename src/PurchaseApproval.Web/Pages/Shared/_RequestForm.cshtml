@@ -1,0 +1,85 @@
+@* Shared body of the employee and administrator request forms: payee, reason, account, dynamic
+   expense rows and optional attachments. The hosting page supplies the form element, the
+   submission key and the requester card; this partial only renders the editable fields. *@
+@model PurchaseApproval.Web.Pages.RequestFormViewModel
+
+@* "All" because the row fields are rendered by hand (dynamic rows), so field-level server
+   errors have no asp-validation-for span of their own and must appear in the summary. *@
+<div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+<p class="form-text mb-3">@L["Fields marked with * are required."]</p>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="Input_PayeeName" class="form-label">@L["Payee name"] <span class="required-marker" aria-hidden="true">*</span></label>
+        <input name="Input.PayeeName" id="Input_PayeeName" value="@Model.PayeeName" class="form-control" maxlength="200" required dir="auto" />
+        <span class="text-danger field-validation-valid" data-valmsg-for="Input.PayeeName" data-valmsg-replace="true"></span>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="Input_RequestedAccountOrCardNumber" class="form-label">@L["Account or card number (optional)"]</label>
+        <input name="Input.RequestedAccountOrCardNumber" id="Input_RequestedAccountOrCardNumber" value="@Model.RequestedAccountOrCardNumber" class="form-control ltr-value" maxlength="100" autocomplete="off" dir="ltr" inputmode="numeric" />
+        <span class="text-danger field-validation-valid" data-valmsg-for="Input.RequestedAccountOrCardNumber" data-valmsg-replace="true"></span>
+    </div>
+</div>
+<div class="mb-4">
+    <label for="Input_Justification" class="form-label">@L["Payment reason"] <span class="required-marker" aria-hidden="true">*</span></label>
+    <textarea name="Input.Justification" id="Input_Justification" class="form-control" rows="3" maxlength="2000" required dir="auto">@Model.Justification</textarea>
+    <span class="text-danger field-validation-valid" data-valmsg-for="Input.Justification" data-valmsg-replace="true"></span>
+</div>
+
+<section aria-labelledby="expenses-heading">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h2 id="expenses-heading" class="h5 mb-0">@L["Expense rows"] <span class="required-marker" aria-hidden="true">*</span></h2>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-line">@L["Add row"]</button>
+    </div>
+    <span class="text-danger field-validation-valid" data-valmsg-for="Input.Lines" data-valmsg-replace="true"></span>
+    <div id="expense-lines">
+        @for (var index = 0; index < Model.Lines.Count; index++)
+        {
+            var line = Model.Lines[index];
+            <div class="card mb-3 expense-line">
+                <div class="card-body row g-3">
+                    <div class="col-12 small text-secondary">@L["Row"] <span class="line-number">@(index + 1)</span></div>
+                    <div class="col-md-5">
+                        <label class="form-label" data-for="Description" for="line-description-@index">@L["Description"] <span class="required-marker" aria-hidden="true">*</span></label>
+                        <input name="Input.Lines[@index].Description" id="line-description-@index" value="@line.Description" class="form-control line-description" maxlength="500" required dir="auto" />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Input.Lines[@index].Description" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" data-for="AmountRials" for="line-amountrials-@index">@L["Amount (IRR)"] <span class="required-marker" aria-hidden="true">*</span></label>
+                        <input name="Input.Lines[@index].AmountRials" id="line-amountrials-@index" value="@(line.AmountRials == 0 ? "" : line.AmountRials.ToString())" class="form-control line-amount ltr-value" type="number" min="1" max="10000000000" step="1" inputmode="numeric" dir="ltr" required />
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Input.Lines[@index].AmountRials" data-valmsg-replace="true"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" data-for="Remarks" for="line-remarks-@index">@L["Remarks"]</label>
+                        <input name="Input.Lines[@index].Remarks" id="line-remarks-@index" value="@line.Remarks" class="form-control line-remarks" maxlength="1000" dir="auto" />
+                    </div>
+                    <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
+                        <div class="form-check">
+                            <input type="checkbox" name="Input.Lines[@index].HasInvoice" value="true" checked="@line.HasInvoice" class="form-check-input line-invoice" id="line-hasinvoice-@index" />
+                            <label class="form-check-label" data-for="HasInvoice" for="line-hasinvoice-@index">@L["Invoice available"]</label>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-line">@L["Remove row"]</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    <p class="fw-semibold">@L["Estimated total"]: <span id="request-total" class="amount ltr-value">0</span> @L["IRR"]</p>
+    <p class="form-text">@L["Maximum request total: {0} IRR. The saved total is recalculated by the server.", "10,000,000,000"]</p>
+</section>
+
+<div class="mb-4">
+    <label for="Attachments" class="form-label">@L["Supporting files (optional)"]</label>
+    <input name="Attachments" id="Attachments" class="form-control" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
+    <div class="form-text">@L["Up to {0} PDF, JPEG, or PNG files; {1} MiB each.", Model.MaximumAttachmentCount, Model.MaximumAttachmentMiB]</div>
+    <span class="text-danger field-validation-valid" data-valmsg-for="Attachments" data-valmsg-replace="true"></span>
+</div>
+
+<template id="expense-line-template">
+    <div class="card mb-3 expense-line"><div class="card-body row g-3">
+        <div class="col-12 small text-secondary">@L["Row"] <span class="line-number"></span></div>
+        <div class="col-md-5"><label class="form-label" data-for="Description">@L["Description"] <span class="required-marker" aria-hidden="true">*</span></label><input class="form-control line-description" maxlength="500" required dir="auto" /></div>
+        <div class="col-md-3"><label class="form-label" data-for="AmountRials">@L["Amount (IRR)"] <span class="required-marker" aria-hidden="true">*</span></label><input class="form-control line-amount ltr-value" type="number" min="1" max="10000000000" step="1" inputmode="numeric" dir="ltr" required /></div>
+        <div class="col-md-4"><label class="form-label" data-for="Remarks">@L["Remarks"]</label><input class="form-control line-remarks" maxlength="1000" dir="auto" /></div>
+        <div class="col-12 d-flex flex-wrap gap-3 align-items-center"><div class="form-check"><input class="form-check-input line-invoice" type="checkbox" value="true" /><label class="form-check-label" data-for="HasInvoice">@L["Invoice available"]</label></div><button type="button" class="btn btn-sm btn-outline-danger remove-line">@L["Remove row"]</button></div>
+    </div></div>
+</template>

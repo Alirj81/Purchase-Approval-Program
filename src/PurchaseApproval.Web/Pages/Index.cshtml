@@ -1,29 +1,43 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Purchase Approval";
+    ViewData["Title"] = L["Purchase Approval"];
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
+    <div class="col-md-7 col-lg-5">
         <div class="text-center mb-4">
-            <h1 class="display-6">Purchase Approval</h1>
-            <p class="lead">Enter your employee access key to continue.</p>
+            <h1 class="display-6">@L["Purchase Approval"]</h1>
+            <p class="lead">@L["Enter your username and employee access key to continue."]</p>
         </div>
 
-        <form method="post">
+        @if (Model.SignOutReason == PurchaseApproval.Security.EmployeeCookieEvents.AccessChangedReason)
+        {
+            <div class="alert alert-warning" role="status">@L["Your access was changed by an administrator. Sign in again with your current access key."]</div>
+        }
+        else if (Model.SignOutReason == "expired")
+        {
+            <div class="alert alert-info" role="status">@L["Your session has expired. Sign in again to continue."]</div>
+        }
+
+        <form method="post" novalidate>
             <input type="hidden" asp-for="ReturnUrl" />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
             <div class="mb-3">
-                <label asp-for="Input.AccessKey" class="form-label"></label>
-                <input asp-for="Input.AccessKey" class="form-control" autocomplete="current-password" autofocus />
+                <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
+                <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="username" autofocus dir="ltr" required />
+                <span asp-validation-for="Input.Username" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.AccessKey" class="form-label">@L["Employee access key"] <span class="required-marker" aria-hidden="true">*</span></label>
+                <input asp-for="Input.AccessKey" class="form-control ltr-value" autocomplete="current-password" dir="ltr" required />
                 <span asp-validation-for="Input.AccessKey" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Continue</button>
+            <button type="submit" class="btn btn-primary w-100">@L["Continue"]</button>
         </form>
 
         <div class="text-center mt-3">
-            <a href="/account/login" class="text-secondary">Administrator or accountant sign in</a>
+            <a asp-page="/Account/Login" class="text-secondary">@L["Administrator or accountant sign in"]</a>
         </div>
     </div>
 </div>

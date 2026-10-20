@@ -1,25 +1,31 @@
-//  This code-behind file defines the ErrorModel class for the Error Razor page in the PurchaseApproval.Web project.
-//  The ErrorModel class provides properties and methods to handle error information, including the request ID and whether it should be displayed.
-
+// Production error page. It shows a generic message and a correlation ID only; the exception
+// itself is written to the server log by the exception-handler middleware under the same
+// request ID, so an operator can match a user report to the log line without exposing details.
 using System.Diagnostics;
-// Provides response-cache metadata for the error response.
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-// Supplies the PageModel base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PurchaseApproval.Web.Pages;
 
-[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]//  Disables caching for the error page to ensure that the most recent error information is always displayed.
+[AllowAnonymous]
+[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [IgnoreAntiforgeryToken]
 public class ErrorModel : PageModel
 {
     public string? RequestId { get; set; }
 
+    public int? HttpStatus { get; set; }
+
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-    public void OnGet()
+    public void OnGet(int? status)
     {
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        HttpStatus = status;
+        if (status is { } code && code is >= 400 and < 600)
+        {
+            Response.StatusCode = code;
+        }
     }
 }
-

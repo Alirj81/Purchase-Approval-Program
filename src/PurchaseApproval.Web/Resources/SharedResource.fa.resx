@@ -1,0 +1,545 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Persian (fa) translations for the application's user interface.
+  Each <data name> is the English sentence used as the key in views (L["..."]) and in the
+  localizable rule messages; the value is the Persian text shown when the UI language is fa.
+  Keys that are missing here fall back to the English key automatically. Placeholders such as
+  {0} are substituted after translation and must be kept. Amounts, references, usernames and
+  dates are never translated and keep Western digits by design.
+-->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Layout and navigation -->
+  <data name="Purchase Approval" xml:space="preserve"><value>تأیید خرید</value></data>
+  <data name="Purchase Approval Program" xml:space="preserve"><value>برنامهٔ تأیید خرید</value></data>
+  <data name="Skip to main content" xml:space="preserve"><value>رفتن به محتوای اصلی</value></data>
+  <data name="Main navigation" xml:space="preserve"><value>ناوبری اصلی</value></data>
+  <data name="Toggle navigation" xml:space="preserve"><value>باز و بسته کردن منو</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>پیشخوان</value></data>
+  <data name="New request" xml:space="preserve"><value>درخواست جدید</value></data>
+  <data name="My requests" xml:space="preserve"><value>درخواست‌های من</value></data>
+  <data name="Review queue" xml:space="preserve"><value>صف بررسی</value></data>
+  <data name="History" xml:space="preserve"><value>تاریخچه</value></data>
+  <data name="Reports" xml:space="preserve"><value>گزارش‌ها</value></data>
+  <data name="Employees" xml:space="preserve"><value>کارکنان</value></data>
+  <data name="Staff accounts" xml:space="preserve"><value>حساب‌های کاربری مسئولان</value></data>
+  <data name="Execution records" xml:space="preserve"><value>سوابق پرداخت</value></data>
+  <data name="Language" xml:space="preserve"><value>زبان</value></data>
+  <data name="Sign out" xml:space="preserve"><value>خروج</value></data>
+  <data name="Change password" xml:space="preserve"><value>تغییر رمز عبور</value></data>
+  <data name="Staff sign in" xml:space="preserve"><value>ورود مسئولان</value></data>
+  <data name="Employee sign in" xml:space="preserve"><value>ورود کارکنان</value></data>
+  <data name="Back to start" xml:space="preserve"><value>بازگشت به صفحهٔ اول</value></data>
+  <data name="Pagination" xml:space="preserve"><value>صفحه‌بندی</value></data>
+  <data name="Previous page" xml:space="preserve"><value>صفحهٔ قبل</value></data>
+  <data name="Next page" xml:space="preserve"><value>صفحهٔ بعد</value></data>
+  <data name="Page {0} of {1}" xml:space="preserve"><value>صفحهٔ {0} از {1}</value></data>
+  <data name="Actions" xml:space="preserve"><value>عملیات</value></data>
+  <data name="Details" xml:space="preserve"><value>جزئیات</value></data>
+  <data name="View" xml:space="preserve"><value>مشاهده</value></data>
+  <data name="Review" xml:space="preserve"><value>بررسی</value></data>
+  <data name="Cancel" xml:space="preserve"><value>انصراف</value></data>
+  <data name="Clear" xml:space="preserve"><value>پاک کردن</value></data>
+  <data name="Yes" xml:space="preserve"><value>بله</value></data>
+  <data name="No" xml:space="preserve"><value>خیر</value></data>
+  <data name="All" xml:space="preserve"><value>همه</value></data>
+  <data name="Open" xml:space="preserve"><value>باز</value></data>
+  <data name="Closed" xml:space="preserve"><value>بسته‌شده</value></data>
+  <data name="Not applicable" xml:space="preserve"><value>موضوعیت ندارد</value></data>
+  <data name="Not provided" xml:space="preserve"><value>ثبت نشده</value></data>
+  <data name="Fields marked with * are required." xml:space="preserve"><value>فیلدهای علامت‌گذاری‌شده با * الزامی هستند.</value></data>
+  <data name="IRR" xml:space="preserve"><value>ریال</value></data>
+  <data name="Total" xml:space="preserve"><value>جمع کل</value></data>
+  <data name="Total (IRR)" xml:space="preserve"><value>جمع کل (ریال)</value></data>
+  <data name="Amount" xml:space="preserve"><value>مبلغ</value></data>
+  <data name="Amount (IRR)" xml:space="preserve"><value>مبلغ (ریال)</value></data>
+  <data name="Currency" xml:space="preserve"><value>واحد پول</value></data>
+  <data name="Iranian rials (IRR)" xml:space="preserve"><value>ریال ایران (IRR)</value></data>
+  <data name="Reference" xml:space="preserve"><value>شمارهٔ پیگیری</value></data>
+  <data name="Status" xml:space="preserve"><value>وضعیت</value></data>
+  <data name="Decision" xml:space="preserve"><value>تصمیم مدیریت</value></data>
+  <data name="Execution" xml:space="preserve"><value>اجرای پرداخت</value></data>
+  <data name="Payment" xml:space="preserve"><value>پرداخت</value></data>
+  <data name="Closure" xml:space="preserve"><value>بستن پرونده</value></data>
+  <data name="Submitted" xml:space="preserve"><value>زمان ثبت</value></data>
+  <data name="Decided" xml:space="preserve"><value>زمان تصمیم</value></data>
+  <data name="Recorded" xml:space="preserve"><value>زمان ثبت نتیجه</value></data>
+  <data name="Requester" xml:space="preserve"><value>درخواست‌دهنده</value></data>
+  <data name="Requester type" xml:space="preserve"><value>نوع درخواست‌دهنده</value></data>
+  <data name="Name" xml:space="preserve"><value>نام</value></data>
+  <data name="Full name" xml:space="preserve"><value>نام و نام خانوادگی</value></data>
+  <data name="Username" xml:space="preserve"><value>نام کاربری</value></data>
+  <data name="Password" xml:space="preserve"><value>رمز عبور</value></data>
+  <data name="Phone" xml:space="preserve"><value>تلفن</value></data>
+  <data name="Phone number" xml:space="preserve"><value>شمارهٔ تلفن</value></data>
+  <data name="Department" xml:space="preserve"><value>واحد</value></data>
+  <data name="Branch" xml:space="preserve"><value>شعبه</value></data>
+  <data name="Job title" xml:space="preserve"><value>سمت</value></data>
+  <data name="Role" xml:space="preserve"><value>نقش</value></data>
+  <data name="Payee" xml:space="preserve"><value>گیرندهٔ وجه</value></data>
+  <data name="Payee name" xml:space="preserve"><value>نام گیرندهٔ وجه</value></data>
+  <data name="Payment reason" xml:space="preserve"><value>علت پرداخت</value></data>
+  <data name="Account or card number" xml:space="preserve"><value>شمارهٔ حساب یا کارت</value></data>
+  <data name="Account or card number (optional)" xml:space="preserve"><value>شمارهٔ حساب یا کارت (اختیاری)</value></data>
+  <data name="Description" xml:space="preserve"><value>شرح</value></data>
+  <data name="Remarks" xml:space="preserve"><value>توضیحات</value></data>
+  <data name="Invoice" xml:space="preserve"><value>فاکتور</value></data>
+  <data name="Invoice available" xml:space="preserve"><value>فاکتور موجود است</value></data>
+  <data name="Expense rows" xml:space="preserve"><value>ردیف‌های هزینه</value></data>
+  <data name="Row" xml:space="preserve"><value>ردیف</value></data>
+  <data name="Add row" xml:space="preserve"><value>افزودن ردیف</value></data>
+  <data name="Remove row" xml:space="preserve"><value>حذف ردیف</value></data>
+  <data name="Estimated total" xml:space="preserve"><value>جمع تقریبی</value></data>
+  <data name="Maximum request total: {0} IRR. The saved total is recalculated by the server." xml:space="preserve"><value>سقف جمع هر درخواست: {0} ریال. جمع نهایی توسط سرور دوباره محاسبه می‌شود.</value></data>
+  <data name="Supporting files" xml:space="preserve"><value>مدارک پیوست</value></data>
+  <data name="Supporting files (optional)" xml:space="preserve"><value>مدارک پیوست (اختیاری)</value></data>
+  <data name="Up to {0} PDF, JPEG, or PNG files; {1} MiB each." xml:space="preserve"><value>حداکثر {0} فایل PDF، JPEG یا PNG؛ هر فایل تا {1} مگابایت.</value></data>
+  <data name="No supporting files were attached." xml:space="preserve"><value>مدرکی پیوست نشده است.</value></data>
+  <data name="Download" xml:space="preserve"><value>دانلود</value></data>
+  <data name="Submit request" xml:space="preserve"><value>ثبت درخواست</value></data>
+  <data name="Submitting…" xml:space="preserve"><value>در حال ثبت…</value></data>
+
+  <!-- Status labels -->
+  <data name="Pending" xml:space="preserve"><value>در انتظار بررسی</value></data>
+  <data name="Approved" xml:space="preserve"><value>تأیید شده</value></data>
+  <data name="Rejected" xml:space="preserve"><value>رد شده</value></data>
+  <data name="Awaiting payment record" xml:space="preserve"><value>در انتظار ثبت پرداخت</value></data>
+  <data name="Transferred" xml:space="preserve"><value>پرداخت شده</value></data>
+  <data name="Unsuccessful" xml:space="preserve"><value>ناموفق</value></data>
+  <data name="Payment recorded" xml:space="preserve"><value>پرداخت ثبت شد</value></data>
+  <data name="Payment attempt unsuccessful" xml:space="preserve"><value>تلاش پرداخت ناموفق بود</value></data>
+  <data name="Execution item" xml:space="preserve"><value>پروندهٔ پرداخت</value></data>
+  <data name="Execution item closed" xml:space="preserve"><value>پروندهٔ پرداخت بسته شد</value></data>
+  <data name="Closure is an operational state; it does not confirm that a payment succeeded." xml:space="preserve"><value>بستن پرونده یک وضعیت عملیاتی است و به معنای موفقیت پرداخت نیست.</value></data>
+  <data name="Cash" xml:space="preserve"><value>نقدی</value></data>
+  <data name="Bank transfer" xml:space="preserve"><value>انتقال بانکی</value></data>
+  <data name="Cheque" xml:space="preserve"><value>چک</value></data>
+  <data name="Other" xml:space="preserve"><value>سایر</value></data>
+  <data name="Automatic" xml:space="preserve"><value>خودکار</value></data>
+  <data name="Administrator" xml:space="preserve"><value>مدیر</value></data>
+  <data name="Accountant" xml:space="preserve"><value>حسابدار</value></data>
+  <data name="Employee" xml:space="preserve"><value>کارمند</value></data>
+  <data name="Active" xml:space="preserve"><value>فعال</value></data>
+  <data name="Disabled" xml:space="preserve"><value>غیرفعال</value></data>
+  <data name="Revoked" xml:space="preserve"><value>لغو شده</value></data>
+  <data name="Deactivated" xml:space="preserve"><value>غیرفعال</value></data>
+  <data name="Entered the payment queue" xml:space="preserve"><value>ورود به صف پرداخت</value></data>
+  <data name="Recorded as transferred" xml:space="preserve"><value>ثبت به‌عنوان پرداخت شده</value></data>
+  <data name="Recorded as unsuccessful" xml:space="preserve"><value>ثبت به‌عنوان ناموفق</value></data>
+  <data name="Closed by administrator" xml:space="preserve"><value>بسته‌شده توسط مدیر</value></data>
+  <data name="Transaction details corrected" xml:space="preserve"><value>اصلاح جزئیات تراکنش</value></data>
+  <data name="Closed automatically (transferred)" xml:space="preserve"><value>بسته‌شدهٔ خودکار (پرداخت شده)</value></data>
+  <data name="Closed automatically (unsuccessful)" xml:space="preserve"><value>بسته‌شدهٔ خودکار (ناموفق)</value></data>
+  <data name="Submission" xml:space="preserve"><value>ثبت درخواست</value></data>
+  <data name="Execution recording" xml:space="preserve"><value>ثبت نتیجهٔ پرداخت</value></data>
+  <data name="Newest first" xml:space="preserve"><value>جدیدترین ابتدا</value></data>
+  <data name="Oldest first" xml:space="preserve"><value>قدیمی‌ترین ابتدا</value></data>
+  <data name="Self-approved" xml:space="preserve"><value>تأیید توسط خود درخواست‌دهنده</value></data>
+  <data name="Self-approval" xml:space="preserve"><value>تأیید درخواست خود</value></data>
+  <data name="Self-approved only" xml:space="preserve"><value>فقط تأییدشده توسط خود درخواست‌دهنده</value></data>
+  <data name="Automatic closure service" xml:space="preserve"><value>سرویس بستن خودکار</value></data>
+
+  <!-- Sign-in pages -->
+  <data name="Enter your username and employee access key to continue." xml:space="preserve"><value>برای ادامه، نام کاربری و کلید دسترسی خود را وارد کنید.</value></data>
+  <data name="Employee access key" xml:space="preserve"><value>کلید دسترسی کارمند</value></data>
+  <data name="Continue" xml:space="preserve"><value>ادامه</value></data>
+  <data name="Administrator or accountant sign in" xml:space="preserve"><value>ورود مدیر یا حسابدار</value></data>
+  <data name="For administrators and accountants. Employees sign in from the start page." xml:space="preserve"><value>ویژهٔ مدیران و حسابداران. کارکنان از صفحهٔ اول وارد می‌شوند.</value></data>
+  <data name="Remember me" xml:space="preserve"><value>مرا به خاطر بسپار</value></data>
+  <data name="Sign in" xml:space="preserve"><value>ورود</value></data>
+  <data name="Username is required." xml:space="preserve"><value>نام کاربری الزامی است.</value></data>
+  <data name="Password is required." xml:space="preserve"><value>رمز عبور الزامی است.</value></data>
+  <data name="Access key is required." xml:space="preserve"><value>کلید دسترسی الزامی است.</value></data>
+  <data name="The username or access key is incorrect." xml:space="preserve"><value>نام کاربری یا کلید دسترسی نادرست است.</value></data>
+  <data name="The username or password is incorrect." xml:space="preserve"><value>نام کاربری یا رمز عبور نادرست است.</value></data>
+  <data name="The account is temporarily locked." xml:space="preserve"><value>این حساب به‌طور موقت قفل شده است.</value></data>
+  <data name="Too many sign-in attempts. Try again later." xml:space="preserve"><value>تعداد تلاش‌های ورود بیش از حد مجاز است. بعداً دوباره تلاش کنید.</value></data>
+  <data name="Your access was changed by an administrator. Sign in again with your current access key." xml:space="preserve"><value>دسترسی شما توسط مدیر تغییر کرده است. با کلید دسترسی فعلی خود دوباره وارد شوید.</value></data>
+  <data name="Your session has expired. Sign in again to continue." xml:space="preserve"><value>نشست شما منقضی شده است. برای ادامه دوباره وارد شوید.</value></data>
+  <data name="Access denied" xml:space="preserve"><value>دسترسی غیرمجاز</value></data>
+  <data name="Your account does not have permission to perform this action." xml:space="preserve"><value>حساب کاربری شما مجوز انجام این عملیات را ندارد.</value></data>
+
+  <!-- Change password -->
+  <data name="A new password is required." xml:space="preserve"><value>تعیین رمز عبور جدید الزامی است.</value></data>
+  <data name="You signed in with a temporary password. Choose a personal password before using the application." xml:space="preserve"><value>شما با رمز عبور موقت وارد شده‌اید. پیش از استفاده از برنامه، یک رمز عبور شخصی انتخاب کنید.</value></data>
+  <data name="Temporary password valid until" xml:space="preserve"><value>رمز عبور موقت معتبر است تا</value></data>
+  <data name="Current or temporary password" xml:space="preserve"><value>رمز عبور فعلی یا موقت</value></data>
+  <data name="New password" xml:space="preserve"><value>رمز عبور جدید</value></data>
+  <data name="Confirm new password" xml:space="preserve"><value>تکرار رمز عبور جدید</value></data>
+  <data name="At least 12 characters with upper-case, lower-case, a digit and a symbol." xml:space="preserve"><value>حداقل 12 نویسه شامل حرف بزرگ، حرف کوچک، رقم و نماد.</value></data>
+  <data name="Save new password" xml:space="preserve"><value>ذخیرهٔ رمز عبور جدید</value></data>
+  <data name="Sign out instead" xml:space="preserve"><value>به‌جای آن خارج شوید</value></data>
+  <data name="Current password is required." xml:space="preserve"><value>رمز عبور فعلی الزامی است.</value></data>
+  <data name="New password is required." xml:space="preserve"><value>رمز عبور جدید الزامی است.</value></data>
+  <data name="Confirm the new password." xml:space="preserve"><value>رمز عبور جدید را تکرار کنید.</value></data>
+  <data name="The password must be at least 12 characters." xml:space="preserve"><value>رمز عبور باید حداقل 12 نویسه باشد.</value></data>
+  <data name="The new password and its confirmation do not match." xml:space="preserve"><value>رمز عبور جدید و تکرار آن یکسان نیستند.</value></data>
+  <data name="Your password was changed." xml:space="preserve"><value>رمز عبور شما تغییر کرد.</value></data>
+  <data name="The temporary password has expired. Ask an administrator to initiate a new reset." xml:space="preserve"><value>رمز عبور موقت منقضی شده است. از مدیر بخواهید بازنشانی جدیدی انجام دهد.</value></data>
+
+  <!-- Employee pages -->
+  <data name="Employee dashboard" xml:space="preserve"><value>پیشخوان کارمند</value></data>
+  <data name="Welcome, {0}" xml:space="preserve"><value>خوش آمدید، {0}</value></data>
+  <data name="New payment request" xml:space="preserve"><value>درخواست پرداخت جدید</value></data>
+  <data name="My payment requests" xml:space="preserve"><value>درخواست‌های پرداخت من</value></data>
+  <data name="You have not submitted any payment requests yet." xml:space="preserve"><value>هنوز درخواست پرداختی ثبت نکرده‌اید.</value></data>
+  <data name="Back to dashboard" xml:space="preserve"><value>بازگشت به پیشخوان</value></data>
+  <data name="Back to my requests" xml:space="preserve"><value>بازگشت به درخواست‌های من</value></data>
+  <data name="Request details" xml:space="preserve"><value>جزئیات درخواست</value></data>
+  <data name="Explanation from the administrator" xml:space="preserve"><value>توضیح مدیر</value></data>
+  <data name="No explanation was supplied." xml:space="preserve"><value>توضیحی ارائه نشده است.</value></data>
+  <data name="Your request is pending management review." xml:space="preserve"><value>درخواست شما در انتظار بررسی مدیریت است.</value></data>
+  <data name="Payment details as submitted" xml:space="preserve"><value>جزئیات پرداخت به همان صورت ثبت‌شده</value></data>
+  <data name="Enter the payment details. The server will verify the total before saving." xml:space="preserve"><value>جزئیات پرداخت را وارد کنید. سرور پیش از ذخیره، جمع کل را بررسی می‌کند.</value></data>
+  <data name="Your details" xml:space="preserve"><value>مشخصات شما</value></data>
+  <data name="Request submitted" xml:space="preserve"><value>درخواست ثبت شد</value></data>
+  <data name="Payment request submitted" xml:space="preserve"><value>درخواست پرداخت ثبت شد</value></data>
+  <data name="Save your private tracking link now" xml:space="preserve"><value>پیوند پیگیری خصوصی خود را همین حالا ذخیره کنید</value></data>
+  <data name="This link contains a secret token and is shown only once. Anyone with it can see the request status." xml:space="preserve"><value>این پیوند حاوی یک کد محرمانه است و فقط یک بار نمایش داده می‌شود. هر کسی که آن را داشته باشد می‌تواند وضعیت درخواست را ببیند.</value></data>
+  <data name="Private tracking link" xml:space="preserve"><value>پیوند پیگیری خصوصی</value></data>
+  <data name="View my requests" xml:space="preserve"><value>مشاهدهٔ درخواست‌های من</value></data>
+  <data name="Create another" xml:space="preserve"><value>ثبت درخواست دیگر</value></data>
+  <data name="Enter the payee's name." xml:space="preserve"><value>نام گیرندهٔ وجه را وارد کنید.</value></data>
+  <data name="Enter the reason for this payment." xml:space="preserve"><value>علت این پرداخت را وارد کنید.</value></data>
+  <data name="Add at least one expense row." xml:space="preserve"><value>حداقل یک ردیف هزینه اضافه کنید.</value></data>
+  <data name="Enter an expense description." xml:space="preserve"><value>شرح هزینه را وارد کنید.</value></data>
+  <data name="Enter a positive whole-rial amount." xml:space="preserve"><value>مبلغ را به‌صورت عدد صحیح و مثبت به ریال وارد کنید.</value></data>
+  <data name="Too many expense rows were submitted." xml:space="preserve"><value>تعداد ردیف‌های هزینه بیش از حد مجاز است.</value></data>
+  <data name="Attach no more than {0} files." xml:space="preserve"><value>بیش از {0} فایل پیوست نکنید.</value></data>
+  <data name="{0}: each file must be between 1 byte and 5 MiB." xml:space="preserve"><value>{0}: حجم هر فایل باید بین 1 بایت و 5 مگابایت باشد.</value></data>
+  <data name="{0}: file is too large." xml:space="preserve"><value>{0}: حجم فایل بیش از حد مجاز است.</value></data>
+  <data name="This form was already submitted; no duplicate request was created." xml:space="preserve"><value>این فرم قبلاً ثبت شده بود؛ درخواست تکراری ایجاد نشد.</value></data>
+  <data name="Your payment request was submitted for review." xml:space="preserve"><value>درخواست پرداخت شما برای بررسی ثبت شد.</value></data>
+
+  <!-- Tracking -->
+  <data name="Track payment request" xml:space="preserve"><value>پیگیری درخواست پرداخت</value></data>
+  <data name="Payment request status" xml:space="preserve"><value>وضعیت درخواست پرداخت</value></data>
+  <data name="This page intentionally shows only the reference and status. Sign in to see your request details." xml:space="preserve"><value>این صفحه عمداً فقط شمارهٔ پیگیری و وضعیت را نشان می‌دهد. برای مشاهدهٔ جزئیات وارد شوید.</value></data>
+
+  <!-- Error page -->
+  <data name="Error" xml:space="preserve"><value>خطا</value></data>
+  <data name="Page not found" xml:space="preserve"><value>صفحه پیدا نشد</value></data>
+  <data name="The address you opened does not exist or is no longer available." xml:space="preserve"><value>نشانی موردنظر وجود ندارد یا دیگر در دسترس نیست.</value></data>
+  <data name="Too many requests" xml:space="preserve"><value>درخواست‌های بیش از حد</value></data>
+  <data name="You have sent too many requests in a short time. Wait a few minutes and try again." xml:space="preserve"><value>در مدت کوتاهی درخواست‌های زیادی ارسال کرده‌اید. چند دقیقه صبر کنید و دوباره تلاش کنید.</value></data>
+  <data name="Something went wrong" xml:space="preserve"><value>مشکلی پیش آمد</value></data>
+  <data name="The request could not be completed. Nothing was saved. If the problem continues, give the reference below to the administrator." xml:space="preserve"><value>درخواست کامل نشد و چیزی ذخیره نشد. اگر مشکل ادامه داشت، کد زیر را به مدیر اطلاع دهید.</value></data>
+  <data name="Error reference" xml:space="preserve"><value>کد خطا</value></data>
+
+  <!-- Administrator review -->
+  <data name="Payment request review" xml:space="preserve"><value>بررسی درخواست‌های پرداخت</value></data>
+  <data name="Review submitted requests and record one final decision." xml:space="preserve"><value>درخواست‌های ثبت‌شده را بررسی و یک تصمیم نهایی ثبت کنید.</value></data>
+  <data name="My submitted requests" xml:space="preserve"><value>درخواست‌های ثبت‌شدهٔ من</value></data>
+  <data name="Requests from the selected requester" xml:space="preserve"><value>درخواست‌های درخواست‌دهندهٔ انتخاب‌شده</value></data>
+  <data name="Clear requester filter" xml:space="preserve"><value>حذف فیلتر درخواست‌دهنده</value></data>
+  <data name="Request totals" xml:space="preserve"><value>آمار درخواست‌ها</value></data>
+  <data name="There are no requests in this queue." xml:space="preserve"><value>درخواستی در این صف وجود ندارد.</value></data>
+  <data name="Review payment request" xml:space="preserve"><value>بررسی درخواست پرداخت</value></data>
+  <data name="Back to review queue" xml:space="preserve"><value>بازگشت به صف بررسی</value></data>
+  <data name="Enter the payment details. The server verifies the total and stores this request under your administrator account." xml:space="preserve"><value>جزئیات پرداخت را وارد کنید. سرور جمع کل را بررسی می‌کند و این درخواست را زیر حساب مدیر شما ذخیره می‌کند.</value></data>
+  <data name="Your administrator details" xml:space="preserve"><value>مشخصات مدیر</value></data>
+  <data name="Final decision" xml:space="preserve"><value>تصمیم نهایی</value></data>
+  <data name="Recorded by {0} on" xml:space="preserve"><value>ثبت‌شده توسط {0} در</value></data>
+  <data name="The deciding administrator is also the request's requester. This is permitted and recorded." xml:space="preserve"><value>مدیر تصمیم‌گیرنده همان درخواست‌دهنده است. این کار مجاز است و ثبت می‌شود.</value></data>
+  <data name="Explanation shown to the requester" xml:space="preserve"><value>توضیح نمایش‌داده‌شده به درخواست‌دهنده</value></data>
+  <data name="Download decision record (Excel, English)" xml:space="preserve"><value>دانلود سند تصمیم (اکسل، انگلیسی)</value></data>
+  <data name="Execution state" xml:space="preserve"><value>وضعیت اجرای پرداخت</value></data>
+  <data name="Transfer outcome" xml:space="preserve"><value>نتیجهٔ پرداخت</value></data>
+  <data name="Server recording time" xml:space="preserve"><value>زمان ثبت در سرور</value></data>
+  <data name="Failure explanation" xml:space="preserve"><value>توضیح ناموفق بودن</value></data>
+  <data name="Operational state" xml:space="preserve"><value>وضعیت عملیاتی</value></data>
+  <data name="Open execution record" xml:space="preserve"><value>مشاهدهٔ سابقهٔ پرداخت</value></data>
+  <data name="Record final decision" xml:space="preserve"><value>ثبت تصمیم نهایی</value></data>
+  <data name="You submitted this request yourself. Approving it is permitted and will be recorded as self-approved." xml:space="preserve"><value>این درخواست را خودتان ثبت کرده‌اید. تأیید آن مجاز است و به‌عنوان «تأیید توسط خود درخواست‌دهنده» ثبت می‌شود.</value></data>
+  <data name="Approve this request when its details and supporting evidence are complete." xml:space="preserve"><value>وقتی جزئیات و مدارک کامل است، درخواست را تأیید کنید.</value></data>
+  <data name="Approve request" xml:space="preserve"><value>تأیید درخواست</value></data>
+  <data name="Explanation for the requester (optional)" xml:space="preserve"><value>توضیح برای درخواست‌دهنده (اختیاری)</value></data>
+  <data name="Visible to the requester in their request history. This is not an internal note." xml:space="preserve"><value>در تاریخچهٔ درخواست‌دهنده نمایش داده می‌شود. این یادداشت داخلی نیست.</value></data>
+  <data name="Reject request" xml:space="preserve"><value>رد درخواست</value></data>
+  <data name="Confirm approval" xml:space="preserve"><value>تأیید نهایی</value></data>
+  <data name="Confirm the saved payment request:" xml:space="preserve"><value>درخواست پرداخت ذخیره‌شده را تأیید کنید:</value></data>
+  <data name="You are approving your own request." xml:space="preserve"><value>شما در حال تأیید درخواست خودتان هستید.</value></data>
+  <data name="Approval authorizes the request; it does not execute a bank transfer." xml:space="preserve"><value>تأیید فقط مجوز پرداخت است و انتقال بانکی انجام نمی‌دهد.</value></data>
+  <data name="Confirm the saved reference, amount, and currency before approving." xml:space="preserve"><value>پیش از تأیید، شمارهٔ پیگیری، مبلغ و واحد پول ذخیره‌شده را تأیید کنید.</value></data>
+  <data name="This request changed while you were reviewing it. The latest decision is shown below." xml:space="preserve"><value>این درخواست هنگام بررسی شما تغییر کرد. آخرین تصمیم در زیر نمایش داده شده است.</value></data>
+  <data name="The payment request was approved." xml:space="preserve"><value>درخواست پرداخت تأیید شد.</value></data>
+  <data name="The payment request was rejected." xml:space="preserve"><value>درخواست پرداخت رد شد.</value></data>
+  <data name="Back to employees" xml:space="preserve"><value>بازگشت به فهرست کارکنان</value></data>
+
+  <!-- History -->
+  <data name="Administrator history" xml:space="preserve"><value>تاریخچهٔ مدیریت</value></data>
+  <data name="All request statuses, execution outcomes, and closure states for employee and administrator requesters." xml:space="preserve"><value>همهٔ وضعیت‌های درخواست، نتایج پرداخت و وضعیت بستن پرونده برای درخواست‌دهندگان کارمند و مدیر.</value></data>
+  <data name="Reference, requester or payee" xml:space="preserve"><value>شمارهٔ پیگیری، درخواست‌دهنده یا گیرندهٔ وجه</value></data>
+  <data name="Execution outcome" xml:space="preserve"><value>نتیجهٔ پرداخت</value></data>
+  <data name="All / not applicable" xml:space="preserve"><value>همه / بدون موضوعیت</value></data>
+  <data name="Open/closed state" xml:space="preserve"><value>وضعیت باز/بسته</value></data>
+  <data name="Chronological order" xml:space="preserve"><value>ترتیب زمانی</value></data>
+  <data name="Requester ID (per-person history)" xml:space="preserve"><value>شناسهٔ درخواست‌دهنده (تاریخچهٔ هر فرد)</value></data>
+  <data name="Date filter and sort timestamp" xml:space="preserve"><value>زمان مبنای فیلتر تاریخ و مرتب‌سازی</value></data>
+  <data name="Date-boundary timezone (IANA)" xml:space="preserve"><value>منطقهٔ زمانی مرز تاریخ (IANA)</value></data>
+  <data name="Filled from this device when available; visible and editable before filtering." xml:space="preserve"><value>در صورت امکان از این دستگاه پر می‌شود؛ پیش از فیلتر قابل مشاهده و ویرایش است.</value></data>
+  <data name="All dates (lift the recent-months window)" xml:space="preserve"><value>همهٔ تاریخ‌ها (حذف بازهٔ ماه‌های اخیر)</value></data>
+  <data name="Specific date" xml:space="preserve"><value>تاریخ مشخص</value></data>
+  <data name="From date (inclusive)" xml:space="preserve"><value>از تاریخ (شامل)</value></data>
+  <data name="To date (inclusive)" xml:space="preserve"><value>تا تاریخ (شامل)</value></data>
+  <data name="Apply history filters" xml:space="preserve"><value>اعمال فیلترها</value></data>
+  <data name="Date basis" xml:space="preserve"><value>مبنای تاریخ</value></data>
+  <data name="No date filter is applied." xml:space="preserve"><value>فیلتر تاریخی اعمال نشده است.</value></data>
+  <data name="Filtering {0} for {1} in {2}. UTC boundary: {3} to before {4}." xml:space="preserve"><value>فیلتر بر اساس {0} برای {1} در منطقهٔ زمانی {2}. مرز UTC: از {3} تا پیش از {4}.</value></data>
+  <data name="Showing the last {0} calendar months by submission date ({1} in {2}). Use a date range or 'All dates' for older records." xml:space="preserve"><value>نمایش {0} ماه تقویمی اخیر بر اساس تاریخ ثبت ({1} در منطقهٔ زمانی {2}). برای سوابق قدیمی‌تر از بازهٔ تاریخ یا «همهٔ تاریخ‌ها» استفاده کنید.</value></data>
+  <data name="Showing all retained records without a date filter." xml:space="preserve"><value>نمایش همهٔ سوابق بدون فیلتر تاریخ.</value></data>
+  <data name="submission timestamp" xml:space="preserve"><value>زمان ثبت درخواست</value></data>
+  <data name="decision timestamp" xml:space="preserve"><value>زمان تصمیم</value></data>
+  <data name="immutable server execution-recording timestamp" xml:space="preserve"><value>زمان تغییرناپذیر ثبت نتیجهٔ پرداخت در سرور</value></data>
+  <data name="closure timestamp" xml:space="preserve"><value>زمان بستن پرونده</value></data>
+  <data name="No history records match these filters." xml:space="preserve"><value>سابقه‌ای با این فیلترها یافت نشد.</value></data>
+  <data name="{0} matching records" xml:space="preserve"><value>{0} سابقهٔ منطبق</value></data>
+  <data name="Reference / requester" xml:space="preserve"><value>شمارهٔ پیگیری / درخواست‌دهنده</value></data>
+  <data name="Reported occurrence (entered device time)" xml:space="preserve"><value>زمان اعلام‌شدهٔ تراکنش (زمان دستگاه)</value></data>
+  <data name="Server execution recording" xml:space="preserve"><value>ثبت نتیجه در سرور</value></data>
+  <data name="External accounting reference" xml:space="preserve"><value>شمارهٔ مرجع حسابداری</value></data>
+  <data name="Request" xml:space="preserve"><value>درخواست</value></data>
+  <data name="Enter the device or business timezone used for the date boundary." xml:space="preserve"><value>منطقهٔ زمانی دستگاه یا کسب‌وکار را برای مرز تاریخ وارد کنید.</value></data>
+
+  <!-- Reports -->
+  <data name="Approved request export" xml:space="preserve"><value>خروجی درخواست‌های تأییدشده</value></data>
+  <data name="Generate one worksheet containing approved employee and administrator requests." xml:space="preserve"><value>یک کاربرگ شامل درخواست‌های تأییدشدهٔ کارکنان و مدیران تولید کنید.</value></data>
+  <data name="Approval-decision timestamp" xml:space="preserve"><value>زمان تصمیم تأیید</value></data>
+  <data name="Reporting timezone" xml:space="preserve"><value>منطقهٔ زمانی گزارش</value></data>
+  <data name="Exporting administrator's device timezone (IANA)" xml:space="preserve"><value>منطقهٔ زمانی دستگاه مدیر صادرکننده (IANA)</value></data>
+  <data name="Displayed calendar" xml:space="preserve"><value>تقویم نمایش</value></data>
+  <data name="Gregorian" xml:space="preserve"><value>میلادی</value></data>
+  <data name="Workbook language" xml:space="preserve"><value>زبان فایل اکسل</value></data>
+  <data name="English, with Gregorian dates and Western digits, regardless of the interface language." xml:space="preserve"><value>انگلیسی، با تاریخ میلادی و ارقام لاتین، مستقل از زبان رابط کاربری.</value></data>
+  <data name="Two administrators in different timezones can legitimately receive different rows for the same date. A report is defined by its date range, timezone and timestamp basis; all three are written into the workbook." xml:space="preserve"><value>دو مدیر در دو منطقهٔ زمانی متفاوت ممکن است برای یک تاریخ، ردیف‌های متفاوتی دریافت کنند. هر گزارش با بازهٔ تاریخ، منطقهٔ زمانی و مبنای زمان تعریف می‌شود و هر سه در فایل نوشته می‌شوند.</value></data>
+  <data name="Select a period" xml:space="preserve"><value>انتخاب بازه</value></data>
+  <data name="Use either one date or an inclusive From/To range. Both boundaries are interpreted in the visible timezone." xml:space="preserve"><value>یک تاریخ یا یک بازهٔ از/تا (شامل) انتخاب کنید. هر دو مرز در منطقهٔ زمانی نمایش‌داده‌شده تفسیر می‌شوند.</value></data>
+  <data name="Reporting timezone (IANA)" xml:space="preserve"><value>منطقهٔ زمانی گزارش (IANA)</value></data>
+  <data name="Detected from this device when available. If detection fails, enter an IANA timezone explicitly." xml:space="preserve"><value>در صورت امکان از این دستگاه تشخیص داده می‌شود. اگر تشخیص ممکن نبود، یک منطقهٔ زمانی IANA وارد کنید.</value></data>
+  <data name="Date boundaries will use {0}." xml:space="preserve"><value>مرزهای تاریخ بر اساس {0} خواهد بود.</value></data>
+  <data name="Timezone detection failed. Enter an IANA timezone before exporting." xml:space="preserve"><value>تشخیص منطقهٔ زمانی ناموفق بود. پیش از خروجی گرفتن، یک منطقهٔ زمانی IANA وارد کنید.</value></data>
+  <data name="Single date" xml:space="preserve"><value>یک تاریخ</value></data>
+  <data name="Download approved requests (Excel, English)" xml:space="preserve"><value>دانلود درخواست‌های تأییدشده (اکسل، انگلیسی)</value></data>
+  <data name="No approved requests match the selected period. No workbook was generated." xml:space="preserve"><value>درخواست تأییدشده‌ای در بازهٔ انتخابی وجود ندارد. فایلی تولید نشد.</value></data>
+  <data name="The selected local date is not valid in the submitted reporting timezone." xml:space="preserve"><value>تاریخ انتخاب‌شده در منطقهٔ زمانی ارسال‌شده معتبر نیست.</value></data>
+
+  <!-- Employee management -->
+  <data name="Employee management" xml:space="preserve"><value>مدیریت کارکنان</value></data>
+  <data name="Create employee" xml:space="preserve"><value>ایجاد کارمند</value></data>
+  <data name="New access key for {0}:" xml:space="preserve"><value>کلید دسترسی جدید برای {0}:</value></data>
+  <data name="Access key for {0}:" xml:space="preserve"><value>کلید دسترسی {0}:</value></data>
+  <data name="This key is displayed only once. Deliver it through a secure channel together with the username." xml:space="preserve"><value>این کلید فقط یک بار نمایش داده می‌شود. آن را همراه با نام کاربری از طریق یک کانال امن تحویل دهید.</value></data>
+  <data name="This value is displayed only once. Store it securely and deliver it together with the username." xml:space="preserve"><value>این مقدار فقط یک بار نمایش داده می‌شود. آن را امن نگه دارید و همراه با نام کاربری تحویل دهید.</value></data>
+  <data name="Disable/enable change the account state and keep the key. Revoke invalidates the key; restoring a revoked employee is an explicit action that issues a fresh key. A replacement key never changes the account state." xml:space="preserve"><value>غیرفعال/فعال کردن فقط وضعیت حساب را تغییر می‌دهد و کلید را نگه می‌دارد. لغو دسترسی کلید را باطل می‌کند؛ بازگرداندن دسترسی کارمند لغوشده یک اقدام صریح است که کلید جدیدی صادر می‌کند. کلید جایگزین هرگز وضعیت حساب را تغییر نمی‌دهد.</value></data>
+  <data name="No employees have been created yet." xml:space="preserve"><value>هنوز کارمندی ایجاد نشده است.</value></data>
+  <data name="Key version" xml:space="preserve"><value>نسخهٔ کلید</value></data>
+  <data name="Last sign-in" xml:space="preserve"><value>آخرین ورود</value></data>
+  <data name="Edit profile" xml:space="preserve"><value>ویرایش مشخصات</value></data>
+  <data name="Requests" xml:space="preserve"><value>درخواست‌ها</value></data>
+  <data name="Replacement key" xml:space="preserve"><value>کلید جایگزین</value></data>
+  <data name="Issue a replacement key? The current key and all sessions stop working immediately; the account state does not change." xml:space="preserve"><value>کلید جایگزین صادر شود؟ کلید فعلی و همهٔ نشست‌ها بلافاصله از کار می‌افتند؛ وضعیت حساب تغییر نمی‌کند.</value></data>
+  <data name="Disable" xml:space="preserve"><value>غیرفعال کردن</value></data>
+  <data name="Disable this employee? Their sessions end and the key is suspended until re-enabled." xml:space="preserve"><value>این کارمند غیرفعال شود؟ نشست‌های او پایان می‌یابد و کلید تا فعال‌سازی مجدد معلق می‌ماند.</value></data>
+  <data name="Enable" xml:space="preserve"><value>فعال کردن</value></data>
+  <data name="Revoke" xml:space="preserve"><value>لغو دسترسی</value></data>
+  <data name="Revoke this employee's access? The key and sessions become invalid; restoring access later requires an explicit action and a fresh key." xml:space="preserve"><value>دسترسی این کارمند لغو شود؟ کلید و نشست‌ها باطل می‌شوند؛ بازگرداندن دسترسی بعداً نیازمند اقدام صریح و کلید جدید است.</value></data>
+  <data name="Restore access" xml:space="preserve"><value>بازگرداندن دسترسی</value></data>
+  <data name="The employee was disabled." xml:space="preserve"><value>کارمند غیرفعال شد.</value></data>
+  <data name="The employee was enabled." xml:space="preserve"><value>کارمند فعال شد.</value></data>
+  <data name="The employee's access was revoked." xml:space="preserve"><value>دسترسی کارمند لغو شد.</value></data>
+  <data name="Letters, numbers, periods, hyphens or underscores. The employee signs in with this username and their access key." xml:space="preserve"><value>حروف لاتین، ارقام، نقطه، خط تیره یا زیرخط. کارمند با این نام کاربری و کلید دسترسی وارد می‌شود.</value></data>
+  <data name="Use letters, numbers, periods, hyphens, or underscores only." xml:space="preserve"><value>فقط از حروف لاتین، ارقام، نقطه، خط تیره یا زیرخط استفاده کنید.</value></data>
+  <data name="Use letters, numbers, periods, hyphens, underscores or @ only." xml:space="preserve"><value>فقط از حروف لاتین، ارقام، نقطه، خط تیره، زیرخط یا @ استفاده کنید.</value></data>
+  <data name="Administrator notes (private)" xml:space="preserve"><value>یادداشت مدیر (خصوصی)</value></data>
+  <data name="Never shown to the employee, on tracking pages or in exports." xml:space="preserve"><value>هرگز به کارمند، در صفحهٔ پیگیری یا در خروجی‌ها نمایش داده نمی‌شود.</value></data>
+  <data name="Create and generate key" xml:space="preserve"><value>ایجاد و تولید کلید</value></data>
+  <data name="Full name is required." xml:space="preserve"><value>نام و نام خانوادگی الزامی است.</value></data>
+  <data name="Full name is required and must not exceed 200 characters." xml:space="preserve"><value>نام و نام خانوادگی الزامی است و نباید بیش از 200 نویسه باشد.</value></data>
+  <data name="Username must be between 3 and 100 characters." xml:space="preserve"><value>نام کاربری باید بین 3 تا 100 نویسه باشد.</value></data>
+  <data name="This username is already in use." xml:space="preserve"><value>این نام کاربری قبلاً استفاده شده است.</value></data>
+  <data name="Branch is required for this installation." xml:space="preserve"><value>در این نصب، شعبه الزامی است.</value></data>
+  <data name="Phone number is too long." xml:space="preserve"><value>شمارهٔ تلفن بیش از حد طولانی است.</value></data>
+  <data name="Department is too long." xml:space="preserve"><value>نام واحد بیش از حد طولانی است.</value></data>
+  <data name="Branch is too long." xml:space="preserve"><value>نام شعبه بیش از حد طولانی است.</value></data>
+  <data name="Job title is too long." xml:space="preserve"><value>عنوان سمت بیش از حد طولانی است.</value></data>
+  <data name="Administrator notes are too long." xml:space="preserve"><value>یادداشت مدیر بیش از حد طولانی است.</value></data>
+  <data name="Edit employee profile" xml:space="preserve"><value>ویرایش مشخصات کارمند</value></data>
+  <data name="Changes apply to future requests only. Requests already submitted keep the profile snapshot taken at submission." xml:space="preserve"><value>تغییرات فقط بر درخواست‌های آینده اثر دارد. درخواست‌های ثبت‌شده، مشخصات زمان ثبت را نگه می‌دارند.</value></data>
+  <data name="Save profile" xml:space="preserve"><value>ذخیرهٔ مشخصات</value></data>
+  <data name="The employee profile was updated." xml:space="preserve"><value>مشخصات کارمند به‌روزرسانی شد.</value></data>
+  <data name="The employee was not found." xml:space="preserve"><value>کارمند یافت نشد.</value></data>
+  <data name="Only an active employee can be disabled." xml:space="preserve"><value>فقط کارمند فعال را می‌توان غیرفعال کرد.</value></data>
+  <data name="Only a disabled employee can be enabled. A revoked employee needs explicit restoration." xml:space="preserve"><value>فقط کارمند غیرفعال را می‌توان فعال کرد. کارمند لغوشده به بازگرداندن صریح نیاز دارد.</value></data>
+  <data name="Access is already revoked." xml:space="preserve"><value>دسترسی قبلاً لغو شده است.</value></data>
+  <data name="Only a revoked employee can be restored." xml:space="preserve"><value>فقط دسترسی کارمند لغوشده را می‌توان بازگرداند.</value></data>
+  <data name="Restore the revoked employee first; a replacement key alone does not restore access." xml:space="preserve"><value>ابتدا دسترسی کارمند لغوشده را بازگردانید؛ کلید جایگزین به‌تنهایی دسترسی را برنمی‌گرداند.</value></data>
+  <data name="Restore revoked access" xml:space="preserve"><value>بازگرداندن دسترسی لغوشده</value></data>
+  <data name="Access was restored for {0}." xml:space="preserve"><value>دسترسی {0} بازگردانده شد.</value></data>
+  <data name="Effects of restoring access" xml:space="preserve"><value>اثرات بازگرداندن دسترسی</value></data>
+  <data name="The employee becomes Active and can sign in again." xml:space="preserve"><value>کارمند فعال می‌شود و می‌تواند دوباره وارد شود.</value></data>
+  <data name="A fresh access key is issued; the previously revoked key stays invalid and is never restored." xml:space="preserve"><value>کلید دسترسی جدیدی صادر می‌شود؛ کلید لغوشدهٔ قبلی باطل می‌ماند و هرگز بازگردانده نمی‌شود.</value></data>
+  <data name="Previous sessions stay signed out." xml:space="preserve"><value>نشست‌های قبلی خارج‌شده می‌مانند.</value></data>
+  <data name="The restoration and the new key are recorded in the audit trail under your account." xml:space="preserve"><value>بازگرداندن دسترسی و کلید جدید در سوابق حسابرسی زیر حساب شما ثبت می‌شود.</value></data>
+  <data name="I confirm that this employee should regain access." xml:space="preserve"><value>تأیید می‌کنم که این کارمند باید دوباره دسترسی داشته باشد.</value></data>
+  <data name="Restore access and issue a new key" xml:space="preserve"><value>بازگرداندن دسترسی و صدور کلید جدید</value></data>
+  <data name="Tick the confirmation box to restore access." xml:space="preserve"><value>برای بازگرداندن دسترسی، گزینهٔ تأیید را علامت بزنید.</value></data>
+
+  <!-- Staff accounts -->
+  <data name="Create staff account" xml:space="preserve"><value>ایجاد حساب مسئول</value></data>
+  <data name="Administrator and accountant accounts. Each account has exactly one role. Deactivation, role changes and resets end the holder's sessions and are recorded in the audit trail." xml:space="preserve"><value>حساب‌های مدیر و حسابدار. هر حساب دقیقاً یک نقش دارد. غیرفعال‌سازی، تغییر نقش و بازنشانی رمز، نشست‌های دارنده را پایان می‌دهد و در سوابق حسابرسی ثبت می‌شود.</value></data>
+  <data name="Temporary password for {0}:" xml:space="preserve"><value>رمز عبور موقت برای {0}:</value></data>
+  <data name="Shown once. Valid until" xml:space="preserve"><value>فقط یک بار نمایش داده می‌شود. معتبر تا</value></data>
+  <data name="The holder must choose a personal password at the next sign-in; all previous sessions are ended." xml:space="preserve"><value>دارندهٔ حساب باید در ورود بعدی یک رمز عبور شخصی انتخاب کند؛ همهٔ نشست‌های قبلی پایان یافته‌اند.</value></data>
+  <data name="You" xml:space="preserve"><value>شما</value></data>
+  <data name="Password setup pending" xml:space="preserve"><value>در انتظار تعیین رمز عبور</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>غیرفعال کردن</value></data>
+  <data name="Deactivate this account? The holder is signed out immediately." xml:space="preserve"><value>این حساب غیرفعال شود؟ دارندهٔ حساب بلافاصله خارج می‌شود.</value></data>
+  <data name="Reactivate" xml:space="preserve"><value>فعال‌سازی مجدد</value></data>
+  <data name="Reset password" xml:space="preserve"><value>بازنشانی رمز عبور</value></data>
+  <data name="Issue a temporary password? The current password and all sessions stop working immediately." xml:space="preserve"><value>رمز عبور موقت صادر شود؟ رمز فعلی و همهٔ نشست‌ها بلافاصله از کار می‌افتند.</value></data>
+  <data name="Change role" xml:space="preserve"><value>تغییر نقش</value></data>
+  <data name="Change the role? The holder must sign in again to receive the new permissions." xml:space="preserve"><value>نقش تغییر کند؟ دارندهٔ حساب باید دوباره وارد شود تا مجوزهای جدید را دریافت کند.</value></data>
+  <data name="The account was deactivated." xml:space="preserve"><value>حساب غیرفعال شد.</value></data>
+  <data name="The account was reactivated." xml:space="preserve"><value>حساب دوباره فعال شد.</value></data>
+  <data name="The role was changed. The account holder must sign in again." xml:space="preserve"><value>نقش تغییر کرد. دارندهٔ حساب باید دوباره وارد شود.</value></data>
+  <data name="The account {0} was created." xml:space="preserve"><value>حساب {0} ایجاد شد.</value></data>
+  <data name="Back to staff accounts" xml:space="preserve"><value>بازگشت به حساب‌های مسئولان</value></data>
+  <data name="Create account and show temporary password" xml:space="preserve"><value>ایجاد حساب و نمایش رمز عبور موقت</value></data>
+  <data name="Choose Administrator or Accountant." xml:space="preserve"><value>مدیر یا حسابدار را انتخاب کنید.</value></data>
+  <data name="You cannot deactivate your own account." xml:space="preserve"><value>نمی‌توانید حساب خودتان را غیرفعال کنید.</value></data>
+  <data name="You cannot change your own role." xml:space="preserve"><value>نمی‌توانید نقش خودتان را تغییر دهید.</value></data>
+  <data name="Use the change-password page for your own account." xml:space="preserve"><value>برای حساب خودتان از صفحهٔ تغییر رمز عبور استفاده کنید.</value></data>
+  <data name="The account was not found." xml:space="preserve"><value>حساب یافت نشد.</value></data>
+  <data name="The account is already deactivated." xml:space="preserve"><value>حساب قبلاً غیرفعال شده است.</value></data>
+  <data name="The account is already active." xml:space="preserve"><value>حساب قبلاً فعال است.</value></data>
+  <data name="The account already has that role." xml:space="preserve"><value>حساب همین نقش را دارد.</value></data>
+  <data name="This is the last active administrator and cannot be deactivated." xml:space="preserve"><value>این آخرین مدیر فعال است و نمی‌توان آن را غیرفعال کرد.</value></data>
+  <data name="This is the last active administrator and cannot be demoted." xml:space="preserve"><value>این آخرین مدیر فعال است و نمی‌توان نقش آن را تنزل داد.</value></data>
+
+  <!-- Execution -->
+  <data name="Payment execution records" xml:space="preserve"><value>سوابق اجرای پرداخت</value></data>
+  <data name="Record the outcome of payments performed outside this application." xml:space="preserve"><value>نتیجهٔ پرداخت‌هایی را که خارج از این برنامه انجام شده‌اند ثبت کنید.</value></data>
+  <data name="Execution queue filters" xml:space="preserve"><value>فیلترهای صف پرداخت</value></data>
+  <data name="This programme records an external payment outcome. It does not send money or connect to a bank." xml:space="preserve"><value>این برنامه فقط نتیجهٔ پرداخت بیرونی را ثبت می‌کند و پولی ارسال نمی‌کند یا به بانک متصل نمی‌شود.</value></data>
+  <data name="There are no requests in this view." xml:space="preserve"><value>درخواستی در این نما وجود ندارد.</value></data>
+  <data name="Payee / requested destination" xml:space="preserve"><value>گیرندهٔ وجه / مقصد درخواستی</value></data>
+  <data name="Approved amount" xml:space="preserve"><value>مبلغ تأییدشده</value></data>
+  <data name="Requested" xml:space="preserve"><value>درخواستی</value></data>
+  <data name="Unsuccessful; awaiting 48-hour automatic closure" xml:space="preserve"><value>ناموفق؛ در انتظار بستن خودکار پس از 48 ساعت</value></data>
+  <data name="Paid; awaiting 24-hour automatic closure" xml:space="preserve"><value>پرداخت شده؛ در انتظار بستن خودکار پس از 24 ساعت</value></data>
+  <data name="Payment execution record" xml:space="preserve"><value>سابقهٔ اجرای پرداخت</value></data>
+  <data name="Back to execution queue" xml:space="preserve"><value>بازگشت به صف پرداخت</value></data>
+  <data name="Unsuccessful, awaiting automatic closure." xml:space="preserve"><value>ناموفق، در انتظار بستن خودکار.</value></data>
+  <data name="The recorded outcome and reason remain final. Automatic closure is due" xml:space="preserve"><value>نتیجه و علت ثبت‌شده نهایی هستند. زمان بستن خودکار:</value></data>
+  <data name="Transferred, awaiting automatic closure." xml:space="preserve"><value>پرداخت شده، در انتظار بستن خودکار.</value></data>
+  <data name="This item is paid and cannot be executed again. Automatic closure is due" xml:space="preserve"><value>این مورد پرداخت شده و دوباره قابل اجرا نیست. زمان بستن خودکار:</value></data>
+  <data name="Approved request" xml:space="preserve"><value>درخواست تأییدشده</value></data>
+  <data name="Requested destination" xml:space="preserve"><value>مقصد درخواستی</value></data>
+  <data name="Record an external payment outcome" xml:space="preserve"><value>ثبت نتیجهٔ پرداخت بیرونی</value></data>
+  <data name="Use this form only after you personally made a payment or attempt outside the programme. Saving this form does not send funds. You are recorded as the executor." xml:space="preserve"><value>این فرم را فقط پس از آن‌که شخصاً پرداخت یا تلاش برای پرداخت را خارج از برنامه انجام دادید پر کنید. ذخیرهٔ این فرم پولی ارسال نمی‌کند. شما به‌عنوان مجری پرداخت ثبت می‌شوید.</value></data>
+  <data name="Execution method" xml:space="preserve"><value>روش پرداخت</value></data>
+  <data name="Choose a method" xml:space="preserve"><value>یک روش انتخاب کنید</value></data>
+  <data name="Occurred at (your device time)" xml:space="preserve"><value>زمان انجام (به وقت دستگاه شما)</value></data>
+  <data name="Editable before saving. The server resolves the offset for this date in the timezone below." xml:space="preserve"><value>پیش از ذخیره قابل ویرایش است. سرور اختلاف با UTC را برای این تاریخ در منطقهٔ زمانی زیر محاسبه می‌کند.</value></data>
+  <data name="Timezone of the entered time (IANA)" xml:space="preserve"><value>منطقهٔ زمانی زمان واردشده (IANA)</value></data>
+  <data name="Detected from this device: {0}. Edit it if the payment happened elsewhere." xml:space="preserve"><value>از این دستگاه تشخیص داده شد: {0}. اگر پرداخت در جای دیگری انجام شده، آن را ویرایش کنید.</value></data>
+  <data name="Timezone detection failed. Enter an IANA timezone or choose a UTC offset below." xml:space="preserve"><value>تشخیص منطقهٔ زمانی ناموفق بود. یک منطقهٔ زمانی IANA وارد کنید یا اختلاف با UTC را در زیر انتخاب کنید.</value></data>
+  <data name="UTC offset (only if no timezone, or when asked)" xml:space="preserve"><value>اختلاف با UTC (فقط بدون منطقهٔ زمانی یا هنگام درخواست)</value></data>
+  <data name="This local time occurred twice. Which offset applied?" xml:space="preserve"><value>این زمان محلی دو بار رخ داده است. کدام اختلاف با UTC صحیح است؟</value></data>
+  <data name="Use the timezone" xml:space="preserve"><value>استفاده از منطقهٔ زمانی</value></data>
+  <data name="Actual destination account/card" xml:space="preserve"><value>حساب/کارت مقصد واقعی</value></data>
+  <data name="Kept separate from the destination originally requested." xml:space="preserve"><value>جدا از مقصد درخواستی اولیه نگهداری می‌شود.</value></data>
+  <data name="Bank name" xml:space="preserve"><value>نام بانک</value></data>
+  <data name="Optional for bank transfer; required for cheque." xml:space="preserve"><value>برای انتقال بانکی اختیاری؛ برای چک الزامی.</value></data>
+  <data name="Cheque number" xml:space="preserve"><value>شمارهٔ چک</value></data>
+  <data name="Cheque date" xml:space="preserve"><value>تاریخ چک</value></data>
+  <data name="A date only; it never shifts with timezones." xml:space="preserve"><value>فقط تاریخ است و با منطقهٔ زمانی تغییر نمی‌کند.</value></data>
+  <data name="Cheque payee" xml:space="preserve"><value>گیرندهٔ چک</value></data>
+  <data name="Describe the other method" xml:space="preserve"><value>روش دیگر را شرح دهید</value></data>
+  <data name="External accounting reference (optional)" xml:space="preserve"><value>شمارهٔ مرجع حسابداری (اختیاری)</value></data>
+  <data name="A manual reference from any accounting or external system; no synchronization is performed." xml:space="preserve"><value>یک شمارهٔ مرجع دستی از هر سامانهٔ حسابداری یا بیرونی؛ همگام‌سازی انجام نمی‌شود.</value></data>
+  <data name="Unsuccessful-attempt reason" xml:space="preserve"><value>علت ناموفق بودن تلاش</value></data>
+  <data name="required for an unsuccessful outcome" xml:space="preserve"><value>برای نتیجهٔ ناموفق الزامی است</value></data>
+  <data name="Required when recording an unsuccessful outcome; ignored for a transferred outcome." xml:space="preserve"><value>هنگام ثبت نتیجهٔ ناموفق الزامی است؛ برای نتیجهٔ پرداخت‌شده نادیده گرفته می‌شود.</value></data>
+  <data name="Record as transferred" xml:space="preserve"><value>ثبت به‌عنوان پرداخت شده</value></data>
+  <data name="Record unsuccessful attempt" xml:space="preserve"><value>ثبت تلاش ناموفق</value></data>
+  <data name="Recorded outcome" xml:space="preserve"><value>نتیجهٔ ثبت‌شده</value></data>
+  <data name="Outcome" xml:space="preserve"><value>نتیجه</value></data>
+  <data name="Method" xml:space="preserve"><value>روش</value></data>
+  <data name="Actual destination" xml:space="preserve"><value>مقصد واقعی</value></data>
+  <data name="Bank" xml:space="preserve"><value>بانک</value></data>
+  <data name="Executor" xml:space="preserve"><value>مجری پرداخت</value></data>
+  <data name="Reported occurrence" xml:space="preserve"><value>زمان اعلام‌شدهٔ تراکنش</value></data>
+  <data name="Immutable server recording time (UTC)" xml:space="preserve"><value>زمان تغییرناپذیر ثبت در سرور (UTC)</value></data>
+  <data name="Closure type" xml:space="preserve"><value>نوع بستن</value></data>
+  <data name="Closed at" xml:space="preserve"><value>زمان بستن</value></data>
+  <data name="Closed by" xml:space="preserve"><value>بسته‌شده توسط</value></data>
+  <data name="Closure reason" xml:space="preserve"><value>علت بستن پرونده</value></data>
+  <data name="Close this execution item early" xml:space="preserve"><value>بستن زودهنگام این پروندهٔ پرداخت</value></data>
+  <data name="Administrator closure preserves the recorded outcome and audit history. Closure never changes whether a payment succeeded." xml:space="preserve"><value>بستن توسط مدیر، نتیجهٔ ثبت‌شده و سوابق حسابرسی را حفظ می‌کند. بستن پرونده هرگز موفق یا ناموفق بودن پرداخت را تغییر نمی‌دهد.</value></data>
+  <data name="Close item now" xml:space="preserve"><value>بستن پرونده اکنون</value></data>
+  <data name="Execution audit trail" xml:space="preserve"><value>سوابق حسابرسی پرداخت</value></data>
+  <data name="Server recording times are shown in UTC." xml:space="preserve"><value>زمان‌های ثبت در سرور به وقت UTC نمایش داده می‌شوند.</value></data>
+  <data name="Action" xml:space="preserve"><value>اقدام</value></data>
+  <data name="Actor" xml:space="preserve"><value>انجام‌دهنده</value></data>
+  <data name="Server recorded (UTC)" xml:space="preserve"><value>ثبت در سرور (UTC)</value></data>
+  <data name="Record an execution outcome before closing the item." xml:space="preserve"><value>پیش از بستن پرونده، نتیجهٔ پرداخت را ثبت کنید.</value></data>
+  <data name="This closure state changed while you were working. The latest record is shown below." xml:space="preserve"><value>وضعیت بستن پرونده هنگام کار شما تغییر کرد. آخرین سابقه در زیر نمایش داده شده است.</value></data>
+  <data name="This execution record changed while you were working. The latest outcome is shown below." xml:space="preserve"><value>این سابقهٔ پرداخت هنگام کار شما تغییر کرد. آخرین نتیجه در زیر نمایش داده شده است.</value></data>
+  <data name="The execution item was closed by an administrator. Its outcome and history were preserved." xml:space="preserve"><value>پروندهٔ پرداخت توسط مدیر بسته شد. نتیجه و سوابق آن حفظ شده است.</value></data>
+  <data name="The transfer was recorded and awaits automatic closure after 24 hours." xml:space="preserve"><value>پرداخت ثبت شد و پس از 24 ساعت به‌صورت خودکار بسته می‌شود.</value></data>
+  <data name="The unsuccessful attempt was recorded and awaits automatic closure after 48 hours." xml:space="preserve"><value>تلاش ناموفق ثبت شد و پس از 48 ساعت به‌صورت خودکار بسته می‌شود.</value></data>
+
+  <!-- Rule messages from the services -->
+  <data name="A valid payment requester is required." xml:space="preserve"><value>درخواست‌دهندهٔ معتبر الزامی است.</value></data>
+  <data name="{0} is required." xml:space="preserve"><value>{0} الزامی است.</value></data>
+  <data name="{0} is too long." xml:space="preserve"><value>{0} بیش از حد طولانی است.</value></data>
+  <data name="Add between 1 and {0} expense rows." xml:space="preserve"><value>بین 1 تا {0} ردیف هزینه اضافه کنید.</value></data>
+  <data name="Expense row {0} description" xml:space="preserve"><value>شرح ردیف هزینهٔ {0}</value></data>
+  <data name="Expense row {0} remarks" xml:space="preserve"><value>توضیحات ردیف هزینهٔ {0}</value></data>
+  <data name="Expense row {0} amount must be greater than zero." xml:space="preserve"><value>مبلغ ردیف هزینهٔ {0} باید بزرگ‌تر از صفر باشد.</value></data>
+  <data name="The request total is too large." xml:space="preserve"><value>جمع کل درخواست بیش از حد بزرگ است.</value></data>
+  <data name="The total cannot exceed {0} rials. Please contact the company to arrange this request in person." xml:space="preserve"><value>جمع کل نمی‌تواند از {0} ریال بیشتر باشد. لطفاً برای انجام این درخواست به‌صورت حضوری با شرکت تماس بگیرید.</value></data>
+  <data name="Attachment {0} has an invalid file name." xml:space="preserve"><value>نام فایل پیوست {0} نامعتبر است.</value></data>
+  <data name="Attachment {0} must be between 1 byte and 5 MiB." xml:space="preserve"><value>حجم پیوست {0} باید بین 1 بایت و 5 مگابایت باشد.</value></data>
+  <data name="Attachment {0} must be a PDF, JPEG, or PNG file." xml:space="preserve"><value>پیوست {0} باید فایل PDF، JPEG یا PNG باشد.</value></data>
+  <data name="This submission form is invalid or expired. Reload it and try again." xml:space="preserve"><value>این فرم نامعتبر یا منقضی شده است. صفحه را دوباره بارگذاری کنید و دوباره تلاش کنید.</value></data>
+  <data name="You have already created {0} requests today (UTC day). Try again after 00:00 UTC or contact the company." xml:space="preserve"><value>امروز (به وقت UTC) {0} درخواست ایجاد کرده‌اید. پس از ساعت 00:00 UTC دوباره تلاش کنید یا با شرکت تماس بگیرید.</value></data>
+  <data name="The database rejected this record because it conflicts with a data rule. Reload the page and check the entered values." xml:space="preserve"><value>پایگاه داده این رکورد را به دلیل مغایرت با یک قاعدهٔ داده رد کرد. صفحه را دوباره بارگذاری کنید و مقادیر واردشده را بررسی کنید.</value></data>
+  <data name="This payment request already has a final decision." xml:space="preserve"><value>این درخواست پرداخت قبلاً تصمیم نهایی دارد.</value></data>
+  <data name="Choose a valid approval decision." xml:space="preserve"><value>یک تصمیم معتبر انتخاب کنید.</value></data>
+  <data name="A valid administrator is required." xml:space="preserve"><value>مدیر معتبر الزامی است.</value></data>
+  <data name="The rejection reason cannot exceed {0} characters." xml:space="preserve"><value>علت رد نمی‌تواند بیش از {0} نویسه باشد.</value></data>
+  <data name="Only an approved request can enter the transfer queue." xml:space="preserve"><value>فقط درخواست تأییدشده می‌تواند وارد صف پرداخت شود.</value></data>
+  <data name="This request already has a transfer outcome." xml:space="preserve"><value>این درخواست قبلاً نتیجهٔ پرداخت دارد.</value></data>
+  <data name="Choose Transferred or Unsuccessful." xml:space="preserve"><value>«پرداخت شده» یا «ناموفق» را انتخاب کنید.</value></data>
+  <data name="Choose a valid execution method." xml:space="preserve"><value>یک روش پرداخت معتبر انتخاب کنید.</value></data>
+  <data name="Enter when the transfer or attempt occurred." xml:space="preserve"><value>زمان انجام پرداخت یا تلاش را وارد کنید.</value></data>
+  <data name="Enter a reason for the unsuccessful payment attempt." xml:space="preserve"><value>علت ناموفق بودن تلاش پرداخت را وارد کنید.</value></data>
+  <data name="Enter the actual destination account or card number for a bank transfer." xml:space="preserve"><value>برای انتقال بانکی، شمارهٔ حساب یا کارت مقصد واقعی را وارد کنید.</value></data>
+  <data name="Cheque number, cheque date, bank, and payee are required for a cheque." xml:space="preserve"><value>برای چک، شمارهٔ چک، تاریخ چک، بانک و گیرنده الزامی هستند.</value></data>
+  <data name="Describe the execution method when Other is selected." xml:space="preserve"><value>وقتی «سایر» انتخاب شده، روش پرداخت را شرح دهید.</value></data>
+  <data name="{0} cannot exceed {1} characters." xml:space="preserve"><value>{0} نمی‌تواند بیش از {1} نویسه باشد.</value></data>
+  <data name="Other method description" xml:space="preserve"><value>شرح روش دیگر</value></data>
+  <data name="Destination account or card number" xml:space="preserve"><value>شمارهٔ حساب یا کارت مقصد</value></data>
+  <data name="Only a recorded transferred or unsuccessful outcome has a closure timer." xml:space="preserve"><value>فقط نتیجهٔ ثبت‌شدهٔ پرداخت‌شده یا ناموفق زمان‌سنج بستن دارد.</value></data>
+  <data name="The automatic closure timer has not elapsed." xml:space="preserve"><value>زمان بستن خودکار هنوز فرا نرسیده است.</value></data>
+  <data name="Only an authenticated administrator may close an execution item early." xml:space="preserve"><value>فقط مدیر احرازهویت‌شده می‌تواند پروندهٔ پرداخت را زودتر ببندد.</value></data>
+  <data name="Enter the reason for closing this execution item early." xml:space="preserve"><value>علت بستن زودهنگام این پروندهٔ پرداخت را وارد کنید.</value></data>
+  <data name="Closure cannot be recorded before the execution outcome." xml:space="preserve"><value>بستن پرونده نمی‌تواند پیش از ثبت نتیجهٔ پرداخت باشد.</value></data>
+  <data name="Record a transferred or unsuccessful outcome before closing the item." xml:space="preserve"><value>پیش از بستن پرونده، نتیجهٔ پرداخت‌شده یا ناموفق را ثبت کنید.</value></data>
+  <data name="This execution item is already closed." xml:space="preserve"><value>این پروندهٔ پرداخت قبلاً بسته شده است.</value></data>
+  <data name="The authenticated account is not allowed to record this outcome." xml:space="preserve"><value>حساب احرازهویت‌شده مجاز به ثبت این نتیجه نیست.</value></data>
+  <data name="Choose the timezone or UTC offset that applied when the transaction occurred." xml:space="preserve"><value>منطقهٔ زمانی یا اختلاف با UTC را که هنگام انجام تراکنش برقرار بود انتخاب کنید.</value></data>
+  <data name="The timezone '{0}' is not recognized. Choose a valid IANA timezone." xml:space="preserve"><value>منطقهٔ زمانی «{0}» شناخته نشد. یک منطقهٔ زمانی معتبر IANA انتخاب کنید.</value></data>
+  <data name="The reported timezone offset is invalid." xml:space="preserve"><value>اختلاف با UTC اعلام‌شده نامعتبر است.</value></data>
+  <data name="That local time did not exist because clocks moved forward on that date. Enter the corrected time." xml:space="preserve"><value>آن زمان محلی وجود نداشته است، چون ساعت‌ها در آن تاریخ جلو کشیده شده‌اند. زمان درست را وارد کنید.</value></data>
+  <data name="That local time occurred twice because clocks moved back on that date. Choose which UTC offset applied." xml:space="preserve"><value>آن زمان محلی دو بار رخ داده است، چون ساعت‌ها در آن تاریخ عقب کشیده شده‌اند. اختلاف با UTC صحیح را انتخاب کنید.</value></data>
+  <data name="The transaction time could not be resolved." xml:space="preserve"><value>زمان تراکنش قابل تعیین نبود.</value></data>
+  <data name="The reported transaction time is later than the server time plus the {0}-minute tolerance. Check the device clock and timezone." xml:space="preserve"><value>زمان اعلام‌شدهٔ تراکنش دیرتر از زمان سرور به‌اضافهٔ {0} دقیقه تحمل است. ساعت و منطقهٔ زمانی دستگاه را بررسی کنید.</value></data>
+  <data name="The reported transaction time is earlier than the approval. A payment cannot be attempted before it is authorized." xml:space="preserve"><value>زمان اعلام‌شدهٔ تراکنش پیش از زمان تأیید است. پرداخت نمی‌تواند پیش از مجوز انجام شده باشد.</value></data>
+</root>

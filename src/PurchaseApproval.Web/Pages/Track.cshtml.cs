@@ -1,10 +1,11 @@
-// Provides the not-found and page results used by tracking.
+// Private bearer-token status page. The token proves nothing about who is asking, so the page
+// shows only the reference, the decision status and the minimal payment/closure labels. No
+// amounts, payee, rows, attachments, explanations or names ever appear here.
 using Microsoft.AspNetCore.Mvc;
-// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
-// Reads only the request status fields needed for the public tracking page.
 using Microsoft.EntityFrameworkCore;
 using PurchaseApproval.Data;
+using PurchaseApproval.Models;
 using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages;
@@ -22,21 +23,30 @@ public sealed class TrackModel(ApplicationDbContext dbContext) : PageModel
             {
                 item.ReferenceNumber,
                 item.Status,
-                item.TotalAmountRials,
-                item.SubmittedAtUtc,
-                item.TrackingTokenHash
+                item.TrackingTokenHash,
+                Transfer = item.TransferOutcome == null ? null : (TransferStatus?)item.TransferOutcome.Status,
+                IsClosed = item.TransferOutcome != null && item.TransferOutcome.IsClosed
             })
             .SingleOrDefaultAsync(HttpContext.RequestAborted);
 
+        // Unknown reference and wrong token produce the same 404 so nothing can be enumerated.
         if (request is null
             || !PaymentRequestSubmissionRules.VerifyTrackingToken(token, request.TrackingTokenHash))
             return NotFound();
 
-        RequestStatus = new TrackedRequest(request.ReferenceNumber, request.Status.ToString(),
-            request.TotalAmountRials, request.SubmittedAtUtc);
+        RequestStatus = new TrackedRequest(
+            request.ReferenceNumber,
+            request.Status,
+            request.Status == PaymentRequestStatus.Approved
+                ? request.Transfer ?? TransferStatus.AwaitingTransfer
+                : null,
+            request.IsClosed);
         return Page();
     }
 
-    public sealed record TrackedRequest(string ReferenceNumber, string Status,
-        long TotalAmountRials, DateTimeOffset SubmittedAtUtc);
+    public sealed record TrackedRequest(
+        string ReferenceNumber,
+        PaymentRequestStatus Status,
+        TransferStatus? Payment,
+        bool IsClosed);
 }

@@ -1,0 +1,29 @@
+@* Previous/next pager. The page model passes the current page, total pages and the query
+   values to keep (filters), so navigation never drops a filter. *@
+@model PurchaseApproval.Web.Pages.PagerModel
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="@L["Pagination"]" class="d-flex flex-wrap align-items-center gap-2 my-3">
+        @{
+            var previous = new Dictionary<string, string>(Model.RouteValues) { ["page"] = (Model.Page - 1).ToString() };
+            var next = new Dictionary<string, string>(Model.RouteValues) { ["page"] = (Model.Page + 1).ToString() };
+        }
+        @if (Model.Page > 1)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-page="@Model.PageName" asp-all-route-data="previous">@L["Previous page"]</a>
+        }
+        else
+        {
+            <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">@L["Previous page"]</span>
+        }
+        <span class="small text-secondary">@L["Page {0} of {1}", Model.Page, Model.TotalPages]</span>
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-page="@Model.PageName" asp-all-route-data="next">@L["Next page"]</a>
+        }
+        else
+        {
+            <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">@L["Next page"]</span>
+        }
+    </nav>
+}
