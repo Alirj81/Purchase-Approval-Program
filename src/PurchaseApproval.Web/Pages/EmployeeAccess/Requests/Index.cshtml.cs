@@ -22,7 +22,7 @@ public sealed class IndexModel(ApplicationDbContext dbContext) : PageModel
 
     public PagerModel Pager { get; private set; } = new("Index", 1, 1, new Dictionary<string, string>());
 
-    public async Task<IActionResult> OnGetAsync(int page = 1)
+    public async Task<IActionResult> OnGetAsync(int pageNumber = 1)
     {
         var identity = User.Identities.FirstOrDefault(item => item.IsAuthenticated
             && item.AuthenticationType == EmployeeAuthenticationDefaults.AuthenticationScheme);
@@ -30,7 +30,8 @@ public sealed class IndexModel(ApplicationDbContext dbContext) : PageModel
             || employeeId <= 0)
             return Forbid();
 
-        page = Math.Max(1, page);
+        // "pageNumber", not "page": the latter is the Razor Pages route value for the page path.
+        var page = Math.Max(1, pageNumber);
         var query = dbContext.PaymentRequests.AsNoTracking()
             .Where(item => item.EmployeeRequesterId == employeeId);
         var total = await query.CountAsync(HttpContext.RequestAborted);

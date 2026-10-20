@@ -23,7 +23,7 @@ public sealed class IndexModel(ApplicationDbContext dbContext) : PageModel
 
     public PagerModel Pager { get; private set; } = new("Index", 1, 1, new Dictionary<string, string>());
 
-    public async Task<IActionResult> OnGetAsync(string status = "open", int page = 1)
+    public async Task<IActionResult> OnGetAsync(string status = "open", int pageNumber = 1)
     {
         CurrentFilter = status.Trim().ToLowerInvariant();
         if (CurrentFilter is not ("open" or "history" or "all"))
@@ -44,7 +44,8 @@ public sealed class IndexModel(ApplicationDbContext dbContext) : PageModel
             _ => query
         };
 
-        page = Math.Max(1, page);
+        // "pageNumber", not "page": the latter is the Razor Pages route value for the page path.
+        var page = Math.Max(1, pageNumber);
         var total = await query.CountAsync(HttpContext.RequestAborted);
         Requests = await query
             .OrderByDescending(item => item.TransferOutcome != null

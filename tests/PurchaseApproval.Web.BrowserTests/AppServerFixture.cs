@@ -33,7 +33,14 @@ public sealed class AppServerFixture : IAsyncLifetime
         // Waits here while the integration suite holds the shared test database.
         _suiteLock = await IntegrationTests.TestDatabase.AcquireSuiteLockAsync();
         await IntegrationTests.TestDatabase.MigrateAsync();
-        Seed = new IntegrationTests.TestWebApplicationFactory();
+        // The seeding host and the browser-facing process share the limits below so history
+        // tests can create enough rows to page without hitting the daily quota, and the
+        // administrator history pages with a small page size.
+        Seed = new IntegrationTests.TestWebApplicationFactory(new Dictionary<string, string>
+        {
+            ["Limits:DailySubmissionQuota"] = "100",
+            ["Limits:HistoryPageSize"] = "3"
+        });
         _ = Seed.Services;
 
         Directory.CreateDirectory(ScreenshotDirectory);
@@ -74,6 +81,8 @@ public sealed class AppServerFixture : IAsyncLifetime
         startInfo.Environment["ASPNETCORE_URLS"] = BaseUrl;
         startInfo.Environment["ConnectionStrings__DefaultConnection"] = IntegrationTests.TestDatabase.ConnectionString;
         startInfo.Environment["Limits__SubmissionBurstLimit"] = "100";
+        startInfo.Environment["Limits__DailySubmissionQuota"] = "100";
+        startInfo.Environment["Limits__HistoryPageSize"] = "3";
         _server = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start the application.");
         // The server log is kept next to the screenshots so a failed step can be matched to its exception.
         var log = new StreamWriter(Path.Combine(ScreenshotDirectory, "server.log"), append: false) { AutoFlush = true };

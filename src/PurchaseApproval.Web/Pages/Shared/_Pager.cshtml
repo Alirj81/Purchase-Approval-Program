@@ -5,8 +5,8 @@
 {
     <nav aria-label="@L["Pagination"]" class="d-flex flex-wrap align-items-center gap-2 my-3">
         @{
-            var previous = new Dictionary<string, string>(Model.RouteValues) { ["page"] = (Model.Page - 1).ToString() };
-            var next = new Dictionary<string, string>(Model.RouteValues) { ["page"] = (Model.Page + 1).ToString() };
+            var previous = new Dictionary<string, string>(Model.RouteValues) { [PurchaseApproval.Web.Pages.PagerModel.QueryParameter] = (Model.Page - 1).ToString() };
+            var next = new Dictionary<string, string>(Model.RouteValues) { [PurchaseApproval.Web.Pages.PagerModel.QueryParameter] = (Model.Page + 1).ToString() };
         }
         @if (Model.Page > 1)
         {

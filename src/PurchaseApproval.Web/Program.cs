@@ -2,6 +2,7 @@
 // employee access-key cookie, authorization policies, localization, rate limiting, security
 // headers and the hosted closure worker. Each block below says why it exists; the operational
 // values it reads are documented in docs/DEPLOYMENT-WINDOWS-IIS.md.
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -381,6 +382,25 @@ app.UseRouting();
 app.UseRequestLocalization(requestLocalization);
 // Identify the caller before authorization decides which pages they may access.
 app.UseAuthentication();
+
+// The employee cookie is a second scheme and the middleware above runs only the default (staff)
+// scheme. On pages open to everyone, such as the language switch and the start page, a signed-in
+// employee therefore looked anonymous: the anti-forgery token issued to their identity was
+// rejected and the start page offered the key form again. When the staff scheme produced no
+// identity, authenticate the employee scheme too; its cookie events still enforce revocation.
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated != true)
+    {
+        var employee = await context.AuthenticateAsync(EmployeeAuthenticationDefaults.AuthenticationScheme);
+        if (employee.Succeeded && employee.Principal is not null)
+        {
+            context.User = employee.Principal;
+        }
+    }
+
+    await next();
+});
 
 app.UseRateLimiter();
 app.UseAuthorization();

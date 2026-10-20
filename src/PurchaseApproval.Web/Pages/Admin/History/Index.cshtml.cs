@@ -66,8 +66,9 @@ public sealed class IndexModel(
     [StringLength(200)]
     public string? TimeZoneId { get; set; }
 
-    // Bound as "page" so the shared pager's links round-trip into this property.
-    [BindProperty(SupportsGet = true, Name = "page")]
+    // Bound as "pageNumber" (see PagerModel.QueryParameter): "page" is the Razor Pages route value
+    // holding the page path, so binding this property to "page" fails validation on every request.
+    [BindProperty(SupportsGet = true, Name = PagerModel.QueryParameter)]
     public int PageNumber { get; set; } = 1;
 
     public AdministratorHistoryPage Result { get; private set; } = new([], 0, 1, 50);
@@ -91,6 +92,13 @@ public sealed class IndexModel(
             || (RequesterType is not null && !Enum.IsDefined(RequesterType.Value)))
         {
             return BadRequest();
+        }
+
+        // A requester ID is only meaningful together with its type: employee and administrator
+        // IDs are separate sequences, so an ID alone would silently show the wrong person.
+        if (RequesterId is not null && RequesterType is null)
+        {
+            ModelState.AddModelError(nameof(RequesterType), "Choose the requester type when filtering by requester ID.");
         }
 
         ReportPeriod? period = null;

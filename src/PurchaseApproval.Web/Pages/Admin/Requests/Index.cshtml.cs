@@ -40,7 +40,7 @@ public sealed class IndexModel(
         bool mine = false,
         RequesterType? requesterType = null,
         int? requesterId = null,
-        int page = 1)
+        int pageNumber = 1)
     {
         var normalizedStatus = status.Trim().ToLowerInvariant();
         PaymentRequestStatus? statusFilter = normalizedStatus switch
@@ -102,7 +102,8 @@ public sealed class IndexModel(
             RequesterFilterLabel = "Requests from the selected requester";
         }
 
-        page = Math.Max(1, page);
+        // "pageNumber", not "page": the latter is the Razor Pages route value for the page path.
+        var page = Math.Max(1, pageNumber);
         var total = await query.CountAsync(HttpContext.RequestAborted);
         Requests = await query
             .OrderByDescending(item => item.SubmittedAtUtc)
