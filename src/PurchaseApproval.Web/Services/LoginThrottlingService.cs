@@ -7,7 +7,8 @@
 //    deployment runs as one IIS process, which is why no shared store is needed.
 //  - A successful login clears only the account counter. The IP counter is left alone so an
 //    attacker on a shared office network cannot reset it by signing in to their own account.
-//  - Account keys are normalized usernames, never raw access keys, so secrets never become keys.
+//  - Account keys are normalized usernames (staff) or the employee ID a key claims (employees),
+//    never raw access keys or passwords, so secrets never become cache keys.
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PurchaseApproval.Configuration;

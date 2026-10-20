@@ -144,7 +144,8 @@
   <data name="Automatic closure service" xml:space="preserve"><value>سرویس بستن خودکار</value></data>
 
   <!-- Sign-in pages -->
-  <data name="Enter your username and employee access key to continue." xml:space="preserve"><value>برای ادامه، نام کاربری و کلید دسترسی خود را وارد کنید.</value></data>
+  <data name="Enter your employee access key to continue." xml:space="preserve"><value>برای ادامه، کلید دسترسی کارمندی خود را وارد کنید.</value></data>
+  <data name="Your key was issued by an administrator and identifies you on its own; no username is needed." xml:space="preserve"><value>کلید شما توسط مدیر صادر شده و به‌تنهایی شما را شناسایی می‌کند؛ نیازی به نام کاربری نیست.</value></data>
   <data name="Employee access key" xml:space="preserve"><value>کلید دسترسی کارمند</value></data>
   <data name="Continue" xml:space="preserve"><value>ادامه</value></data>
   <data name="Administrator or accountant sign in" xml:space="preserve"><value>ورود مدیر یا حسابدار</value></data>
@@ -154,7 +155,7 @@
   <data name="Username is required." xml:space="preserve"><value>نام کاربری الزامی است.</value></data>
   <data name="Password is required." xml:space="preserve"><value>رمز عبور الزامی است.</value></data>
   <data name="Access key is required." xml:space="preserve"><value>کلید دسترسی الزامی است.</value></data>
-  <data name="The username or access key is incorrect." xml:space="preserve"><value>نام کاربری یا کلید دسترسی نادرست است.</value></data>
+  <data name="The access key is incorrect." xml:space="preserve"><value>کلید دسترسی نادرست است.</value></data>
   <data name="The username or password is incorrect." xml:space="preserve"><value>نام کاربری یا رمز عبور نادرست است.</value></data>
   <data name="The account is temporarily locked." xml:space="preserve"><value>این حساب به‌طور موقت قفل شده است.</value></data>
   <data name="Too many sign-in attempts. Try again later." xml:space="preserve"><value>تعداد تلاش‌های ورود بیش از حد مجاز است. بعداً دوباره تلاش کنید.</value></data>
@@ -279,6 +280,7 @@
   <data name="Open/closed state" xml:space="preserve"><value>وضعیت باز/بسته</value></data>
   <data name="Chronological order" xml:space="preserve"><value>ترتیب زمانی</value></data>
   <data name="Requester ID (per-person history)" xml:space="preserve"><value>شناسهٔ درخواست‌دهنده (تاریخچهٔ هر فرد)</value></data>
+  <data name="Choose the requester type when filtering by requester ID." xml:space="preserve"><value>برای فیلتر بر اساس شناسهٔ درخواست‌دهنده، نوع درخواست‌دهنده را انتخاب کنید.</value></data>
   <data name="Date filter and sort timestamp" xml:space="preserve"><value>زمان مبنای فیلتر تاریخ و مرتب‌سازی</value></data>
   <data name="Date-boundary timezone (IANA)" xml:space="preserve"><value>منطقهٔ زمانی مرز تاریخ (IANA)</value></data>
   <data name="Filled from this device when available; visible and editable before filtering." xml:space="preserve"><value>در صورت امکان از این دستگاه پر می‌شود؛ پیش از فیلتر قابل مشاهده و ویرایش است.</value></data>
@@ -351,7 +353,7 @@
   <data name="The employee was disabled." xml:space="preserve"><value>کارمند غیرفعال شد.</value></data>
   <data name="The employee was enabled." xml:space="preserve"><value>کارمند فعال شد.</value></data>
   <data name="The employee's access was revoked." xml:space="preserve"><value>دسترسی کارمند لغو شد.</value></data>
-  <data name="Letters, numbers, periods, hyphens or underscores. The employee signs in with this username and their access key." xml:space="preserve"><value>حروف لاتین، ارقام، نقطه، خط تیره یا زیرخط. کارمند با این نام کاربری و کلید دسترسی وارد می‌شود.</value></data>
+  <data name="Letters, numbers, periods, hyphens or underscores. An internal identifier shown to administrators; employees sign in with their access key only." xml:space="preserve"><value>حروف لاتین، ارقام، نقطه، خط تیره یا زیرخط. شناسه‌ای داخلی که به مدیران نمایش داده می‌شود؛ کارکنان فقط با کلید دسترسی وارد می‌شوند.</value></data>
   <data name="Use letters, numbers, periods, hyphens, or underscores only." xml:space="preserve"><value>فقط از حروف لاتین، ارقام، نقطه، خط تیره یا زیرخط استفاده کنید.</value></data>
   <data name="Use letters, numbers, periods, hyphens, underscores or @ only." xml:space="preserve"><value>فقط از حروف لاتین، ارقام، نقطه، خط تیره، زیرخط یا @ استفاده کنید.</value></data>
   <data name="Administrator notes (private)" xml:space="preserve"><value>یادداشت مدیر (خصوصی)</value></data>

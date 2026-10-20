@@ -141,11 +141,12 @@ public static class Browser
             [new("Input.Username", username), new("Input.Password", password)], ExtractToken(page));
     }
 
-    public static async Task<HttpResponseMessage> SignInEmployeeAsync(HttpClient client, string username, string accessKey)
+    /// <summary>Employee sign-in: the access key alone identifies and authenticates the account.</summary>
+    public static async Task<HttpResponseMessage> SignInEmployeeAsync(HttpClient client, string accessKey)
     {
         var page = await client.GetStringAsync("/");
         return await PostFormAsync(client, "/",
-            [new("Input.Username", username), new("Input.AccessKey", accessKey)], ExtractToken(page));
+            [new("Input.AccessKey", accessKey)], ExtractToken(page));
     }
 
     /// <summary>Submits a one-row request through the employee or administrator form and returns the redirect target.</summary>

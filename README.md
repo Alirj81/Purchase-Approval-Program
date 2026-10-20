@@ -8,7 +8,7 @@ This is also a learning project for me. I’m using it to practise C#, backend d
 
 ## How it works
 
-1. An employee signs in with a username and an administrator-issued access key.
+1. An employee signs in with their administrator-issued access key; no username is typed. Administrators and accountants sign in with a username and password.
 2. They enter what the payment is for, add expense rows and optionally attach supporting files.
 3. An administrator reviews the request and approves or rejects it. Administrators can also submit their own requests.
 4. After an approved payment is attempted outside the app, an accountant or administrator records whether it was transferred or unsuccessful.
@@ -68,7 +68,7 @@ Keep credentials, database backups and real payment information out of Git. Use 
 
 ## Current state
 
-The main request, approval, payment-recording and reporting flows have been implemented and tested locally. There is still work to do on deployment scripts, backup and restore checks, and testing on the intended Windows Server/IIS setup and physical devices.
+The main request, approval, payment-recording and reporting flows have been implemented and tested locally, and the deployment, backup and restore scripts exist with their own checks. Still pending: the end-to-end backup and restore test with real Windows PostgreSQL client tools, the rehearsal on the intended Windows Server/IIS setup, and testing on physical devices over the company network.
 
 I’m still developing this project. Local test results do not mean it is ready to handle real company payments yet.
 

@@ -71,32 +71,50 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
     }
 
     [PostgresFact]
-    public async Task EmployeeSignIn_RequiresMatchingUsernameAndKey_AndThrottlesRepeatedFailures()
+    public async Task EmployeeSignIn_UsesTheKeyAlone_IdentifiesTheAccount_AndThrottlesRepeatedFailures()
     {
-        var employee = await _factory.CreateEmployeeAsync("sign.in");
-        var other = await _factory.CreateEmployeeAsync("someone.else");
+        var employee = await _factory.CreateEmployeeAsync("sign.in", "Sign In Employee");
+        var other = await _factory.CreateEmployeeAsync("someone.else", "Someone Else");
         var client = _factory.CreateCookieClient();
         await Browser.UseEnglishAsync(client);
 
-        // Right key with the wrong username, then two wrong keys with the right username.
-        var wrongUsername = await Browser.SignInEmployeeAsync(client, employee.Username, other.AccessKey);
-        Assert.Equal(HttpStatusCode.OK, wrongUsername.StatusCode);
-        Assert.Contains("username or access key is incorrect", await wrongUsername.Content.ReadAsStringAsync());
-        var wrongKey = await Browser.SignInEmployeeAsync(client, employee.Username, "pak_1_wrong");
-        Assert.Equal(HttpStatusCode.OK, wrongKey.StatusCode);
-        var third = await Browser.SignInEmployeeAsync(client, employee.Username, "pak_2_wrong");
-        Assert.Equal(HttpStatusCode.OK, third.StatusCode);
+        // The key alone decides which account signs in; no username is submitted or needed.
+        var asOther = await Browser.SignInEmployeeAsync(client, other.AccessKey);
+        Assert.Equal(HttpStatusCode.Redirect, asOther.StatusCode);
+        Assert.Contains("Someone Else", await client.GetStringAsync("/employee"));
+        await client.PostAsync("/employee/logout", new FormUrlEncodedContent([new("__RequestVerificationToken", Browser.ExtractToken(await client.GetStringAsync("/employee")))]));
 
-        // Three failures for this username reached the configured limit: even the right key is now blocked.
-        var blocked = await Browser.SignInEmployeeAsync(client, employee.Username, employee.AccessKey);
+        // Three wrong keys that claim this employee's ID: the message never says whether the account exists.
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var wrong = await Browser.SignInEmployeeAsync(client, $"pak_{employee.Id}_wrong{attempt}");
+            Assert.Equal(HttpStatusCode.OK, wrong.StatusCode);
+            Assert.Contains("The access key is incorrect.", await wrong.Content.ReadAsStringAsync());
+        }
+
+        // The per-account limit (3 in this host) is reached: even the right key is blocked for that account.
+        var blocked = await Browser.SignInEmployeeAsync(client, employee.AccessKey);
         Assert.Equal(HttpStatusCode.OK, blocked.StatusCode);
         Assert.Contains("Too many sign-in attempts", await blocked.Content.ReadAsStringAsync());
 
-        // A different account from the same address is unaffected.
+        // Another account from the same address is unaffected; a disabled account gets the generic message.
         var fresh = _factory.CreateCookieClient();
-        var success = await Browser.SignInEmployeeAsync(fresh, other.Username, other.AccessKey);
+        await Browser.UseEnglishAsync(fresh);
+        var success = await Browser.SignInEmployeeAsync(fresh, other.AccessKey);
         Assert.Equal(HttpStatusCode.Redirect, success.StatusCode);
         Assert.Equal("/employee", success.Headers.Location!.ToString());
+
+        var third = await _factory.CreateEmployeeAsync("disabled.one");
+        using (var scope = _factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IEmployeeAccessService>().DisableAsync(third.Id, AuditActor.System);
+        }
+
+        var disabledClient = _factory.CreateCookieClient();
+        await Browser.UseEnglishAsync(disabledClient);
+        var disabled = await Browser.SignInEmployeeAsync(disabledClient, third.AccessKey);
+        Assert.Equal(HttpStatusCode.OK, disabled.StatusCode);
+        Assert.Contains("The access key is incorrect.", await disabled.Content.ReadAsStringAsync());
     }
 
     [PostgresFact]
@@ -106,8 +124,8 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
         var bob = await _factory.CreateEmployeeAsync("bob");
         var aliceClient = _factory.CreateCookieClient();
         var bobClient = _factory.CreateCookieClient();
-        await Browser.SignInEmployeeAsync(aliceClient, alice.Username, alice.AccessKey);
-        await Browser.SignInEmployeeAsync(bobClient, bob.Username, bob.AccessKey);
+        await Browser.SignInEmployeeAsync(aliceClient, alice.AccessKey);
+        await Browser.SignInEmployeeAsync(bobClient, bob.AccessKey);
 
         var submittedUrl = await Browser.SubmitRequestAsync(aliceClient, "/employee/requests/create", "Alice Supplier", 750_000, TinyPdf);
         var receipt = await aliceClient.GetStringAsync(submittedUrl);
@@ -139,7 +157,7 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
     {
         var employee = await _factory.CreateEmployeeAsync("revoke.me");
         var client = _factory.CreateCookieClient();
-        await Browser.SignInEmployeeAsync(client, employee.Username, employee.AccessKey);
+        await Browser.SignInEmployeeAsync(client, employee.AccessKey);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/employee/requests")).StatusCode);
 
         using (var scope = _factory.Services.CreateScope())
@@ -151,7 +169,7 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
         var afterRevocation = await client.GetAsync("/employee/requests");
         Assert.Equal(HttpStatusCode.Redirect, afterRevocation.StatusCode);
         Assert.StartsWith("/?", Browser.LocationPath(afterRevocation));
-        var signInAgain = await Browser.SignInEmployeeAsync(client, employee.Username, employee.AccessKey);
+        var signInAgain = await Browser.SignInEmployeeAsync(client, employee.AccessKey);
         Assert.Equal(HttpStatusCode.OK, signInAgain.StatusCode); // refused: the key is revoked
     }
 
@@ -161,7 +179,7 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
         await _factory.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword);
         var employee = await _factory.CreateEmployeeAsync("forge.employee");
         var employeeClient = _factory.CreateCookieClient();
-        await Browser.SignInEmployeeAsync(employeeClient, employee.Username, employee.AccessKey);
+        await Browser.SignInEmployeeAsync(employeeClient, employee.AccessKey);
         var submitted = await Browser.SubmitRequestAsync(employeeClient, "/employee/requests/create", "Payee", 1_000);
         var requestId = int.Parse(submitted.Split('/').Last());
 
@@ -184,7 +202,7 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
 
         var employeeClient = _factory.CreateCookieClient();
         await Browser.UseEnglishAsync(employeeClient);
-        await Browser.SignInEmployeeAsync(employeeClient, employee.Username, employee.AccessKey);
+        await Browser.SignInEmployeeAsync(employeeClient, employee.AccessKey);
         var submitted = await Browser.SubmitRequestAsync(employeeClient, "/employee/requests/create", "Flow Supplier", 2_500_000, TinyPdf);
         var requestId = int.Parse(submitted.Split('/').Last());
 
@@ -356,6 +374,6 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Redirect, switched.StatusCode);
         var english = await client.GetStringAsync("/");
         Assert.Contains("lang=\"en\" dir=\"ltr\"", english);
-        Assert.Contains("Enter your username and employee access key", english);
+        Assert.Contains("Enter your employee access key", english);
     }
 }

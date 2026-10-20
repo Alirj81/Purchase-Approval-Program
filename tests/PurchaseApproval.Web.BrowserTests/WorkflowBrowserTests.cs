@@ -92,7 +92,7 @@ public sealed class WorkflowBrowserTests(AppServerFixture fixture) : IAsyncLifet
         await page.GotoAsync(AppServerFixture.BaseUrl + "/");
         Assert.Equal("rtl", await page.GetAttributeAsync("html", "dir"));
         await page.ScreenshotAsync(new() { Path = Shot("01-employee-login"), FullPage = true });
-        await page.FillAsync("#Input_Username", employee.Username);
+        // Employees sign in with the access key alone; the key identifies the account.
         await page.FillAsync("#Input_AccessKey", employee.AccessKey);
         await page.ClickAsync("#main-content button[type=submit]");
         try

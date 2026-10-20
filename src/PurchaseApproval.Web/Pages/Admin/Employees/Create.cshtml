@@ -30,7 +30,7 @@
                 <div class="mb-3">
                     <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
                     <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="off" dir="ltr" required />
-                    <div class="form-text">@L["Letters, numbers, periods, hyphens or underscores. The employee signs in with this username and their access key."]</div>
+                    <div class="form-text">@L["Letters, numbers, periods, hyphens or underscores. An internal identifier shown to administrators; employees sign in with their access key only."]</div>
                     <span asp-validation-for="Input.Username" class="text-danger"></span>
                 </div>
                 <div class="mb-3">

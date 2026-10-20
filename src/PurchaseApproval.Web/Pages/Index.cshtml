@@ -8,7 +8,7 @@
     <div class="col-md-7 col-lg-5">
         <div class="text-center mb-4">
             <h1 class="display-6">@L["Purchase Approval"]</h1>
-            <p class="lead">@L["Enter your username and employee access key to continue."]</p>
+            <p class="lead">@L["Enter your employee access key to continue."]</p>
         </div>
 
         @if (Model.SignOutReason == PurchaseApproval.Security.EmployeeCookieEvents.AccessChangedReason)
@@ -24,13 +24,9 @@
             <input type="hidden" asp-for="ReturnUrl" />
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
             <div class="mb-3">
-                <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
-                <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="username" autofocus dir="ltr" required />
-                <span asp-validation-for="Input.Username" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
                 <label asp-for="Input.AccessKey" class="form-label">@L["Employee access key"] <span class="required-marker" aria-hidden="true">*</span></label>
-                <input asp-for="Input.AccessKey" class="form-control ltr-value" autocomplete="current-password" dir="ltr" required />
+                <input asp-for="Input.AccessKey" class="form-control ltr-value" autocomplete="off" autofocus dir="ltr" required />
+                <div class="form-text">@L["Your key was issued by an administrator and identifies you on its own; no username is needed."]</div>
                 <span asp-validation-for="Input.AccessKey" class="text-danger"></span>
             </div>
             <button type="submit" class="btn btn-primary w-100">@L["Continue"]</button>

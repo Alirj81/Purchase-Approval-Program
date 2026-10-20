@@ -1,12 +1,12 @@
-// Employee sign-in: username plus access key, both required and matched to the same record.
-// The employee ID embedded in the key only locates the row; the username must match it and the
-// full key must verify against the stored hash. Failures are generic (no hint whether the
-// username exists) and counted by LoginThrottlingService per client address and per username.
+// Employee sign-in: the access key alone. The key has the form pak_<employeeId>_<256-bit secret>;
+// the ID part only locates the row, the secret must verify against the stored salted hash, and
+// the account must be Active. Employees never type a username (it stays an internal identifier).
+// Failures are generic and counted by LoginThrottlingService per client address and, when the
+// key names an account, per that account ID, never per key value.
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,6 @@ namespace PurchaseApproval.Web.Pages;
 public sealed class IndexModel(
     ApplicationDbContext dbContext,
     IEmployeeAccessKeyService accessKeyService,
-    ILookupNormalizer lookupNormalizer,
     ILoginThrottlingService throttling) : PageModel
 {
     [BindProperty]
@@ -59,7 +58,7 @@ public sealed class IndexModel(
         return Page();
     }
 
-    /// <summary>Validates username + access key and creates the employee cookie session.</summary>
+    /// <summary>Validates the access key and creates the employee cookie session.</summary>
     public async Task<IActionResult> OnPostAsync()
     {
         ReadSignOutReason();
@@ -69,35 +68,37 @@ public sealed class IndexModel(
         }
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var accountKey = ILoginThrottlingService.AccountKey("employee", Input.Username);
+        // The account counter is keyed by the ID the key claims to belong to (a non-secret
+        // number), so guessing against one employee is slowed down even from many addresses.
+        var hasEmployeeId = accessKeyService.TryGetEmployeeId(Input.AccessKey, out var employeeId);
+        var accountKey = hasEmployeeId ? ILoginThrottlingService.AccountKey("employee", $"#{employeeId}") : null;
         if (throttling.IsBlocked(ipAddress, accountKey))
         {
             ModelState.AddModelError(string.Empty, "Too many sign-in attempts. Try again later.");
             return Page();
         }
 
-        var normalizedUsername = lookupNormalizer.NormalizeName(Input.Username.Trim());
         Employee? employee = null;
-        if (accessKeyService.TryGetEmployeeId(Input.AccessKey, out var employeeId))
+        if (hasEmployeeId)
         {
             employee = await dbContext.Employees.SingleOrDefaultAsync(
                 item => item.Id == employeeId, HttpContext.RequestAborted);
         }
 
-        // Every branch fails with the same message so neither username nor key existence leaks.
+        // Every branch fails with the same message so neither the account's existence nor its
+        // state (disabled, revoked) leaks to someone holding a wrong or old key.
         if (employee is null
-            || !string.Equals(employee.NormalizedUsername, normalizedUsername, StringComparison.Ordinal)
             || employee.AccessStatus != EmployeeAccessStatus.Active
             || !accessKeyService.Verify(employee, Input.AccessKey))
         {
             throttling.RecordFailure(ipAddress, accountKey);
-            ModelState.AddModelError(string.Empty, "The username or access key is incorrect.");
+            ModelState.AddModelError(string.Empty, "The access key is incorrect.");
             return Page();
         }
 
         throttling.RecordSuccess(ipAddress, accountKey);
 
-        // Claims come from the verified database record, never from editable profile fields.
+        // Claims come from the verified database record, never from the submitted form.
         // CredentialVersion lets EmployeeCookieEvents reject an old session after access changes.
         var claims = new List<Claim>
         {
@@ -146,12 +147,8 @@ public sealed class IndexModel(
 
     public sealed class InputModel
     {
-        [Required(ErrorMessage = "Username is required.")]
-        [StringLength(100)]
-        [Display(Name = "Username")]
-        public string Username { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Access key is required.")]
+        [StringLength(200)]
         [DataType(DataType.Password)]
         [Display(Name = "Employee access key")]
         public string AccessKey { get; set; } = string.Empty;
