@@ -33,6 +33,72 @@ public class ApplicationDbContext
     ConfigureTransferOutcomes(modelBuilder);
     ConfigureTransferAuditEntries(modelBuilder);
     ConfigureItemCatalogueEntries(modelBuilder);
+    ConfigureAuditEntries(modelBuilder);
+    ConfigureSubmissionQuotaDays(modelBuilder);
+}
+
+// Generic accountability trail for staff accounts, employee access and approval decisions.
+// Transfer execution keeps its own richer TransferAuditEntries table.
+private static void ConfigureAuditEntries(ModelBuilder modelBuilder)
+{
+    var audit = modelBuilder.Entity<AuditEntry>();
+
+    audit.ToTable(
+        "AuditEntries",
+        table =>
+        {
+            table.HasCheckConstraint(
+                "CK_AuditEntries_Category",
+                """
+                "Category" IN (1, 2, 3)
+                """);
+
+            table.HasCheckConstraint(
+                "CK_AuditEntries_Action",
+                """
+                "Action" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42)
+                """);
+        });
+
+    audit.Property(item => item.Category).HasConversion<int>().IsRequired();
+    audit.Property(item => item.Action).HasConversion<int>().IsRequired();
+    audit.Property(item => item.SubjectType).HasMaxLength(50).IsRequired();
+    audit.Property(item => item.SubjectLabel).HasMaxLength(200).IsRequired();
+    audit.Property(item => item.ActorFullNameSnapshot).HasMaxLength(200).IsRequired();
+    audit.Property(item => item.ActorRoleSnapshot).HasMaxLength(50).IsRequired();
+    audit.Property(item => item.Details).HasMaxLength(2000);
+
+    audit
+        .HasOne(item => item.ActorUser)
+        .WithMany()
+        .HasForeignKey(item => item.ActorUserId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+    audit.HasIndex(item => new { item.SubjectType, item.SubjectId, item.RecordedAtUtc });
+    audit.HasIndex(item => item.RecordedAtUtc);
+}
+
+// Daily submission quota counters. The unique index is what makes concurrent first
+// submissions on the same UTC day collapse into one row (see SubmissionQuotaService).
+private static void ConfigureSubmissionQuotaDays(ModelBuilder modelBuilder)
+{
+    var quota = modelBuilder.Entity<SubmissionQuotaDay>();
+
+    quota.ToTable(
+        "SubmissionQuotaDays",
+        table => table.HasCheckConstraint(
+            "CK_SubmissionQuotaDays_CreatedCount",
+            """
+            "CreatedCount" >= 0
+            """));
+
+    quota.Property(item => item.RequesterType).HasConversion<int>().IsRequired();
+    quota.Property(item => item.QuotaDateUtc).HasColumnType("date");
+    quota.Property(item => item.Version).IsRowVersion();
+
+    quota
+        .HasIndex(item => new { item.RequesterType, item.RequesterId, item.QuotaDateUtc })
+        .IsUnique();
 }
 private static void ConfigurePaymentRequestAttachments(ModelBuilder modelBuilder)
 {
@@ -286,6 +352,10 @@ private static void ConfigurePaymentRequests(ModelBuilder modelBuilder)
     user
         .Property(item => item.IsActive)
         .HasDefaultValue(true);
+
+    user
+        .Property(item => item.MustChangePassword)
+        .HasDefaultValue(false);
 }
 
     private static void ConfigureEmployees(ModelBuilder modelBuilder) // Configure the Employee entity
@@ -389,6 +459,10 @@ private static void ConfigurePaymentRequests(ModelBuilder modelBuilder)
         .HasMaxLength(2000);
 
     decision
+        .Property(item => item.IsSelfApproval)
+        .HasDefaultValue(false);
+
+    decision
         .HasOne(item => item.PaymentRequest)
         .WithOne(item => item.Decision)
         .HasForeignKey<ApprovalDecision>(
@@ -450,9 +524,14 @@ private static void ConfigureTransferOutcomes(
                 """);
 
             table.HasCheckConstraint(
-                "CK_TransferOutcomes_TransferredClosed",
+                "CK_TransferOutcomes_UnsuccessfulReason",
                 """
-                "Status" <> 2 OR "IsClosed" = TRUE
+                "Status" <> 3
+                OR
+                (
+                    "FailureReason" IS NOT NULL
+                    AND LENGTH(BTRIM("FailureReason")) > 0
+                )
                 """);
             table.HasCheckConstraint(
                 "CK_TransferOutcomes_Method",
@@ -513,15 +592,39 @@ private static void ConfigureTransferOutcomes(
                 )
                 """);
             table.HasCheckConstraint(
-                "CK_TransferOutcomes_UnsuccessfulClosure",
+                "CK_TransferOutcomes_ClosureState",
                 """
-                "Status" <> 3
-                OR "IsClosed" = FALSE
+                (
+                    "IsClosed" = FALSE
+                    AND "ClosedAtUtc" IS NULL
+                    AND "ClosureType" IS NULL
+                    AND "ClosedByUserId" IS NULL
+                    AND "ClosedByFullNameSnapshot" IS NULL
+                    AND "ClosedByRoleSnapshot" IS NULL
+                )
                 OR
                 (
-                    "ClosedAtUtc" IS NOT NULL
-                    AND "ClosedByUserId" IS NOT NULL
-                    AND "ClosedByFullNameSnapshot" IS NOT NULL
+                    "IsClosed" = TRUE
+                    AND "Status" IN (2, 3)
+                    AND "ClosedAtUtc" IS NOT NULL
+                    AND "ClosureReason" IS NOT NULL
+                    AND LENGTH(BTRIM("ClosureReason")) > 0
+                    AND
+                    (
+                        (
+                            "ClosureType" = 1
+                            AND "ClosedByUserId" IS NULL
+                            AND "ClosedByFullNameSnapshot" IS NULL
+                            AND "ClosedByRoleSnapshot" IS NULL
+                        )
+                        OR
+                        (
+                            "ClosureType" = 2
+                            AND "ClosedByUserId" IS NOT NULL
+                            AND "ClosedByFullNameSnapshot" IS NOT NULL
+                            AND "ClosedByRoleSnapshot" = 'Administrator'
+                        )
+                    )
                 )
                 """);
 
@@ -559,8 +662,26 @@ private static void ConfigureTransferOutcomes(
         .HasMaxLength(200);
 
     transfer
+        .Property(item => item.ClosedByRoleSnapshot)
+        .HasMaxLength(50);
+
+    transfer
+        .Property(item => item.ClosureType)
+        .HasConversion<int>();
+
+    transfer
         .Property(item => item.ClosureReason)
         .HasMaxLength(2000);
+
+    transfer
+        .Property(item => item.TransactionTimeZoneId)
+        .HasMaxLength(100);
+
+    // "timestamp without time zone" stores the wall-clock entry exactly as typed; the UTC
+    // instant and offset columns carry the resolved meaning.
+    transfer
+        .Property(item => item.TransactionEnteredLocalDateTime)
+        .HasColumnType("timestamp without time zone");
 
     transfer
         .Property(item => item.Version)
@@ -594,6 +715,13 @@ private static void ConfigureTransferOutcomes(
         {
             item.Status,
             item.IsClosed
+        });
+
+    transfer
+        .HasIndex(item => new
+        {
+            item.IsClosed,
+            item.RecordedAtUtc
         });
         transfer
     .Property(item => item.Method)
@@ -635,7 +763,7 @@ private static void ConfigureTransferAuditEntries(
             table.HasCheckConstraint(
                 "CK_TransferAuditEntries_Action",
                 """
-                "Action" IN (1, 2, 3, 4, 5)
+                "Action" IN (1, 2, 3, 4, 5, 6, 7)
                 """);
 
             table.HasCheckConstraint(
@@ -771,6 +899,18 @@ private static void ConfigureTransferAuditEntries(
         .HasMaxLength(2000);
 
     audit
+        .Property(item => item.ClosureReason)
+        .HasMaxLength(2000);
+
+    audit
+        .Property(item => item.TransactionTimeZoneId)
+        .HasMaxLength(100);
+
+    audit
+        .Property(item => item.TransactionEnteredLocalDateTime)
+        .HasColumnType("timestamp without time zone");
+
+    audit
         .HasOne(item => item.TransferOutcome)
         .WithMany(item => item.AuditEntries)
         .HasForeignKey(item => item.TransferOutcomeId)
@@ -856,4 +996,8 @@ public DbSet<PaymentRequestAttachment> PaymentRequestAttachments
     => Set<TransferAuditEntry>(); // Configure the TransferAuditEntry entity in the DbContext
     public DbSet<ItemCatalogueEntry> ItemCatalogueEntries
     => Set<ItemCatalogueEntry>();
+    public DbSet<AuditEntry> AuditEntries
+    => Set<AuditEntry>();
+    public DbSet<SubmissionQuotaDay> SubmissionQuotaDays
+    => Set<SubmissionQuotaDay>();
 }

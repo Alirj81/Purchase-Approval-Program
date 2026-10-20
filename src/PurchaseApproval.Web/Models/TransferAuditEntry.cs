@@ -1,3 +1,6 @@
+// Captures append-only execution and closure actions, including system automatic closures.
+// Each row snapshots the outcome fields as they stood after the action, so the trail stays
+// readable even if the TransferOutcome row is later corrected under a future workflow.
 namespace PurchaseApproval.Models;
 
 public class TransferAuditEntry
@@ -26,13 +29,12 @@ public class TransferAuditEntry
 
     public DateOnly? ChequeDate { get; set; }
 
-public string? ChequePayeeName { get; set; }
+    public string? ChequePayeeName { get; set; }
 
-    // The authenticated user who performed this action
-    public int ActorUserId { get; set; }
+    // Null only for an automatic system closure; human actions always retain the authenticated ID.
+    public int? ActorUserId { get; set; }
 
-    public ApplicationUser ActorUser { get; set; }
-        = null!;
+    public ApplicationUser? ActorUser { get; set; }
 
     public string ActorFullNameSnapshot { get; set; }
         = string.Empty;
@@ -40,14 +42,21 @@ public string? ChequePayeeName { get; set; }
     public string ActorRoleSnapshot { get; set; }
         = string.Empty;
 
-    // Snapshot of the reported transaction information
+    // Snapshot of the reported transaction information (see TransferOutcome for meaning)
     public DateTimeOffset? TransactionOccurredAtUtc { get; set; }
 
     public short? TransactionUtcOffsetMinutes { get; set; }
 
+    public string? TransactionTimeZoneId { get; set; }
+
+    public DateTime? TransactionEnteredLocalDateTime { get; set; }
+
     public string? FailureReason { get; set; }
 
     public string? ExternalReference { get; set; }
+
+    // Closure reason as recorded by the administrator or the automatic timer.
+    public string? ClosureReason { get; set; }
 
     public string? Notes { get; set; }
 

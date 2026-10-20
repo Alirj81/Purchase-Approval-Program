@@ -5,6 +5,8 @@ public enum TransferAuditAction
     AwaitingTransferCreated = 1,
     MarkedTransferred = 2,
     MarkedUnsuccessful = 3,
-    UnsuccessfulClosed = 4,
-    TransactionDetailsCorrected = 5
+    ClosedByAdministrator = 4,
+    TransactionDetailsCorrected = 5,
+    TransferredClosedAutomatically = 6,
+    UnsuccessfulClosedAutomatically = 7
 }

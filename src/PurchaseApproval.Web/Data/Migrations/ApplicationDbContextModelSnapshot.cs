@@ -176,6 +176,9 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTimeOffset?>("DeactivatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Department")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -210,6 +213,11 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("MustChangePassword")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -217,6 +225,9 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("PasswordChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
@@ -229,6 +240,9 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("TemporaryCredentialExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
@@ -271,6 +285,11 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<int>("DecisionType")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsSelfApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("PaymentRequestId")
                         .HasColumnType("integer");
 
@@ -290,6 +309,69 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.ToTable("ApprovalDecisions", null, t =>
                         {
                             t.HasCheckConstraint("CK_ApprovalDecisions_DecisionType", "\"DecisionType\" IN (1, 2)");
+                        });
+                });
+
+            modelBuilder.Entity("PurchaseApproval.Models.AuditEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ActorFullNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ActorRoleSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("RecordedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SubjectLabel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorUserId");
+
+                    b.HasIndex("RecordedAtUtc");
+
+                    b.HasIndex("SubjectType", "SubjectId", "RecordedAtUtc");
+
+                    b.ToTable("AuditEntries", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AuditEntries_Action", "\"Action\" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42)");
+
+                            t.HasCheckConstraint("CK_AuditEntries_Category", "\"Category\" IN (1, 2, 3)");
                         });
                 });
 
@@ -626,6 +708,43 @@ namespace PurchaseApproval.Web.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PurchaseApproval.Models.SubmissionQuotaDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("QuotaDateUtc")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RequesterId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RequesterType")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterType", "RequesterId", "QuotaDateUtc")
+                        .IsUnique();
+
+                    b.ToTable("SubmissionQuotaDays", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_SubmissionQuotaDays_CreatedCount", "\"CreatedCount\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("PurchaseApproval.Models.TransferAuditEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -647,7 +766,7 @@ namespace PurchaseApproval.Web.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("ActorUserId")
+                    b.Property<int?>("ActorUserId")
                         .HasColumnType("integer");
 
                     b.Property<string>("BankName")
@@ -664,6 +783,10 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<string>("ChequePayeeName")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ClosureReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("DestinationAccountOrCardNumber")
                         .HasMaxLength(100)
@@ -697,8 +820,15 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<int>("StatusAfterAction")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("TransactionEnteredLocalDateTime")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTimeOffset?>("TransactionOccurredAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TransactionTimeZoneId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<short?>("TransactionUtcOffsetMinutes")
                         .HasColumnType("smallint");
@@ -714,7 +844,7 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                     b.ToTable("TransferAuditEntries", null, t =>
                         {
-                            t.HasCheckConstraint("CK_TransferAuditEntries_Action", "\"Action\" IN (1, 2, 3, 4, 5)");
+                            t.HasCheckConstraint("CK_TransferAuditEntries_Action", "\"Action\" IN (1, 2, 3, 4, 5, 6, 7)");
 
                             t.HasCheckConstraint("CK_TransferAuditEntries_BankTransferDetails", "\"Method\" IS DISTINCT FROM 2\r\nOR\r\n(\r\n    \"DestinationAccountOrCardNumber\" IS NOT NULL\r\n    AND LENGTH(\r\n        BTRIM(\"DestinationAccountOrCardNumber\")\r\n    ) > 0\r\n)");
 
@@ -762,12 +892,19 @@ namespace PurchaseApproval.Web.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ClosedByRoleSnapshot")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<int?>("ClosedByUserId")
                         .HasColumnType("integer");
 
                     b.Property<string>("ClosureReason")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("ClosureType")
+                        .HasColumnType("integer");
 
                     b.Property<string>("DestinationAccountOrCardNumber")
                         .HasMaxLength(100)
@@ -811,8 +948,15 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("TransactionEnteredLocalDateTime")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTimeOffset?>("TransactionOccurredAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TransactionTimeZoneId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<short?>("TransactionUtcOffsetMinutes")
                         .HasColumnType("smallint");
@@ -832,6 +976,8 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                     b.HasIndex("PerformedByUserId");
 
+                    b.HasIndex("IsClosed", "RecordedAtUtc");
+
                     b.HasIndex("Status", "IsClosed");
 
                     b.ToTable("TransferOutcomes", null, t =>
@@ -839,6 +985,8 @@ namespace PurchaseApproval.Web.Data.Migrations
                             t.HasCheckConstraint("CK_TransferOutcomes_BankTransferDetails", "\"Method\" IS DISTINCT FROM 2\r\nOR\r\n(\r\n    \"DestinationAccountOrCardNumber\" IS NOT NULL\r\n    AND LENGTH(\r\n        BTRIM(\"DestinationAccountOrCardNumber\")\r\n    ) > 0\r\n)");
 
                             t.HasCheckConstraint("CK_TransferOutcomes_ChequeDetails", "\"Method\" IS DISTINCT FROM 3\r\nOR\r\n(\r\n    \"ChequeNumber\" IS NOT NULL\r\n    AND \"ChequeDate\" IS NOT NULL\r\n    AND \"BankName\" IS NOT NULL\r\n    AND \"ChequePayeeName\" IS NOT NULL\r\n)");
+
+                            t.HasCheckConstraint("CK_TransferOutcomes_ClosureState", "(\r\n    \"IsClosed\" = FALSE\r\n    AND \"ClosedAtUtc\" IS NULL\r\n    AND \"ClosureType\" IS NULL\r\n    AND \"ClosedByUserId\" IS NULL\r\n    AND \"ClosedByFullNameSnapshot\" IS NULL\r\n    AND \"ClosedByRoleSnapshot\" IS NULL\r\n)\r\nOR\r\n(\r\n    \"IsClosed\" = TRUE\r\n    AND \"Status\" IN (2, 3)\r\n    AND \"ClosedAtUtc\" IS NOT NULL\r\n    AND \"ClosureReason\" IS NOT NULL\r\n    AND LENGTH(BTRIM(\"ClosureReason\")) > 0\r\n    AND\r\n    (\r\n        (\r\n            \"ClosureType\" = 1\r\n            AND \"ClosedByUserId\" IS NULL\r\n            AND \"ClosedByFullNameSnapshot\" IS NULL\r\n            AND \"ClosedByRoleSnapshot\" IS NULL\r\n        )\r\n        OR\r\n        (\r\n            \"ClosureType\" = 2\r\n            AND \"ClosedByUserId\" IS NOT NULL\r\n            AND \"ClosedByFullNameSnapshot\" IS NOT NULL\r\n            AND \"ClosedByRoleSnapshot\" = 'Administrator'\r\n        )\r\n    )\r\n)");
 
                             t.HasCheckConstraint("CK_TransferOutcomes_Method", "\"Method\" IS NULL OR \"Method\" IN (1, 2, 3, 4)");
 
@@ -850,9 +998,7 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                             t.HasCheckConstraint("CK_TransferOutcomes_Status", "\"Status\" IN (1, 2, 3)");
 
-                            t.HasCheckConstraint("CK_TransferOutcomes_TransferredClosed", "\"Status\" <> 2 OR \"IsClosed\" = TRUE");
-
-                            t.HasCheckConstraint("CK_TransferOutcomes_UnsuccessfulClosure", "\"Status\" <> 3\r\nOR \"IsClosed\" = FALSE\r\nOR\r\n(\r\n    \"ClosedAtUtc\" IS NOT NULL\r\n    AND \"ClosedByUserId\" IS NOT NULL\r\n    AND \"ClosedByFullNameSnapshot\" IS NOT NULL\r\n)");
+                            t.HasCheckConstraint("CK_TransferOutcomes_UnsuccessfulReason", "\"Status\" <> 3\r\nOR\r\n(\r\n    \"FailureReason\" IS NOT NULL\r\n    AND LENGTH(BTRIM(\"FailureReason\")) > 0\r\n)");
 
                             t.HasCheckConstraint("CK_TransferOutcomes_UtcOffset", "\"TransactionUtcOffsetMinutes\" IS NULL\r\nOR \"TransactionUtcOffsetMinutes\"\r\n    BETWEEN -840 AND 840");
                         });
@@ -928,6 +1074,16 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.Navigation("PaymentRequest");
                 });
 
+            modelBuilder.Entity("PurchaseApproval.Models.AuditEntry", b =>
+                {
+                    b.HasOne("PurchaseApproval.Models.ApplicationUser", "ActorUser")
+                        .WithMany()
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ActorUser");
+                });
+
             modelBuilder.Entity("PurchaseApproval.Models.PaymentRequest", b =>
                 {
                     b.HasOne("PurchaseApproval.Models.ApplicationUser", "ApplicationUserRequester")
@@ -972,8 +1128,7 @@ namespace PurchaseApproval.Web.Data.Migrations
                     b.HasOne("PurchaseApproval.Models.ApplicationUser", "ActorUser")
                         .WithMany()
                         .HasForeignKey("ActorUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("PurchaseApproval.Models.TransferOutcome", "TransferOutcome")
                         .WithMany("AuditEntries")

@@ -1,10 +1,13 @@
+// Header record for one outbound payment request. Expense rows, attachments, the single
+// decision and the single execution outcome hang off this row. Requester details are copied
+// into the *Snapshot columns at submission so later profile edits never rewrite history.
 namespace PurchaseApproval.Models;
 
 public class PaymentRequest
 {
     public int Id { get; set; }
 
-    // Public business reference, for example PR-2026-00042
+    // Public business reference, for example PR-2026-3F9A0C12B7D4E6A1 (year plus random hex)
     public string ReferenceNumber { get; set; } = string.Empty;
 
     // Identifies which type of account submitted the request
