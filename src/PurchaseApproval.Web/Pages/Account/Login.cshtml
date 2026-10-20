@@ -1,31 +1,35 @@
 @page "/account/login"
 @model PurchaseApproval.Web.Pages.Account.LoginModel
 @{
-    ViewData["Title"] = "Admin sign in";
+    ViewData["Title"] = L["Staff sign in"];
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <h1 class="h3 mb-3">Admin sign in</h1>
-        <form method="post">
+    <div class="col-md-7 col-lg-5">
+        <h1 class="h3 mb-3">@L["Staff sign in"]</h1>
+        <p class="text-secondary">@L["For administrators and accountants. Employees sign in from the start page."]</p>
+        <form method="post" novalidate>
             <input type="hidden" asp-for="ReturnUrl" />
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
             <div class="mb-3">
-                <label asp-for="Input.Username" class="form-label"></label>
-                <input asp-for="Input.Username" class="form-control" autocomplete="username" autofocus />
+                <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
+                <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="username" autofocus dir="ltr" required />
                 <span asp-validation-for="Input.Username" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="Input.Password" class="form-label"></label>
-                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+                <label asp-for="Input.Password" class="form-label">@L["Password"] <span class="required-marker" aria-hidden="true">*</span></label>
+                <input asp-for="Input.Password" class="form-control ltr-value" autocomplete="current-password" dir="ltr" required />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
             <div class="form-check mb-3">
                 <input asp-for="Input.RememberMe" class="form-check-input" />
-                <label asp-for="Input.RememberMe" class="form-check-label"></label>
+                <label asp-for="Input.RememberMe" class="form-check-label">@L["Remember me"]</label>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Sign in</button>
+            <button type="submit" class="btn btn-primary w-100">@L["Sign in"]</button>
         </form>
+        <div class="text-center mt-3">
+            <a asp-page="/Index" class="text-secondary">@L["Employee sign in"]</a>
+        </div>
     </div>
 </div>
 

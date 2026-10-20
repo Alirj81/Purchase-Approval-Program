@@ -1,5 +1,6 @@
 namespace PurchaseApproval.Security;
-///  This is the static class that defines application policies.
+
+/// <summary>Policy names used by page authorization and startup configuration.</summary>
 public static class AppPolicies
 {
     /// <summary>Allows administrators to create and control employee access.</summary>

@@ -1,0 +1,47 @@
+@page "{id:int}"
+@model PurchaseApproval.Web.Pages.Admin.Employees.RestoreModel
+@{
+    ViewData["Title"] = L["Restore revoked access"];
+}
+
+<section class="mx-auto" style="max-width: 44rem">
+    <h1 class="h3 mb-3">@L["Restore revoked access"]</h1>
+    @if (Model.IssuedAccessKey is not null)
+    {
+        <div class="alert alert-success" role="status">@L["Access was restored for {0}.", Model.Username]</div>
+        <div class="alert alert-warning" role="alert">
+            <strong>@L["New access key for {0}:", Model.Username]</strong>
+            <code class="user-select-all d-block my-2">@Model.IssuedAccessKey</code>
+            <div>@L["This key is displayed only once. Deliver it through a secure channel together with the username."]</div>
+        </div>
+        <a asp-page="Index" class="btn btn-primary">@L["Back to employees"]</a>
+    }
+    else
+    {
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <dl class="row">
+            <dt class="col-sm-4">@L["Name"]</dt><dd class="col-sm-8" dir="auto">@Model.FullName</dd>
+            <dt class="col-sm-4">@L["Username"]</dt><dd class="col-sm-8"><code>@Model.Username</code></dd>
+            <dt class="col-sm-4">@L["Revoked"]</dt><dd class="col-sm-8"><timestamp utc="@Model.RevokedAtUtc" /></dd>
+        </dl>
+        <div class="alert alert-info">
+            <p class="mb-1"><strong>@L["Effects of restoring access"]</strong></p>
+            <ul class="mb-0">
+                <li>@L["The employee becomes Active and can sign in again."]</li>
+                <li>@L["A fresh access key is issued; the previously revoked key stays invalid and is never restored."]</li>
+                <li>@L["Previous sessions stay signed out."]</li>
+                <li>@L["The restoration and the new key are recorded in the audit trail under your account."]</li>
+            </ul>
+        </div>
+        <form method="post">
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="confirmed" name="confirmed" value="true" />
+                <label class="form-check-label" for="confirmed">@L["I confirm that this employee should regain access."]</label>
+            </div>
+            <div class="form-actions d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-success">@L["Restore access and issue a new key"]</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
+            </div>
+        </form>
+    }
+</section>

@@ -1,10 +1,11 @@
 @page "/account/access-denied"
 @model PurchaseApproval.Web.Pages.Account.AccessDeniedModel
 @{
-    ViewData["Title"] = "Access denied";
+    ViewData["Title"] = L["Access denied"];
 }
 
-<div class="alert alert-danger">
-    <h1 class="h4">Access denied</h1>
-    <p class="mb-0">Your account does not have permission to perform this action.</p>
+<div class="alert alert-danger" role="alert">
+    <h1 class="h4">@L["Access denied"]</h1>
+    <p class="mb-0">@L["Your account does not have permission to perform this action."]</p>
 </div>
+<a asp-page="/Index" class="btn btn-outline-primary">@L["Back to start"]</a>

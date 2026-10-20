@@ -8,12 +8,17 @@ using PurchaseApproval.Models;
 namespace PurchaseApproval.Security;
 
 /// <summary>
-///  Revalidates every employee cookie against the current database record. A disabled,
+/// Revalidates every employee cookie against the current database record. A disabled,
 /// revoked, deleted, or rotated credential therefore invalidates existing sessions.
+/// When that happens a short-lived marker cookie tells the sign-in page to explain that access
+/// changed, so the employee can tell a revoked key apart from an ordinary expired session.
 /// </summary>
 public sealed class EmployeeCookieEvents(ApplicationDbContext dbContext)
     : CookieAuthenticationEvents
 {
+    public const string SignOutReasonCookie = "PurchaseApproval.EmployeeSignOutReason";
+    public const string AccessChangedReason = "access-changed";
+
     /// <inheritdoc />
     public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
     {
@@ -50,5 +55,16 @@ public sealed class EmployeeCookieEvents(ApplicationDbContext dbContext)
         context.RejectPrincipal();
         await context.HttpContext.SignOutAsync(
             EmployeeAuthenticationDefaults.AuthenticationScheme);
+        context.HttpContext.Response.Cookies.Append(
+            SignOutReasonCookie,
+            AccessChangedReason,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = context.HttpContext.Request.IsHttps,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(5),
+                IsEssential = true
+            });
     }
 }

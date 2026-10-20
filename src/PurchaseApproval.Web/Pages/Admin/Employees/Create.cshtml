@@ -1,58 +1,68 @@
 @page
 @model PurchaseApproval.Web.Pages.Admin.Employees.CreateModel
 @{
-    ViewData["Title"] = "Create employee";
+    ViewData["Title"] = L["Create employee"];
 }
 
 <section class="row">
     <div class="col-lg-7">
-        <h1 class="h3 mb-3">Create employee</h1>
+        <h1 class="h3 mb-3">@L["Create employee"]</h1>
 
         @if (Model.IssuedAccessKey is not null)
         {
-            <div class="alert alert-warning">
-                <strong>Access key for @Model.Input.Username:</strong>
-                <code class="user-select-all">@Model.IssuedAccessKey</code>
-                <div>This value is displayed only once. Store it securely.</div>
+            <div class="alert alert-warning" role="alert">
+                <strong>@L["Access key for {0}:", Model.Input.Username]</strong>
+                <code class="user-select-all d-block my-2">@Model.IssuedAccessKey</code>
+                <div>@L["This value is displayed only once. Store it securely and deliver it together with the username."]</div>
             </div>
-            <a asp-page="Index" class="btn btn-primary">Back to employees</a>
+            <a asp-page="Index" class="btn btn-primary">@L["Back to employees"]</a>
         }
         else
         {
+            <p class="form-text">@L["Fields marked with * are required."]</p>
             <form method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                 <div class="mb-3">
-                    <label asp-for="Input.FullName" class="form-label"></label>
-                    <input asp-for="Input.FullName" class="form-control" />
+                    <label asp-for="Input.FullName" class="form-label">@L["Full name"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <input asp-for="Input.FullName" class="form-control" dir="auto" required />
                     <span asp-validation-for="Input.FullName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Input.Username" class="form-label"></label>
-                    <input asp-for="Input.Username" class="form-control" autocomplete="off" />
+                    <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="off" dir="ltr" required />
+                    <div class="form-text">@L["Letters, numbers, periods, hyphens or underscores. The employee signs in with this username and their access key."]</div>
                     <span asp-validation-for="Input.Username" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                    <input asp-for="Input.PhoneNumber" class="form-control" />
+                    <label asp-for="Input.PhoneNumber" class="form-label">@L["Phone number"]</label>
+                    <input asp-for="Input.PhoneNumber" class="form-control ltr-value" dir="ltr" inputmode="tel" />
                     <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Input.Department" class="form-label"></label>
-                    <input asp-for="Input.Department" class="form-control" />
+                    <label asp-for="Input.Department" class="form-label">@L["Department"]</label>
+                    <input asp-for="Input.Department" class="form-control" dir="auto" />
                     <span asp-validation-for="Input.Department" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Input.Branch" class="form-label"></label>
-                    <input asp-for="Input.Branch" class="form-control" />
+                    <label asp-for="Input.Branch" class="form-label">@L["Branch"] @if (Model.BranchRequired) { <span class="required-marker" aria-hidden="true">*</span> }</label>
+                    <input asp-for="Input.Branch" class="form-control" dir="auto" required="@Model.BranchRequired" />
                     <span asp-validation-for="Input.Branch" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
-                    <label asp-for="Input.JobTitle" class="form-label"></label>
-                    <input asp-for="Input.JobTitle" class="form-control" />
+                    <label asp-for="Input.JobTitle" class="form-label">@L["Job title"]</label>
+                    <input asp-for="Input.JobTitle" class="form-control" dir="auto" />
                     <span asp-validation-for="Input.JobTitle" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary">Create and generate key</button>
-                <a asp-page="Index" class="btn btn-outline-secondary">Cancel</a>
+                <div class="mb-3">
+                    <label asp-for="Input.AdminNotes" class="form-label">@L["Administrator notes (private)"]</label>
+                    <textarea asp-for="Input.AdminNotes" class="form-control" rows="2" dir="auto"></textarea>
+                    <div class="form-text">@L["Never shown to the employee, on tracking pages or in exports."]</div>
+                    <span asp-validation-for="Input.AdminNotes" class="text-danger"></span>
+                </div>
+                <div class="form-actions d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">@L["Create and generate key"]</button>
+                    <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
+                </div>
             </form>
         }
     </div>

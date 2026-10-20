@@ -1,23 +1,24 @@
+// Staff sign-in through ASP.NET Core Identity, with IP/account throttling in front of the
+// password check and the temporary-credential rule behind it: an expired temporary password
+// fails like any wrong password, and an unexpired one leads straight to the change-password page.
 using System.ComponentModel.DataAnnotations;
-// Allows the login page to be opened before authentication.
 using Microsoft.AspNetCore.Authorization;
-// Validates passwords and applies Identity lockout rules.
 using Microsoft.AspNetCore.Identity;
-// Supplies form binding and redirect results.
 using Microsoft.AspNetCore.Mvc;
-// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PurchaseApproval.Models;
+using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages.Account;
 
-/// <summary>Authenticates administrators and accountants through ASP.NET Core Identity.</summary>
 [AllowAnonymous]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class LoginModel(
     UserManager<ApplicationUser> userManager,
-    SignInManager<ApplicationUser> signInManager) : PageModel
+    SignInManager<ApplicationUser> signInManager,
+    ILoginThrottlingService throttling,
+    TimeProvider timeProvider) : PageModel
 {
-    // The input model groups editable login fields without binding an ApplicationUser entity.
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
@@ -28,7 +29,6 @@ public sealed class LoginModel(
     {
     }
 
-    /// <summary>Validates credentials, lockout state, and the application's active flag.</summary>
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
@@ -36,22 +36,34 @@ public sealed class LoginModel(
             return Page();
         }
 
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var accountKey = ILoginThrottlingService.AccountKey("staff", Input.Username);
+        if (throttling.IsBlocked(ipAddress, accountKey))
+        {
+            ModelState.AddModelError(string.Empty, "Too many sign-in attempts. Try again later.");
+            return Page();
+        }
+
         var user = await userManager.FindByNameAsync(Input.Username.Trim());
         if (user is null || !user.IsActive)
         {
+            throttling.RecordFailure(ipAddress, accountKey);
             ModelState.AddModelError(string.Empty, "The username or password is incorrect.");
             return Page();
         }
 
         // Identity checks the password hash and counts failed attempts for account lockout.
-        // Reusing Identity avoids implementing password comparison and failure counters ourselves.
         var checkResult = await signInManager.CheckPasswordSignInAsync(
             user,
             Input.Password,
             lockoutOnFailure: true);
 
-        if (!checkResult.Succeeded)
+        var now = timeProvider.GetUtcNow();
+        var temporaryExpired = user.MustChangePassword
+            && user.TemporaryCredentialExpiresAtUtc is { } expiry && expiry < now;
+        if (!checkResult.Succeeded || temporaryExpired)
         {
+            throttling.RecordFailure(ipAddress, accountKey);
             ModelState.AddModelError(
                 string.Empty,
                 checkResult.IsLockedOut
@@ -60,9 +72,15 @@ public sealed class LoginModel(
             return Page();
         }
 
-        user.LastAuthenticatedAtUtc = DateTimeOffset.UtcNow;
+        throttling.RecordSuccess(ipAddress, accountKey);
+        user.LastAuthenticatedAtUtc = now;
         await userManager.UpdateAsync(user);
-        await signInManager.SignInAsync(user, Input.RememberMe);
+        await signInManager.SignInAsync(user, Input.RememberMe && !user.MustChangePassword);
+
+        if (user.MustChangePassword)
+        {
+            return RedirectToPage("/Account/ChangePassword", new { required = true });
+        }
 
         // Restrict redirects to this application, even if the return URL came from a query string.
         return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/");

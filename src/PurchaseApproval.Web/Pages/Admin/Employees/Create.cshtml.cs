@@ -1,32 +1,33 @@
+// Creates an employee profile and issues its first one-time access key through
+// EmployeeAccessService, which also writes the audit entry.
 using System.ComponentModel.DataAnnotations;
-// Restricts employee creation to administrators.
 using Microsoft.AspNetCore.Authorization;
-// Creates the Identity relationship used by the page when needed.
 using Microsoft.AspNetCore.Identity;
-// Provides binding and redirect results for the form.
 using Microsoft.AspNetCore.Mvc;
-// Provides the Razor Page base class.
 using Microsoft.AspNetCore.Mvc.RazorPages;
-// Checks usernames before saving a new employee record.
-using Microsoft.EntityFrameworkCore;
-using PurchaseApproval.Data;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using PurchaseApproval.Configuration;
 using PurchaseApproval.Models;
 using PurchaseApproval.Security;
 using PurchaseApproval.Services;
 
 namespace PurchaseApproval.Web.Pages.Admin.Employees;
 
-/// <summary>Creates an employee profile and issues its first one-time access key.</summary>
 [Authorize(Policy = AppPolicies.CanManageEmployees)]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class CreateModel(
-    ApplicationDbContext dbContext,
-    ILookupNormalizer lookupNormalizer,
-    IEmployeeAccessKeyService accessKeyService) : PageModel
+    IEmployeeAccessService employeeAccess,
+    UserManager<ApplicationUser> userManager,
+    IOptions<ApplicationLimitsOptions> limits,
+    IStringLocalizer<SharedResource> localizer) : PageModel
 {
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
     public string? IssuedAccessKey { get; private set; }
+
+    public bool BranchRequired => limits.Value.RequireEmployeeBranch;
 
     public void OnGet()
     {
@@ -39,49 +40,42 @@ public sealed class CreateModel(
             return Page();
         }
 
-        var username = Input.Username.Trim();
-        var normalizedUsername = lookupNormalizer.NormalizeName(username);
-        if (await dbContext.Employees.AnyAsync(
-            item => item.NormalizedUsername == normalizedUsername))
+        var administrator = await userManager.GetUserAsync(User);
+        if (administrator is null || !administrator.IsActive)
         {
-            ModelState.AddModelError("Input.Username", "This username is already in use.");
+            return Forbid();
+        }
+
+        var result = await employeeAccess.CreateAsync(
+            Input.Username,
+            new EmployeeProfileInput(
+                Input.FullName, Input.PhoneNumber, Input.Department, Input.Branch, Input.JobTitle, Input.AdminNotes),
+            new AuditActor(administrator.Id, administrator.FullName, AppRoles.Administrator),
+            HttpContext.RequestAborted);
+
+        if (result.Status != EmployeeAccessOperation.Success)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(
+                    result.Status == EmployeeAccessOperation.UsernameTaken ? "Input.Username" : string.Empty,
+                    localizer[error.Key, error.Args]);
+            }
+
             return Page();
         }
 
-        var employee = new Employee
-        {
-            FullName = Input.FullName.Trim(),
-            Username = username,
-            NormalizedUsername = normalizedUsername,
-            PhoneNumber = Clean(Input.PhoneNumber),
-            Department = Clean(Input.Department),
-            Branch = Clean(Input.Branch),
-            JobTitle = Clean(Input.JobTitle),
-            AccessKeyHash = "pending",
-            AccessStatus = EmployeeAccessStatus.Active,
-            CreatedAtUtc = DateTimeOffset.UtcNow
-        };
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
-        dbContext.Employees.Add(employee);
-        await dbContext.SaveChangesAsync();
-
-        IssuedAccessKey = accessKeyService.InitializeCredential(employee);
-        await dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
+        IssuedAccessKey = result.IssuedAccessKey;
         return Page();
     }
 
-    private static string? Clean(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
     public sealed class InputModel
     {
-        [Required, StringLength(200)]
+        [Required(ErrorMessage = "Full name is required."), StringLength(200)]
         [Display(Name = "Full name")]
         public string FullName { get; set; } = string.Empty;
 
-        [Required, StringLength(100, MinimumLength = 3)]
+        [Required(ErrorMessage = "Username is required."), StringLength(100, MinimumLength = 3)]
         [RegularExpression("^[A-Za-z0-9._-]+$", ErrorMessage = "Use letters, numbers, periods, hyphens, or underscores only.")]
         [Display(Name = "Username")]
         public string Username { get; set; } = string.Empty;
@@ -101,5 +95,9 @@ public sealed class CreateModel(
         [StringLength(100)]
         [Display(Name = "Job title")]
         public string? JobTitle { get; set; }
+
+        [StringLength(1000)]
+        [Display(Name = "Administrator notes (private)")]
+        public string? AdminNotes { get; set; }
     }
 }

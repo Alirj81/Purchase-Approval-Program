@@ -1,87 +1,99 @@
 @page
 @model PurchaseApproval.Web.Pages.Admin.Employees.IndexModel
 @{
-    ViewData["Title"] = "Employee management";
+    ViewData["Title"] = L["Employee management"];
 }
 
 <section>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h3 mb-0">Employee management</h1>
-        <a asp-page="Create" class="btn btn-primary">Create employee</a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">@L["Employee management"]</h1>
+        <a asp-page="Create" class="btn btn-primary">@L["Create employee"]</a>
     </div>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
     @if (Model.IssuedAccessKey is not null)
     {
         <div class="alert alert-warning" role="alert">
-            <strong>New access key for @Model.IssuedForUsername:</strong>
-            <code class="user-select-all">@Model.IssuedAccessKey</code>
-            <div>This key is displayed only once. Deliver it through a secure channel.</div>
+            <strong>@L["New access key for {0}:", Model.IssuedForUsername ?? string.Empty]</strong>
+            <code class="user-select-all d-block my-2">@Model.IssuedAccessKey</code>
+            <div>@L["This key is displayed only once. Deliver it through a secure channel together with the username."]</div>
         </div>
     }
 
-    @if (TempData["StatusMessage"] is string statusMessage)
-    {
-        <div class="alert alert-success">@statusMessage</div>
-    }
+    <p class="form-text">@L["Disable/enable change the account state and keep the key. Revoke invalidates the key; restoring a revoked employee is an explicit action that issues a fresh key. A replacement key never changes the account state."]</p>
 
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Key version</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            @foreach (var employee in Model.Employees)
-            {
-                <tr>
-                    <td>@employee.FullName</td>
-                    <td><code>@employee.Username</code></td>
-                    <td>@employee.Department</td>
-                    <td>@employee.AccessStatus</td>
-                    <td>@employee.CredentialVersion</td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form method="post" asp-page-handler="Regenerate">
-                                <input type="hidden" name="id" value="@employee.Id" />
-                                <button class="btn btn-sm btn-outline-primary" type="submit">New key</button>
-                            </form>
-                            @if (employee.AccessStatus == PurchaseApproval.Models.EmployeeAccessStatus.Active)
-                            {
-                                <form method="post" asp-page-handler="ChangeStatus">
-                                    <input type="hidden" name="id" value="@employee.Id" />
-                                    <input type="hidden" name="status" value="Disabled" />
-                                    <button class="btn btn-sm btn-outline-warning" type="submit">Disable</button>
-                                </form>
-                            }
-                            else if (employee.AccessStatus == PurchaseApproval.Models.EmployeeAccessStatus.Disabled)
-                            {
-                                <form method="post" asp-page-handler="ChangeStatus">
-                                    <input type="hidden" name="id" value="@employee.Id" />
-                                    <input type="hidden" name="status" value="Active" />
-                                    <button class="btn btn-sm btn-outline-success" type="submit">Activate</button>
-                                </form>
-                            }
-                            @if (employee.AccessStatus != PurchaseApproval.Models.EmployeeAccessStatus.Revoked)
-                            {
-                                <form method="post" asp-page-handler="ChangeStatus">
-                                    <input type="hidden" name="id" value="@employee.Id" />
-                                    <input type="hidden" name="status" value="Revoked" />
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Revoke</button>
-                                </form>
-                            }
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
-    </div>
+    @if (Model.Employees.Count == 0)
+    {
+        <div class="alert alert-info">@L["No employees have been created yet."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle table-stack">
+                <thead>
+                    <tr>
+                        <th>@L["Name"]</th>
+                        <th>@L["Username"]</th>
+                        <th>@L["Department"]</th>
+                        <th>@L["Status"]</th>
+                        <th>@L["Key version"]</th>
+                        <th>@L["Last sign-in"]</th>
+                        <th>@L["Actions"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var employee in Model.Employees)
+                {
+                    <tr>
+                        <td data-label="@L["Name"]" dir="auto">@employee.FullName</td>
+                        <td data-label="@L["Username"]"><code>@employee.Username</code></td>
+                        <td data-label="@L["Department"]" dir="auto">@(employee.Department ?? "—")@if (employee.Branch is not null) { <div class="small text-secondary">@employee.Branch</div> }</td>
+                        <td data-label="@L["Status"]"><span class="badge status-badge text-bg-@(employee.AccessStatus == EmployeeAccessStatus.Active ? "success" : employee.AccessStatus == EmployeeAccessStatus.Disabled ? "warning" : "danger")" data-marker="@(employee.AccessStatus == EmployeeAccessStatus.Active ? "✓" : employee.AccessStatus == EmployeeAccessStatus.Disabled ? "○" : "✕")">@L[Labels.AccessStatus(employee.AccessStatus)]</span></td>
+                        <td data-label="@L["Key version"]"><span class="ltr-value">@employee.CredentialVersion</span></td>
+                        <td data-label="@L["Last sign-in"]"><timestamp utc="@employee.LastAuthenticatedAtUtc" /></td>
+                        <td data-label="@L["Actions"]">
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-page="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">@L["Edit profile"]</a>
+                                <a asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-requesterType="Employee" asp-route-requesterId="@employee.Id" class="btn btn-sm btn-outline-secondary">@L["Requests"]</a>
+                                @if (employee.AccessStatus != EmployeeAccessStatus.Revoked)
+                                {
+                                    <form method="post" asp-page-handler="ReplaceKey" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Issue a replacement key? The current key and all sessions stop working immediately; the account state does not change."]">
+                                        <input type="hidden" name="id" value="@employee.Id" />
+                                        <button class="btn btn-sm btn-outline-primary" type="submit">@L["Replacement key"]</button>
+                                    </form>
+                                }
+                                @if (employee.AccessStatus == EmployeeAccessStatus.Active)
+                                {
+                                    <form method="post" asp-page-handler="Disable" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Disable this employee? Their sessions end and the key is suspended until re-enabled."]">
+                                        <input type="hidden" name="id" value="@employee.Id" />
+                                        <button class="btn btn-sm btn-outline-warning" type="submit">@L["Disable"]</button>
+                                    </form>
+                                }
+                                else if (employee.AccessStatus == EmployeeAccessStatus.Disabled)
+                                {
+                                    <form method="post" asp-page-handler="Enable">
+                                        <input type="hidden" name="id" value="@employee.Id" />
+                                        <button class="btn btn-sm btn-outline-success" type="submit">@L["Enable"]</button>
+                                    </form>
+                                }
+                                @if (employee.AccessStatus != EmployeeAccessStatus.Revoked)
+                                {
+                                    <form method="post" asp-page-handler="Revoke" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Revoke this employee's access? The key and sessions become invalid; restoring access later requires an explicit action and a fresh key."]">
+                                        <input type="hidden" name="id" value="@employee.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">@L["Revoke"]</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <a asp-page="Restore" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-success">@L["Restore access"]</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 </section>

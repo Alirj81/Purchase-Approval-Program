@@ -1,0 +1,68 @@
+@page "/admin/staff/create"
+@model PurchaseApproval.Web.Pages.Admin.Staff.CreateModel
+@{
+    ViewData["Title"] = L["Create staff account"];
+}
+
+<section class="row">
+    <div class="col-lg-7">
+        <h1 class="h3 mb-3">@L["Create staff account"]</h1>
+        @if (Model.TemporaryPassword is not null)
+        {
+            <div class="alert alert-success" role="status">@L["The account {0} was created.", Model.Input.Username]</div>
+            <div class="alert alert-warning" role="alert">
+                <strong>@L["Temporary password for {0}:", Model.Input.Username]</strong>
+                <code class="user-select-all d-block my-2">@Model.TemporaryPassword</code>
+                <div>@L["Shown once. Valid until"] <timestamp utc="@Model.TemporaryPasswordExpiresAtUtc" />. @L["The holder must choose a personal password at the next sign-in; all previous sessions are ended."]</div>
+            </div>
+            <a asp-page="Index" class="btn btn-primary">@L["Back to staff accounts"]</a>
+        }
+        else
+        {
+            <p class="form-text">@L["Fields marked with * are required."]</p>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <div class="mb-3">
+                    <label asp-for="Input.Username" class="form-label">@L["Username"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <input asp-for="Input.Username" class="form-control ltr-value" autocomplete="off" dir="ltr" required />
+                    <span asp-validation-for="Input.Username" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.FullName" class="form-label">@L["Full name"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <input asp-for="Input.FullName" class="form-control" dir="auto" required />
+                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Role" class="form-label">@L["Role"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <select asp-for="Input.Role" class="form-select">
+                        @foreach (var role in PurchaseApproval.Security.AppRoles.All)
+                        {
+                            <option value="@role">@L[Labels.Role(role)]</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Input.Role" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Department" class="form-label">@L["Department"]</label>
+                    <input asp-for="Input.Department" class="form-control" dir="auto" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Branch" class="form-label">@L["Branch"]</label>
+                    <input asp-for="Input.Branch" class="form-control" dir="auto" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.JobTitle" class="form-label">@L["Job title"]</label>
+                    <input asp-for="Input.JobTitle" class="form-control" dir="auto" />
+                </div>
+                <div class="form-actions d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">@L["Create account and show temporary password"]</button>
+                    <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

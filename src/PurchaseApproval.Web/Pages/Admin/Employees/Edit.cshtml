@@ -1,0 +1,55 @@
+@page "{id:int}"
+@model PurchaseApproval.Web.Pages.Admin.Employees.EditModel
+@{
+    ViewData["Title"] = L["Edit employee profile"];
+}
+
+<section class="row">
+    <div class="col-lg-7">
+        <h1 class="h3 mb-1">@L["Edit employee profile"]</h1>
+        <p class="text-secondary">@L["Username"]: <code>@Model.Username</code> · @L["Status"]: @L[Labels.AccessStatus(Model.AccessStatus)]</p>
+        <p class="form-text">@L["Changes apply to future requests only. Requests already submitted keep the profile snapshot taken at submission."]</p>
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="Input.FullName" class="form-label">@L["Full name"] <span class="required-marker" aria-hidden="true">*</span></label>
+                <input asp-for="Input.FullName" class="form-control" dir="auto" required />
+                <span asp-validation-for="Input.FullName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.PhoneNumber" class="form-label">@L["Phone number"]</label>
+                <input asp-for="Input.PhoneNumber" class="form-control ltr-value" dir="ltr" inputmode="tel" />
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Department" class="form-label">@L["Department"]</label>
+                <input asp-for="Input.Department" class="form-control" dir="auto" />
+                <span asp-validation-for="Input.Department" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Branch" class="form-label">@L["Branch"] @if (Model.BranchRequired) { <span class="required-marker" aria-hidden="true">*</span> }</label>
+                <input asp-for="Input.Branch" class="form-control" dir="auto" required="@Model.BranchRequired" />
+                <span asp-validation-for="Input.Branch" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.JobTitle" class="form-label">@L["Job title"]</label>
+                <input asp-for="Input.JobTitle" class="form-control" dir="auto" />
+                <span asp-validation-for="Input.JobTitle" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.AdminNotes" class="form-label">@L["Administrator notes (private)"]</label>
+                <textarea asp-for="Input.AdminNotes" class="form-control" rows="2" dir="auto"></textarea>
+                <div class="form-text">@L["Never shown to the employee, on tracking pages or in exports."]</div>
+                <span asp-validation-for="Input.AdminNotes" class="text-danger"></span>
+            </div>
+            <div class="form-actions d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">@L["Save profile"]</button>
+                <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
