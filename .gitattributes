@@ -1,0 +1,42 @@
+# Normalize line endings so the same file does not show spurious diffs between
+# Windows and Linux checkouts. Source, Markdown, configuration and shell files are
+# stored with LF; Windows command files keep CRLF; binary assets are never touched.
+* text=auto eol=lf
+
+*.cs        text eol=lf
+*.cshtml    text eol=lf
+*.csproj    text eol=lf
+*.slnx      text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.js        text eol=lf
+*.css       text eol=lf
+*.sh        text eol=lf
+*.ps1       text eol=lf
+*.sql       text eol=lf
+*.resx      text eol=lf
+.gitattributes text eol=lf
+.gitignore  text eol=lf
+.env.example text eol=lf
+
+# Windows command processors require CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Binary classifications: never diff or normalize.
+*.xlsx      binary
+*.xls       binary
+*.pdf       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.pfx       binary
+*.p12       binary
+*.zip       binary

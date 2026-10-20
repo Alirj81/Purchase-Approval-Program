@@ -20,3 +20,13 @@ TestResults/
 *.pfx
 *.p12
 *.key
+
+# Browser automation (Playwright) browsers and verification output
+.playwright/
+TestResults/browser/
+TestResults/*.trx
+
+# Database backups and restore rehearsals
+backups/
+*.dump
+*.backup

@@ -103,8 +103,14 @@ The most important tables are:
 | `PaymentRequestLines` | Expense rows belonging to a payment request. |
 | `PaymentRequestAttachments` | Supporting-file metadata and bytes. |
 | `ApprovalDecisions` | The one final approval or rejection decision per request. |
-| `TransferOutcomes`, `TransferAuditEntries` | External payment outcomes and their immutable audit snapshots. |
-| `ItemCatalogueEntries` | Reusable item names and usage counts. |
+| `TransferOutcomes`, `TransferAuditEntries` | External payment outcomes, closure state and their immutable audit snapshots. |
+| `AuditEntries` | Accountability trail for staff accounts, employee access and approval decisions. |
+| `SubmissionQuotaDays` | Per-account, per-UTC-day counters behind the daily submission quota. |
+| `ItemCatalogueEntries` | Reserved for reusable item names and usage counts (no interface yet). |
+
+Automated tests never use `purchase_approval_dev`. The PostgreSQL integration and browser tests
+read `PURCHASE_APPROVAL_TEST_CONNECTION` and refuse any database whose name does not end in
+`_test`; see the README section "Running the tests".
 
 The entity definitions are in `src/PurchaseApproval.Web/Models`, the mapping and constraints are
 in `src/PurchaseApproval.Web/Data/ApplicationDbContext.cs`, and database migrations are in
@@ -293,18 +299,27 @@ file before applying it. Do not edit an already-applied migration in a shared en
 
 ## 10. Backup and restore a local database
 
-Create a backup file in the project folder:
+The supported way to back up and restore any instance of this application, including the local
+development database, is described in [docs/BACKUP-AND-RESTORE.md](docs/BACKUP-AND-RESTORE.md)
+with `scripts/Backup-Database.ps1` and `scripts/Restore-Database.ps1` (custom-format `pg_dump`,
+verified restore). On this development PC the PostgreSQL client tools live only inside the
+container, so the equivalent commands are:
 
 ```powershell
-docker compose exec -T database pg_dump -U purchase_approval_app -d purchase_approval_dev > local-development-backup.sql
+# Backup (custom format, restorable with pg_restore; the file stays inside the container until copied)
+docker compose exec database pg_dump -U purchase_approval_app -d purchase_approval_dev --format=custom --compress=6 --file /tmp/dev-backup.dump
+docker compose cp database:/tmp/dev-backup.dump ./dev-backup.dump
+
+# Restore rehearsal into a NEW, empty database (never over purchase_approval_dev)
+docker compose exec database psql -U purchase_approval_app -d postgres -c "CREATE DATABASE purchase_approval_dev_rehearsal OWNER purchase_approval_app;"
+docker compose exec database pg_restore -U purchase_approval_app -d purchase_approval_dev_rehearsal --no-owner --no-privileges --exit-on-error /tmp/dev-backup.dump
 ```
 
-The resulting backup can contain personal and financial test data. Keep it out of source control and
-delete it when it is no longer needed.
-
-Restoring overwrites data and should only be done when you understand the consequences. For a local
-development reset, prefer recreating test records through the application rather than overwriting a
-database you still need.
+A plain-SQL dump (`pg_dump` without `--format=custom`, redirected to a `.sql` file) cannot be read
+by `pg_restore` or by the restore script; use the custom format so one procedure covers every
+environment. Backups contain personal and financial data: keep them out of source control
+(`*.dump` and `backups/` are git-ignored) and delete rehearsal copies when done. Restoring over a
+database you still need destroys its current content; restore into a separate database first.
 
 ## 11. Common problems
 
