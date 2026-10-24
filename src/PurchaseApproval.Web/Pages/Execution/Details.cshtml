@@ -167,19 +167,20 @@
                     <dt class="col-sm-4">@L["Bank"]</dt><dd class="col-sm-8" dir="auto">@(request.BankName ?? "—")</dd>
                     <dt class="col-sm-4">@L["Cheque"]</dt><dd class="col-sm-8">@(request.ChequeNumber is null ? "—" : $"{request.ChequeNumber}, {request.ChequeDate:yyyy-MM-dd}, {request.ChequePayeeName}")</dd>
                     <dt class="col-sm-4">@L["Executor"]</dt><dd class="col-sm-8"><span dir="auto">@request.PerformedByName</span> (@L[Labels.Role(request.PerformedByRole ?? string.Empty)])</dd>
-                    <dt class="col-sm-4">@L["Reported occurrence (entered device time)"]</dt>
+                    <dt class="col-sm-4" title="@L["Reported occurrence (entered device time)"]">@L["Reported"]</dt>
                     <dd class="col-sm-8">
                         @if (request.OccurredAtUtc is { } occurredAt && request.UtcOffsetMinutes is { } offsetMinutes)
                         {
-                            <span class="ltr-value">@occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes)).ToString("yyyy-MM-dd HH:mm zzz")</span>
-                            @if (request.TimeZoneId is not null) { <span class="small text-secondary ltr-value">(@request.TimeZoneId)</span> }
+                            var reported = occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes));
+                            var reportedDetail = $"{reported:yyyy-MM-dd HH:mm zzz}{(request.TimeZoneId is null ? string.Empty : $", {request.TimeZoneId}")}";
+                            <time class="compact-time" datetime="@occurredAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")" title="@reportedDetail" aria-label="@reportedDetail">@reported.ToString("yyyy-MM-dd · HH:mm")</time>
                         }
                         else
                         {
                             <span>—</span>
                         }
                     </dd>
-                    <dt class="col-sm-4">@L["Immutable server recording time (UTC)"]</dt><dd class="col-sm-8"><timestamp utc="@request.RecordedAtUtc" mode="utc" /></dd>
+                    <dt class="col-sm-4" title="@L["Immutable server recording time (UTC)"]">@L["Recorded"]</dt><dd class="col-sm-8"><timestamp utc="@request.RecordedAtUtc" mode="utc" /></dd>
                     <dt class="col-sm-4">@L["External accounting reference"]</dt><dd class="col-sm-8"><span class="ltr-value">@(request.ExternalReference ?? "—")</span></dd>
                     @if (request.TransferStatus == TransferStatus.Unsuccessful) {<dt class="col-sm-4">@L["Failure explanation"]</dt><dd class="col-sm-8 wrap-anywhere" dir="auto">@(request.FailureReason ?? "—")</dd>}
                     <dt class="col-sm-4">@L["Operational state"]</dt><dd class="col-sm-8">@(request.IsClosed ? L["Closed"] : L["Open"])</dd>
@@ -210,15 +211,15 @@
 
         <h2 class="h5 mt-4">@L["Execution audit trail"]</h2>
         <p class="small text-secondary">@L["Server recording times are shown in UTC."]</p>
-        <div class="table-responsive"><table class="table table-sm table-stack"><thead><tr><th>@L["Action"]</th><th>@L["Status"]</th><th>@L["Actor"]</th><th>@L["Reported occurrence"]</th><th>@L["Server recorded (UTC)"]</th></tr></thead><tbody>
+        <div class="table-responsive"><table class="table table-sm table-stack"><thead><tr><th>@L["Action"]</th><th>@L["Status"]</th><th>@L["Actor"]</th><th>@L["Reported"]</th><th>@L["Recorded"]</th></tr></thead><tbody>
         @foreach (var audit in request.AuditEntries)
         {
             <tr>
                 <td data-label="@L["Action"]">@L[Labels.TransferAudit(audit.Action)]@if (audit.ClosureReason is not null) {<div class="small wrap-anywhere" dir="auto">@audit.ClosureReason</div>}</td>
                 <td data-label="@L["Status"]">@L[Labels.Transfer(audit.Status)]</td>
                 <td data-label="@L["Actor"]"><span dir="auto">@audit.ActorName</span> (@L[Labels.Role(audit.ActorRole)])</td>
-                <td data-label="@L["Reported occurrence"]">@if (audit.OccurredAtUtc is { } occurred && audit.UtcOffsetMinutes is { } offset) {<span class="ltr-value">@occurred.ToOffset(TimeSpan.FromMinutes(offset)).ToString("yyyy-MM-dd HH:mm zzz")</span>@if (audit.TimeZoneId is not null) {<span class="small text-secondary ltr-value"> (@audit.TimeZoneId)</span>}} else {<span>—</span>}</td>
-                <td data-label="@L["Server recorded (UTC)"]"><timestamp utc="@audit.RecordedAtUtc" mode="utc" /></td>
+                <td data-label="@L["Reported"]">@if (audit.OccurredAtUtc is { } occurred && audit.UtcOffsetMinutes is { } offset) { var localAudit = occurred.ToOffset(TimeSpan.FromMinutes(offset)); var auditDetail = $"{localAudit:yyyy-MM-dd HH:mm zzz}{(audit.TimeZoneId is null ? string.Empty : $", {audit.TimeZoneId}")}"; <time class="compact-time" datetime="@occurred.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")" title="@auditDetail" aria-label="@auditDetail">@localAudit.ToString("yyyy-MM-dd · HH:mm")</time>} else {<span>—</span>}</td>
+                <td data-label="@L["Recorded"]"><timestamp utc="@audit.RecordedAtUtc" mode="utc" /></td>
             </tr>
         }
         </tbody></table></div>

@@ -1,12 +1,12 @@
 // Renders a server timestamp so the browser can show it in the viewer's own timezone.
 //
-// Usage in a view:  <timestamp utc="@row.SubmittedAtUtc" />           -> viewer-local, offset labelled
-//                   <timestamp utc="@audit.RecordedAtUtc" mode="utc" /> -> stays UTC, labelled UTC
+// Usage in a view:  <timestamp utc="@row.SubmittedAtUtc" />              -> compact viewer-local time
+//                   <timestamp utc="@audit.RecordedAtUtc" mode="utc" /> -> compact UTC time
 //
-// The server always writes the UTC value into the datetime attribute and a labelled UTC fallback
-// as the visible text. wwwroot/js/local-time.js then replaces the text of every element marked
-// data-local-time with the device-local rendering plus its offset and IANA zone. A page viewed
-// without JavaScript therefore still shows a correct, correctly labelled time. Date-only values
+// The server always writes the UTC value into the datetime attribute, a compact visible fallback,
+// and a labelled UTC tooltip. wwwroot/js/local-time.js then replaces every element marked
+// data-local-time with a compact device-local rendering. Full timezone details remain available
+// in the title/accessible label. A page viewed without JavaScript still shows correct UTC. Date-only values
 // (cheque dates) must not use this helper; they are rendered as plain text so they never shift.
 using System.Globalization;
 using Microsoft.AspNetCore.Razor.TagHelpers;
@@ -38,12 +38,15 @@ public sealed class TimestampTagHelper : TagHelper
         output.TagName = "time";
         output.TagMode = TagMode.StartTagAndEndTag;
         output.Attributes.SetAttribute("datetime", utc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture));
-        output.Attributes.SetAttribute("class", "text-nowrap");
+        output.Attributes.SetAttribute("class", "compact-time text-nowrap");
         if (string.Equals(Mode, "local", StringComparison.OrdinalIgnoreCase))
         {
             output.Attributes.SetAttribute("data-local-time", "true");
         }
 
-        output.Content.SetContent(utc.ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture));
+        var utcLabel = utc.ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture);
+        output.Attributes.SetAttribute("title", utcLabel);
+        output.Attributes.SetAttribute("aria-label", utcLabel);
+        output.Content.SetContent(utc.ToString("yyyy-MM-dd · HH:mm", CultureInfo.InvariantCulture));
     }
 }

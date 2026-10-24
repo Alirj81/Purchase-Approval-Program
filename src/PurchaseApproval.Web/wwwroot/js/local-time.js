@@ -1,6 +1,5 @@
-// Rewrites every <time data-local-time datetime="...Z"> element into the viewer's own timezone,
-// labelled with its UTC offset and IANA zone, e.g. "2026-10-19 15:30 (UTC+03:30, Asia/Tehran)".
-// The server-rendered text is a labelled UTC fallback, so nothing is wrong if this never runs.
+// Rewrites every timestamp into a compact viewer-local value. The full offset and IANA zone are
+// kept in the tooltip and accessible label instead of making every table cell excessively wide.
 // Digits stay Western on purpose: amounts and times must read the same in both languages.
 (() => {
     const zone = (() => {
@@ -24,8 +23,10 @@
         if (!value) continue;
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) continue;
-        const local = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-        element.textContent = `${local} (${offsetLabel(date)}${zone ? ", " + zone : ""})`;
-        element.setAttribute("title", `${value} (UTC)`);
+        const local = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} · ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        const detail = `${local.replace(" · ", " ")} (${offsetLabel(date)}${zone ? ", " + zone : ""})`;
+        element.textContent = local;
+        element.setAttribute("title", detail);
+        element.setAttribute("aria-label", detail);
     }
 })();

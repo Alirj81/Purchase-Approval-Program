@@ -98,10 +98,140 @@ td, dd {
   overflow-wrap: anywhere;
 }
 
+/* Column headings are navigational labels, not body copy. Keep them intact; responsive
+   containers scroll when necessary and card-style mobile tables take over on small screens. */
+.table-responsive th {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.table-responsive {
+  border: 1px solid var(--bs-border-color-translucent);
+  border-radius: .65rem;
+}
+
+.table-responsive > .table {
+  margin-bottom: 0;
+}
+
+.table-responsive > .table > thead {
+  background: var(--bs-tertiary-bg);
+}
+
+.table-responsive > .table > tbody > tr:last-child > td {
+  border-bottom: 0;
+}
+
 /* Amount cells never wrap; they are already isolated LTR via .ltr-value. */
 .amount {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+/* Dense operational screens use clear visual hierarchy instead of giving every audit field an
+   equally prominent column. Full timestamp details remain available on hover/focus. */
+.compact-time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+
+.record-title {
+  margin-top: .2rem;
+  font-weight: 650;
+  color: var(--bs-body-color);
+}
+
+.record-meta {
+  display: block;
+  margin-top: .15rem;
+  color: var(--bs-secondary-color);
+  font-size: .82rem;
+  line-height: 1.35;
+}
+
+.meta-label {
+  display: block;
+  margin-bottom: .1rem;
+  color: var(--bs-secondary-color);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+
+.history-table {
+  table-layout: fixed;
+  min-width: 58rem;
+}
+
+.history-table thead th {
+  padding-block: .7rem;
+  color: var(--bs-secondary-color);
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom-width: 1px;
+}
+
+.history-table th:nth-child(1) { width: 25%; }
+.history-table th:nth-child(2) { width: 27%; }
+.history-table th:nth-child(3) { width: 23%; }
+.history-table th:nth-child(4) { width: 14%; }
+.history-table th:nth-child(5) { width: 11%; }
+
+.history-table td {
+  padding-block: .85rem;
+  vertical-align: top;
+}
+
+.history-status {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, .65fr) minmax(0, 1fr);
+  column-gap: .5rem;
+  align-items: baseline;
+  padding-block: .2rem;
+}
+
+.history-status + .history-status {
+  border-top: 1px solid var(--bs-border-color-translucent);
+  margin-top: .2rem;
+  padding-top: .4rem;
+}
+
+.history-status .record-meta,
+.history-status .small {
+  grid-column: 2;
+}
+
+.secondary-detail {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.timeline-list {
+  display: grid;
+  gap: .3rem;
+  margin: 0;
+}
+
+.timeline-list > div {
+  display: grid;
+  grid-template-columns: minmax(4.25rem, .65fr) minmax(0, 1fr);
+  gap: .5rem;
+  align-items: baseline;
+}
+
+.timeline-list dt {
+  color: var(--bs-secondary-color);
+  font-size: .75rem;
+}
+
+.timeline-list dd {
+  margin: 0;
+  font-size: .86rem;
 }
 
 /* Status badges are text plus icon, never colour alone. */
@@ -162,6 +292,24 @@ td, dd {
   table.table-stack tbody td[data-label="Actions"] .btn,
   table.table-stack tbody td[data-label="Actions"] form {
     width: 100%;
+  }
+
+  .history-table {
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .history-table tbody td {
+    display: block;
+  }
+
+  .history-table tbody td::before {
+    display: block;
+    margin-bottom: .35rem;
+  }
+
+  .history-table tbody td > :last-child {
+    max-width: 100%;
   }
 }
 

@@ -252,8 +252,10 @@ public sealed class WorkflowBrowserTests(AppServerFixture fixture) : IAsyncLifet
         await page.ScreenshotAsync(new() { Path = Shot("09-accountant-form"), FullPage = true });
         await page.ClickAsync("button[formaction*='handler=Transferred'], form#outcome-form button.btn-success");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-        var executionText = await page.TextContentAsync("main") ?? string.Empty;
-        Assert.Contains("Asia/Tehran", executionText);
+        var reportedTime = page.Locator("main time[title*='Asia/Tehran']").First;
+        Assert.True(await reportedTime.IsVisibleAsync());
+        Assert.DoesNotContain("Asia/Tehran", await reportedTime.TextContentAsync() ?? string.Empty);
+        Assert.Contains(" · ", await reportedTime.TextContentAsync() ?? string.Empty);
         await page.ScreenshotAsync(new() { Path = Shot("10-accountant-recorded"), FullPage = true });
     }
 

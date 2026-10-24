@@ -305,6 +305,9 @@
   <data name="Server execution recording" xml:space="preserve"><value>ثبت نتیجه در سرور</value></data>
   <data name="External accounting reference" xml:space="preserve"><value>شمارهٔ مرجع حسابداری</value></data>
   <data name="Request" xml:space="preserve"><value>درخواست</value></data>
+  <data name="Timeline" xml:space="preserve"><value>زمان‌ها</value></data>
+  <data name="Accounting" xml:space="preserve"><value>حسابداری</value></data>
+  <data name="Reported" xml:space="preserve"><value>اعلام</value></data>
   <data name="Enter the device or business timezone used for the date boundary." xml:space="preserve"><value>منطقهٔ زمانی دستگاه یا کسب‌وکار را برای مرز تاریخ وارد کنید.</value></data>
 
   <!-- Reports -->

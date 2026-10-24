@@ -129,44 +129,38 @@
     else
     {
         <p class="small text-secondary">@L["{0} matching records", Model.Result.TotalCount]</p>
-        <div class="table-responsive">
-            <table class="table table-sm table-hover align-middle table-stack">
+        <div class="table-responsive history-table-wrap">
+            <table class="table table-hover align-middle table-stack history-table">
                 <thead><tr>
-                    <th>@L["Reference / requester"]</th>
-                    <th>@L["Decision"]</th>
-                    <th>@L["Execution"]</th>
-                    <th>@L["Closure"]</th>
-                    <th>@L["Submitted"]</th>
-                    <th>@L["Decided"]</th>
-                    <th>@L["Reported occurrence (entered device time)"]</th>
-                    <th>@L["Server execution recording"]</th>
-                    <th>@L["Closed"]</th>
-                    <th>@L["External accounting reference"]</th>
+                    <th>@L["Request"]</th>
+                    <th>@L["Status"]</th>
+                    <th>@L["Timeline"]</th>
+                    <th>@L["Accounting"]</th>
                     <th><span class="visually-hidden">@L["Actions"]</span></th>
                 </tr></thead>
                 <tbody>
                 @foreach (var row in Model.Result.Rows)
                 {
                     <tr>
-                        <td data-label="@L["Reference / requester"]"><strong class="reference">@row.ReferenceNumber</strong><div dir="auto">@row.RequesterName</div><div class="small text-secondary">@L[Labels.RequesterType(row.RequesterType)] · <span class="ltr-value">@row.RequesterUsername</span></div><div class="small wrap-anywhere" dir="auto">@row.PayeeName · <span class="amount ltr-value">@row.TotalAmountRials.ToString("N0")</span> @L["IRR"]</div></td>
-                        <td data-label="@L["Decision"]">@L[Labels.Status(row.ApprovalStatus)]@if (row.DecidedByName is not null) {<div class="small text-secondary" dir="auto">@row.DecidedByName</div>}@if (row.IsSelfApproval) {<div class="small text-info">@L["Self-approved"]</div>}</td>
-                        <td data-label="@L["Execution"]">@(row.ExecutionOutcome is { } outcome ? L[Labels.Transfer(outcome)] : L["Not applicable"])@if (row.ExecutorName is not null) {<div class="small text-secondary" dir="auto">@row.ExecutorName</div>}@if (row.FailureReason is not null) {<div class="small text-danger wrap-anywhere" dir="auto">@row.FailureReason</div>}</td>
-                        <td data-label="@L["Closure"]">@(row.IsClosed is null ? L["Not applicable"] : row.IsClosed.Value ? L["Closed"] : L["Open"])@if (row.ClosureType is { } closureType) {<div class="small text-secondary">@L[Labels.Closure(closureType)]</div>}@if (row.ClosureReason is not null) {<div class="small wrap-anywhere" dir="auto">@row.ClosureReason</div>}</td>
-                        <td data-label="@L["Submitted"]"><timestamp utc="@row.SubmittedAtUtc" /></td>
-                        <td data-label="@L["Decided"]"><timestamp utc="@row.DecidedAtUtc" /></td>
-                        <td data-label="@L["Reported occurrence (entered device time)"]">
+                        <td data-label="@L["Request"]" class="history-request"><strong class="reference">@row.ReferenceNumber</strong><div class="record-title" dir="auto">@row.RequesterName</div><div class="record-meta">@L[Labels.RequesterType(row.RequesterType)] · <span class="ltr-value">@row.RequesterUsername</span></div><div class="record-meta wrap-anywhere" dir="auto">@row.PayeeName · <span class="amount ltr-value">@row.TotalAmountRials.ToString("N0")</span> @L["IRR"]</div></td>
+                        <td data-label="@L["Status"]">
+                            <div class="history-status"><span class="meta-label">@L["Decision"]</span><strong>@L[Labels.Status(row.ApprovalStatus)]</strong>@if (row.DecidedByName is not null) {<span class="record-meta" dir="auto">@row.DecidedByName</span>}@if (row.IsSelfApproval) {<span class="small text-info">@L["Self-approved"]</span>}</div>
+                            <div class="history-status"><span class="meta-label">@L["Execution"]</span><strong>@(row.ExecutionOutcome is { } outcome ? L[Labels.Transfer(outcome)] : L["Not applicable"])</strong>@if (row.ExecutorName is not null) {<span class="record-meta" dir="auto">@row.ExecutorName</span>}@if (row.FailureReason is not null) {<span class="small text-danger secondary-detail" dir="auto" title="@row.FailureReason">@row.FailureReason</span>}</div>
+                            <div class="history-status"><span class="meta-label">@L["Closure"]</span><strong>@(row.IsClosed is null ? L["Not applicable"] : row.IsClosed.Value ? L["Closed"] : L["Open"])</strong>@if (row.ClosureType is { } closureType) {<span class="record-meta">@L[Labels.Closure(closureType)]</span>}@if (row.ClosureReason is not null) {<span class="small secondary-detail" dir="auto" title="@row.ClosureReason">@row.ClosureReason</span>}</div>
+                        </td>
+                        <td data-label="@L["Timeline"]"><dl class="timeline-list">
+                            <div><dt>@L["Submitted"]</dt><dd><timestamp utc="@row.SubmittedAtUtc" /></dd></div>
+                            @if (row.DecidedAtUtc is not null) {<div><dt>@L["Decided"]</dt><dd><timestamp utc="@row.DecidedAtUtc" /></dd></div>}
                             @if (row.TransactionOccurredAtUtc is { } occurredAt && row.TransactionUtcOffsetMinutes is { } offsetMinutes)
                             {
-                                <span class="ltr-value">@occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes)).ToString("yyyy-MM-dd HH:mm zzz")</span>
+                                var reported = occurredAt.ToOffset(TimeSpan.FromMinutes(offsetMinutes));
+                                var reportedDetail = reported.ToString("yyyy-MM-dd HH:mm zzz");
+                                <div><dt>@L["Reported"]</dt><dd><time class="compact-time text-nowrap" datetime="@occurredAt.ToUniversalTime().ToString("yyyy-MM-dd'T'HH:mm:ss'Z'")" title="@reportedDetail" aria-label="@reportedDetail">@reported.ToString("yyyy-MM-dd · HH:mm")</time></dd></div>
                             }
-                            else
-                            {
-                                <span>—</span>
-                            }
-                        </td>
-                        <td data-label="@L["Server execution recording"]"><timestamp utc="@row.ExecutionRecordedAtUtc" /></td>
-                        <td data-label="@L["Closed"]"><timestamp utc="@row.ClosedAtUtc" />@if (row.ClosedByName is not null) {<div class="small text-secondary" dir="auto">@row.ClosedByName</div>}</td>
-                        <td data-label="@L["External accounting reference"]"><span class="ltr-value">@(row.ExternalReference ?? "—")</span></td>
+                            @if (row.ExecutionRecordedAtUtc is not null) {<div><dt>@L["Recorded"]</dt><dd><timestamp utc="@row.ExecutionRecordedAtUtc" /></dd></div>}
+                            @if (row.ClosedAtUtc is not null) {<div><dt>@L["Closed"]</dt><dd><timestamp utc="@row.ClosedAtUtc" />@if (row.ClosedByName is not null) {<span class="record-meta" dir="auto">@row.ClosedByName</span>}</dd></div>}
+                        </dl></td>
+                        <td data-label="@L["Accounting"]"><span class="meta-label">@L["Reference"]</span><span class="ltr-value">@(row.ExternalReference ?? "—")</span></td>
                         <td data-label="@L["Actions"]" class="text-nowrap"><a asp-page="/Admin/Requests/Details" asp-route-id="@row.RequestId" class="btn btn-sm btn-outline-primary">@L["Request"]</a>@if (row.ApprovalStatus == PaymentRequestStatus.Approved) {<a asp-page="/Execution/Details" asp-route-id="@row.RequestId" class="btn btn-sm btn-outline-secondary ms-1">@L["Execution"]</a>}</td>
                     </tr>
                 }
