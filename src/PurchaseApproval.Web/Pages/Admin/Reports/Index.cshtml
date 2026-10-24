@@ -2,42 +2,44 @@
 @page "/admin/reports"
 @model PurchaseApproval.Web.Pages.Admin.Reports.IndexModel
 @{
-    ViewData["Title"] = L["Approved request export"];
+    ViewData["Title"] = L["Excel reports"];
 }
 
 <section class="mx-auto" style="max-width: 64rem" aria-labelledby="report-heading">
-    <div class="mb-4">
-        <h1 id="report-heading" class="h3 mb-1">@L["Approved request export"]</h1>
-        <p class="text-secondary mb-0">@L["Generate one worksheet containing approved employee and administrator requests."]</p>
+    <div class="page-heading mb-4">
+        <h1 id="report-heading" class="h3 mb-1">@L["Excel reports"]</h1>
+        <p class="text-secondary mb-0">@L["Download approved requests in Persian or English."]</p>
     </div>
-    <div class="card mb-4"><div class="card-body"><dl class="row mb-0">
-        <dt class="col-sm-3">@L["Date basis"]</dt><dd class="col-sm-9">@L["Approval-decision timestamp"]</dd>
-        <dt class="col-sm-3">@L["Reporting timezone"]</dt><dd class="col-sm-9">@L["Exporting administrator's device timezone (IANA)"]</dd>
-        <dt class="col-sm-3">@L["Displayed calendar"]</dt><dd class="col-sm-9">@L["Gregorian"]</dd>
-        <dt class="col-sm-3">@L["Workbook language"]</dt><dd class="col-sm-9">@L["English, with Gregorian dates and Western digits, regardless of the interface language."]</dd>
-    </dl></div></div>
-    <div class="alert alert-secondary py-2">@L["Two administrators in different timezones can legitimately receive different rows for the same date. A report is defined by its date range, timezone and timestamp basis; all three are written into the workbook."]</div>
+
+    <div class="report-facts mb-4" aria-label="@L["Report settings"]">
+        <div><span>@L["Date basis"]</span><strong>@L["Approval decision"]</strong></div>
+        <div><span>@L["Calendar"]</span><strong>@L["Gregorian"]</strong></div>
+        <div><span>@L["Formats"]</span><strong>@L["Persian and English"]</strong></div>
+    </div>
 
     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
     @if (Model.NoResultsMessage is not null) { <div class="alert alert-info">@L[Model.NoResultsMessage]</div> }
 
     <form method="get" asp-page-handler="Export" class="card">
         <div class="card-body">
-            <h2 class="h5">@L["Select a period"]</h2>
-            <p class="text-secondary">@L["Use either one date or an inclusive From/To range. Both boundaries are interpreted in the visible timezone."]</p>
+            <h2 class="h5 mb-1">@L["Report period"]</h2>
+            <p class="form-text mt-0 mb-3">@L["Choose one date or a start and end date."]</p>
             <div class="row g-3">
                 <div class="col-12">
-                    <label asp-for="TimeZoneId" class="form-label">@L["Reporting timezone (IANA)"] <span class="required-marker" aria-hidden="true">*</span></label>
+                    <label asp-for="TimeZoneId" class="form-label">@L["Report timezone"] <span class="required-marker" aria-hidden="true">*</span></label>
                     <input asp-for="TimeZoneId" id="report-timezone" class="form-control ltr-value" maxlength="100" required placeholder="Europe/Berlin, UTC" dir="ltr" aria-describedby="report-timezone-help report-timezone-status" />
-                    <div id="report-timezone-help" class="form-text">@L["Detected from this device when available. If detection fails, enter an IANA timezone explicitly."]</div>
+                    <div id="report-timezone-help" class="form-text">@L["Detected from this device; change it if needed"]</div>
                     <div id="report-timezone-status" class="form-text fw-semibold" aria-live="polite" data-ready="@L["Date boundaries will use {0}.", "{0}"]" data-missing="@L["Timezone detection failed. Enter an IANA timezone before exporting."]"></div>
                 </div>
-                <div class="col-md-4"><label asp-for="Date" class="form-label">@L["Single date"]</label><input asp-for="Date" type="date" class="form-control ltr-value" dir="ltr" /></div>
-                <div class="col-md-4"><label asp-for="From" class="form-label">@L["From date (inclusive)"]</label><input asp-for="From" type="date" class="form-control ltr-value" dir="ltr" /></div>
-                <div class="col-md-4"><label asp-for="To" class="form-label">@L["To date (inclusive)"]</label><input asp-for="To" type="date" class="form-control ltr-value" dir="ltr" /></div>
+                <div class="col-md-4"><label asp-for="Date" class="form-label">@L["One date"]</label><input asp-for="Date" type="date" class="form-control ltr-value" dir="ltr" /></div>
+                <div class="col-md-4"><label asp-for="From" class="form-label">@L["Start date"]</label><input asp-for="From" type="date" class="form-control ltr-value" dir="ltr" /></div>
+                <div class="col-md-4"><label asp-for="To" class="form-label">@L["End date"]</label><input asp-for="To" type="date" class="form-control ltr-value" dir="ltr" /></div>
             </div>
         </div>
-        <div class="card-footer"><button type="submit" class="btn btn-primary">@L["Download approved requests (Excel, English)"]</button></div>
+        <div class="card-footer d-flex flex-wrap gap-2">
+            <button type="submit" name="Language" value="Persian" class="btn btn-primary">@L["Download Persian Excel"]</button>
+            <button type="submit" name="Language" value="English" class="btn btn-outline-primary">@L["Download English Excel"]</button>
+        </div>
     </form>
 </section>
 

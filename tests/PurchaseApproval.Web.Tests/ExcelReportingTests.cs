@@ -175,6 +175,75 @@ public sealed class ExcelReportingTests
     }
 
     [Fact]
+    public async Task PersianExports_AreTranslatedRightToLeftAndKeepTypedFinancialValues()
+    {
+        await using var dbContext = CreateDbContext();
+        var request = CreateApprovedRequest(
+            1,
+            "PR-2026-FA",
+            RequesterType.Employee,
+            "علی رحیمی",
+            "ali.rahimi",
+            GeneratedAt.AddHours(-4));
+        request.Lines.Add(new PaymentRequestLine
+        {
+            Id = 11,
+            DisplayOrder = 0,
+            Description = "خرید کاغذ",
+            AmountRials = 1_000_000,
+            HasInvoice = true
+        });
+        dbContext.Add(request);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        var service = CreateService(dbContext);
+        var individualFile = await service.CreateIndividualAsync(
+            request.Id,
+            ReportLanguage.Persian);
+
+        Assert.NotNull(individualFile);
+        Assert.Contains("-fa.xlsx", individualFile!.DownloadName, StringComparison.Ordinal);
+        using (var individualWorkbook = Open(individualFile.Content))
+        {
+            var sheet = individualWorkbook.Worksheet("گزارش درخواست");
+            var text = CellText(sheet);
+            Assert.True(sheet.RightToLeft);
+            Assert.Contains("گزارش تصمیم و پرداخت درخواست", text);
+            Assert.Contains("تأیید شده", text);
+            Assert.Contains("یک میلیون ریال", text);
+            Assert.Equal(XLAlignmentReadingOrderValues.LeftToRight,
+                sheet.Cell("B5").Style.Alignment.ReadingOrder);
+            Assert.Contains(sheet.CellsUsed(), cell =>
+                cell.DataType == XLDataType.Number && cell.GetValue<long>() == 1_000_000);
+            Assert.DoesNotContain(sheet.CellsUsed(), cell => cell.HasFormula);
+        }
+
+        var period = new ReportPeriod(
+            DateOnly.FromDateTime(GeneratedAt.UtcDateTime),
+            DateOnly.FromDateTime(GeneratedAt.UtcDateTime));
+        var settings = new ResolvedReportingSettings(
+            TimeZoneInfo.Utc,
+            ConsolidatedReportDateBasis.ApprovalDecision,
+            ReportCalendarSystem.Gregorian);
+        var consolidated = await service.CreateConsolidatedAsync(
+            period,
+            settings,
+            ReportLanguage.Persian);
+
+        Assert.NotNull(consolidated.File);
+        Assert.Contains("approved-requests-fa-", consolidated.File!.DownloadName, StringComparison.Ordinal);
+        using var consolidatedWorkbook = Open(consolidated.File.Content);
+        var consolidatedSheet = consolidatedWorkbook.Worksheet("درخواست‌های تأییدشده");
+        Assert.True(consolidatedSheet.RightToLeft);
+        Assert.Equal("شمارهٔ پیگیری", consolidatedSheet.Cell("A8").GetString());
+        Assert.Equal("تأیید شده", consolidatedSheet.Cell("O9").GetString());
+        Assert.Equal(XLDataType.Number, consolidatedSheet.Cell("L9").DataType);
+        Assert.Equal(XLDataType.DateTime, consolidatedSheet.Cell("N9").DataType);
+        Assert.DoesNotContain(consolidatedSheet.CellsUsed(), cell => cell.HasFormula);
+    }
+
+    [Fact]
     public async Task ConsolidatedSingleDate_FiltersBoundariesAndPreventsChildRowDuplicates()
     {
         await using var dbContext = CreateDbContext();
@@ -407,6 +476,31 @@ public sealed class ExcelReportingTests
         using var workbook = Open(new ExcelWorkbookBuilder().BuildIndividual(report, GeneratedAt));
 
         Assert.Contains(expected, CellText(workbook.Worksheet("Decision record")));
+    }
+
+    [Theory]
+    [InlineData(1, "یک ریال")]
+    [InlineData(12_500_000, "دوازده میلیون و پانصد هزار ریال")]
+    [InlineData(10_000_000_000, "ده میلیارد ریال")]
+    public void PersianIndividualAmountInWords_IsCompleteAndReadable(
+        long amountRials,
+        string expected)
+    {
+        var report = CreateIndividualReport(
+            RequesterType.Employee,
+            ApprovalDecisionType.Approved,
+            rejectionReason: null,
+            transfer: null) with
+        {
+            TotalAmountRials = amountRials
+        };
+
+        using var workbook = Open(new ExcelWorkbookBuilder().BuildIndividual(
+            report,
+            GeneratedAt,
+            ReportLanguage.Persian));
+
+        Assert.Contains(expected, CellText(workbook.Worksheet("گزارش درخواست")));
     }
 
     private static ExcelReportService CreateService(ApplicationDbContext dbContext) =>

@@ -7,13 +7,17 @@ namespace PurchaseApproval.Services;
 
 public interface IExcelWorkbookBuilder
 {
-    byte[] BuildIndividual(IndividualRequestReport report, DateTimeOffset generatedAtUtc);
+    byte[] BuildIndividual(
+        IndividualRequestReport report,
+        DateTimeOffset generatedAtUtc,
+        ReportLanguage language = ReportLanguage.English);
 
     byte[] BuildConsolidated(
         IReadOnlyList<ConsolidatedRequestReportRow> rows,
         ReportPeriod period,
         ResolvedReportingSettings settings,
-        DateTimeOffset generatedAtUtc);
+        DateTimeOffset generatedAtUtc,
+        ReportLanguage language = ReportLanguage.English);
 }
 
 public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
@@ -23,51 +27,50 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
     private const string LightBlue = "#D9EAF7";
     private const string LightGray = "#E7E6E6";
     private const string BorderGray = "#B7B7B7";
-    private const string MissingValue = "Not recorded";
-
     public byte[] BuildIndividual(
         IndividualRequestReport report,
-        DateTimeOffset generatedAtUtc)
+        DateTimeOffset generatedAtUtc,
+        ReportLanguage language = ReportLanguage.English)
     {
         ArgumentNullException.ThrowIfNull(report);
+        var copy = new ExcelReportCopy(language);
 
-        using var workbook = CreateWorkbook("Application decision and execution record");
-        var sheet = workbook.Worksheets.Add("Decision record");
-        PrepareSheet(sheet);
+        using var workbook = CreateWorkbook(copy["Application decision and execution record"], copy.IsPersian);
+        var sheet = workbook.Worksheets.Add(copy["Decision record"]);
+        PrepareSheet(sheet, copy.IsPersian);
 
         sheet.Range("A1:H1").Merge();
-        SetText(sheet.Cell("A1"), "Application decision and execution record");
-        StyleTitle(sheet.Range("A1:H1"));
+        SetText(sheet.Cell("A1"), copy["Application decision and execution record"]);
+        StyleTitle(sheet.Range("A1:H1"), copy.IsPersian);
 
         sheet.Range("A2:H2").Merge();
         SetText(
             sheet.Cell("A2"),
-            "This record documents the application decision and any recorded execution outcome. "
-            + "It is not a bank receipt or a cryptographically verified signature.");
+            copy["This record documents the application decision and any recorded execution outcome. It is not a bank receipt or a cryptographically verified signature."]);
         sheet.Cell("A2").Style.Alignment.WrapText = true;
         sheet.Row(2).Height = 32;
 
         var row = 4;
-        AddSection(sheet, row++, "Request and requester snapshot");
-        SetPair(sheet, row, 1, "Request reference", report.ReferenceNumber);
-        SetPair(sheet, row, 5, "Request status", report.Status.ToString());
+        AddSection(sheet, row++, copy["Request and requester snapshot"]);
+        SetPair(sheet, row, 1, copy["Request reference"], report.ReferenceNumber, leftToRight: true);
+        SetPair(sheet, row, 5, copy["Request status"], copy.RequestStatus(report.Status));
         row++;
-        SetPair(sheet, row, 1, "Requester type", report.RequesterType.ToString());
-        SetPair(sheet, row, 5, "Submitted (UTC)", FormatUtc(report.SubmittedAtUtc));
+        SetPair(sheet, row, 1, copy["Requester type"], copy.RequesterType(report.RequesterType));
+        SetPair(sheet, row, 5, copy["Submitted (UTC)"], FormatUtc(report.SubmittedAtUtc), leftToRight: true);
         row++;
-        SetPair(sheet, row, 1, "Requester name", report.RequesterFullName);
-        SetPair(sheet, row, 5, "Username", report.RequesterUsername);
+        SetPair(sheet, row, 1, copy["Requester name"], report.RequesterFullName);
+        SetPair(sheet, row, 5, copy["Username"], report.RequesterUsername, leftToRight: true);
         row++;
-        SetPair(sheet, row, 1, "Phone", report.RequesterPhoneNumber);
-        SetPair(sheet, row, 5, "Department", report.RequesterDepartment);
+        SetPair(sheet, row, 1, copy["Phone"], report.RequesterPhoneNumber, leftToRight: true);
+        SetPair(sheet, row, 5, copy["Department"], report.RequesterDepartment);
         row++;
-        SetPair(sheet, row, 1, "Branch", report.RequesterBranch);
-        SetPair(sheet, row, 5, "Job title", report.RequesterJobTitle);
+        SetPair(sheet, row, 1, copy["Branch"], report.RequesterBranch);
+        SetPair(sheet, row, 5, copy["Job title"], report.RequesterJobTitle);
         row++;
-        SetPair(sheet, row, 1, "Intended payee", report.PayeeName);
-        SetPair(sheet, row, 5, "Requested account/card", report.RequestedAccountOrCardNumber);
+        SetPair(sheet, row, 1, copy["Intended payee"], report.PayeeName);
+        SetPair(sheet, row, 5, copy["Requested account/card"], report.RequestedAccountOrCardNumber, leftToRight: true);
         row++;
-        SetText(sheet.Cell(row, 1), "Payment purpose");
+        SetText(sheet.Cell(row, 1), copy["Payment purpose"]);
         StyleLabel(sheet.Range(row, 1, row + 1, 1));
         sheet.Range(row, 2, row + 1, 8).Merge();
         SetText(sheet.Cell(row, 2), report.Justification);
@@ -81,15 +84,13 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         SetWidePair(
             sheet,
             row++,
-            "Attachments",
-            report.AttachmentCount == 0
-                ? "No attachments recorded"
-                : $"{report.AttachmentCount:N0} attachment(s) recorded; file content is not embedded");
+            copy["Attachments"],
+            copy.AttachmentSummary(report.AttachmentCount));
 
         row++;
-        AddSection(sheet, row++, "Expense rows");
+        AddSection(sheet, row++, copy["Expense rows"]);
         var expenseHeaderRow = row;
-        var expenseHeaders = new[] { "#", "Description", "", "Invoice", "Remarks", "", "", "Amount (IRR)" };
+        var expenseHeaders = new[] { "#", copy["Description"], "", copy["Invoice"], copy["Remarks"], "", "", copy["Amount (IRR)"] };
         for (var column = 1; column <= expenseHeaders.Length; column++)
         {
             SetText(sheet.Cell(row, column), expenseHeaders[column - 1]);
@@ -104,7 +105,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             sheet.Cell(row, 1).SetValue(line.DisplayOrder + 1);
             sheet.Range(row, 2, row, 3).Merge();
             SetText(sheet.Cell(row, 2), line.Description);
-            SetText(sheet.Cell(row, 4), line.HasInvoice ? "Yes" : "No");
+            SetText(sheet.Cell(row, 4), copy[line.HasInvoice ? "Yes" : "No"]);
             sheet.Range(row, 5, row, 7).Merge();
             SetText(sheet.Cell(row, 5), line.Remarks);
             SetAmount(sheet.Cell(row, 8), line.AmountRials);
@@ -113,7 +114,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         }
 
         sheet.Range(row, 1, row, 7).Merge();
-        SetText(sheet.Cell(row, 1), "Authoritative saved total");
+        SetText(sheet.Cell(row, 1), copy["Authoritative saved total"]);
         sheet.Cell(row, 1).Style.Font.Bold = true;
         SetAmount(sheet.Cell(row, 8), report.TotalAmountRials);
         sheet.Cell(row, 8).Style.Font.Bold = true;
@@ -122,40 +123,36 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         SetWidePair(
             sheet,
             row++,
-            "Amount in words",
-            RialAmountInWords.Format(report.TotalAmountRials));
+            copy["Amount in words"],
+            copy.AmountInWords(report.TotalAmountRials));
         row++;
 
-        AddSection(sheet, row++, "Decision");
-        SetPair(sheet, row, 1, "Decision result", report.Decision.DecisionType.ToString());
-        SetPair(sheet, row, 5, "Decision time (UTC)", FormatUtc(report.Decision.DecidedAtUtc));
+        AddSection(sheet, row++, copy["Decision"]);
+        SetPair(sheet, row, 1, copy["Decision result"], copy.Decision(report.Decision.DecisionType));
+        SetPair(sheet, row, 5, copy["Decision time (UTC)"], FormatUtc(report.Decision.DecidedAtUtc), leftToRight: true);
         row++;
-        SetPair(sheet, row, 1, "Deciding administrator", report.Decision.DecidedByFullName);
-        SetPair(sheet, row, 5, "Administrator user ID", report.Decision.DecidedByUserId.ToString());
+        SetPair(sheet, row, 1, copy["Deciding administrator"], report.Decision.DecidedByFullName);
+        SetPair(sheet, row, 5, copy["Administrator user ID"], report.Decision.DecidedByUserId.ToString(), leftToRight: true);
         row++;
         // Self-approval is a recorded fact, not an error: the requester and decider are one account.
         SetWidePair(
             sheet,
             row++,
-            "Self-approved",
-            report.Decision.IsSelfApproval
-                ? "Yes; the deciding administrator is also the request's requester"
-                : "No");
+            copy["Self-approved"],
+            copy.SelfApproval(report.Decision.IsSelfApproval));
         SetWidePair(
             sheet,
             row++,
-            "Rejection explanation",
-            report.Decision.DecisionType == ApprovalDecisionType.Rejected
-                ? report.Decision.RejectionReason ?? "None was provided"
-                : "Not applicable to an approved decision");
+            copy["Rejection explanation"],
+            copy.RejectionExplanation(report.Decision));
 
         row++;
-        AddSection(sheet, row++, "Recorded execution outcome");
-        row = AddTransferDetails(sheet, row, report.Transfer);
+        AddSection(sheet, row++, copy["Recorded execution outcome"]);
+        row = AddTransferDetails(sheet, row, report.Transfer, copy);
 
         row++;
         sheet.Range(row, 1, row, 8).Merge();
-        SetText(sheet.Cell(row, 1), $"Workbook generated at {FormatUtc(generatedAtUtc)}.");
+        SetText(sheet.Cell(row, 1), copy.GeneratedAt(FormatUtc(generatedAtUtc)));
         sheet.Cell(row, 1).Style.Font.Italic = true;
         sheet.Cell(row, 1).Style.Font.FontColor = XLColor.Gray;
 
@@ -172,15 +169,17 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         IReadOnlyList<ConsolidatedRequestReportRow> rows,
         ReportPeriod period,
         ResolvedReportingSettings settings,
-        DateTimeOffset generatedAtUtc)
+        DateTimeOffset generatedAtUtc,
+        ReportLanguage language = ReportLanguage.English)
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(period);
         ArgumentNullException.ThrowIfNull(settings);
+        var copy = new ExcelReportCopy(language);
 
-        using var workbook = CreateWorkbook("Approved request export");
-        var sheet = workbook.Worksheets.Add("Approved requests");
-        PrepareSheet(sheet);
+        using var workbook = CreateWorkbook(copy["Approved request export"], copy.IsPersian);
+        var sheet = workbook.Worksheets.Add(copy["Approved requests"]);
+        PrepareSheet(sheet, copy.IsPersian);
 
         var headers = new[]
         {
@@ -194,28 +193,28 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             "Destination account/card", "Bank", "Cheque number", "Cheque date", "Cheque payee",
             "External accounting reference", "Failure explanation", "Operational state",
             "Closure type", "Closed (report timezone)", "Closed by", "Closure reason"
-        };
+        }.Select(header => copy[header]).ToArray();
 
         sheet.Range(1, 1, 1, headers.Length).Merge();
-        SetText(sheet.Cell(1, 1), "Approved request export");
-        StyleTitle(sheet.Range(1, 1, 1, headers.Length));
+        SetText(sheet.Cell(1, 1), copy["Approved request export"]);
+        StyleTitle(sheet.Range(1, 1, 1, headers.Length), copy.IsPersian);
 
-        SetMetadata(sheet, 3, 1, "Selected period", period.Format(settings.CalendarSystem));
-        SetMetadata(sheet, 3, 5, "Date basis", DateBasisLabel(settings.DateBasis));
-        SetMetadata(sheet, 4, 1, "Reporting timezone", settings.CompanyTimeZone.Id);
-        SetMetadata(sheet, 4, 5, "Displayed calendar", CalendarLabel(settings.CalendarSystem));
+        SetMetadata(sheet, 3, 1, copy["Selected period"], period.Format(settings.CalendarSystem));
+        SetMetadata(sheet, 3, 5, copy["Date basis"], DateBasisLabel(settings.DateBasis, copy));
+        SetMetadata(sheet, 4, 1, copy["Reporting timezone"], settings.CompanyTimeZone.Id);
+        SetMetadata(sheet, 4, 5, copy["Displayed calendar"], CalendarLabel(settings.CalendarSystem, copy));
         SetMetadata(
             sheet,
             5,
             1,
-            "Generated (report timezone)",
+            copy["Generated (report timezone)"],
             FormatCompanyTime(generatedAtUtc, settings.CompanyTimeZone));
-        SetMetadata(sheet, 5, 5, "Record count", rows.Count.ToString("N0"));
+        SetMetadata(sheet, 5, 5, copy["Record count"], rows.Count.ToString("N0"));
         SetMetadata(
             sheet,
             6,
             1,
-            "Export total (IRR)",
+            copy["Export total (IRR)"],
             rows.Aggregate(0L, (total, item) => checked(total + item.TotalAmountRials)).ToString("N0"));
 
         const int headerRow = 8;
@@ -231,7 +230,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         {
             var transfer = item.Transfer;
             SetText(sheet.Cell(row, 1), item.ReferenceNumber);
-            SetText(sheet.Cell(row, 2), item.RequesterType.ToString());
+            SetText(sheet.Cell(row, 2), copy.RequesterType(item.RequesterType));
             SetText(sheet.Cell(row, 3), item.RequesterFullName);
             SetText(sheet.Cell(row, 4), item.RequesterUsername);
             SetText(sheet.Cell(row, 5), item.RequesterPhoneNumber);
@@ -244,17 +243,17 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             SetAmount(sheet.Cell(row, 12), item.TotalAmountRials);
             SetText(sheet.Cell(row, 13), "IRR");
             SetCompanyTime(sheet.Cell(row, 14), item.SubmittedAtUtc, settings.CompanyTimeZone);
-            SetText(sheet.Cell(row, 15), "Approved");
+            SetText(sheet.Cell(row, 15), copy["Approved"]);
             SetIdentifier(sheet.Cell(row, 16), item.DecidedByUserId.ToString());
             SetText(sheet.Cell(row, 17), item.DecidedByFullName);
             SetCompanyTime(sheet.Cell(row, 18), item.DecidedAtUtc, settings.CompanyTimeZone);
-            SetText(sheet.Cell(row, 19), item.IsSelfApproval ? "Yes" : "No");
-            SetText(sheet.Cell(row, 20), transfer?.Status.ToString() ?? MissingValue);
-            SetText(sheet.Cell(row, 21), FormatMethod(transfer));
+            SetText(sheet.Cell(row, 19), copy[item.IsSelfApproval ? "Yes" : "No"]);
+            SetText(sheet.Cell(row, 20), transfer is null ? copy.MissingValue : copy.Transfer(transfer.Status));
+            SetText(sheet.Cell(row, 21), FormatMethod(transfer, copy));
             SetIdentifier(sheet.Cell(row, 22), transfer?.PerformedByUserId?.ToString());
             SetText(sheet.Cell(row, 23), transfer?.PerformedByFullName);
-            SetText(sheet.Cell(row, 24), transfer?.PerformedByRole);
-            SetText(sheet.Cell(row, 25), FormatReportedOccurrence(transfer));
+            SetText(sheet.Cell(row, 24), transfer?.PerformedByRole is null ? null : copy.Role(transfer.PerformedByRole));
+            SetText(sheet.Cell(row, 25), FormatReportedOccurrence(transfer, copy));
             if (transfer?.RecordedAtUtc is { } recordedAt)
             {
                 SetCompanyTime(sheet.Cell(row, 26), recordedAt, settings.CompanyTimeZone);
@@ -270,8 +269,8 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             SetText(sheet.Cell(row, 31), transfer?.ChequePayeeName);
             SetIdentifier(sheet.Cell(row, 32), transfer?.ExternalReference);
             SetText(sheet.Cell(row, 33), transfer?.FailureReason);
-            SetText(sheet.Cell(row, 34), transfer is null ? MissingValue : transfer.IsClosed ? "Closed" : "Open");
-            SetText(sheet.Cell(row, 35), transfer?.ClosureType?.ToString());
+            SetText(sheet.Cell(row, 34), transfer is null ? copy.MissingValue : copy[transfer.IsClosed ? "Closed" : "Open"]);
+            SetText(sheet.Cell(row, 35), transfer?.ClosureType is { } closureType ? copy.Closure(closureType) : null);
             if (transfer?.ClosedAtUtc is { } closedAt)
             {
                 SetCompanyTime(sheet.Cell(row, 36), closedAt, settings.CompanyTimeZone);
@@ -283,7 +282,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             SetText(
                 sheet.Cell(row, 37),
                 transfer?.ClosureType == TransferClosureType.Automatic
-                    ? "Automatic closure service"
+                    ? copy["Automatic closure service"]
                     : transfer?.ClosedByFullName);
             SetText(sheet.Cell(row, 38), transfer?.ClosureReason);
             StyleBodyRow(sheet.Range(row, 1, row, headers.Length));
@@ -301,20 +300,26 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         return Save(workbook);
     }
 
-    private static XLWorkbook CreateWorkbook(string title)
+    private static XLWorkbook CreateWorkbook(string title, bool rightToLeft)
     {
-        var workbook = new XLWorkbook();
+        var workbook = new XLWorkbook { RightToLeft = rightToLeft };
         workbook.Properties.Title = title;
-        workbook.Properties.Subject = "Purchase approval application reporting";
+        workbook.Properties.Subject = rightToLeft
+            ? "گزارش برنامهٔ تأیید خرید"
+            : "Purchase approval application reporting";
         return workbook;
     }
 
-    private static void PrepareSheet(IXLWorksheet sheet)
+    private static void PrepareSheet(IXLWorksheet sheet, bool rightToLeft)
     {
+        sheet.RightToLeft = rightToLeft;
         sheet.ShowGridLines = false;
         sheet.Style.Font.FontName = FontName;
         sheet.Style.Font.FontSize = 10;
         sheet.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+        sheet.Style.Alignment.ReadingOrder = rightToLeft
+            ? XLAlignmentReadingOrderValues.RightToLeft
+            : XLAlignmentReadingOrderValues.LeftToRight;
     }
 
     private static void AddSection(IXLWorksheet sheet, int row, string title)
@@ -333,13 +338,18 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         int row,
         int startColumn,
         string label,
-        string? value)
+        string? value,
+        bool leftToRight = false)
     {
         SetText(sheet.Cell(row, startColumn), label);
         StyleLabel(sheet.Range(row, startColumn, row, startColumn));
         sheet.Range(row, startColumn + 1, row, startColumn + 3).Merge();
         SetText(sheet.Cell(row, startColumn + 1), value);
         StyleValue(sheet.Range(row, startColumn + 1, row, startColumn + 3));
+        if (leftToRight)
+        {
+            StyleLeftToRight(sheet.Range(row, startColumn + 1, row, startColumn + 3));
+        }
     }
 
     private static void SetMetadata(
@@ -360,70 +370,82 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         IXLWorksheet sheet,
         int row,
         string label,
-        string? value)
+        string? value,
+        bool leftToRight = false)
     {
         SetText(sheet.Cell(row, 1), label);
         StyleLabel(sheet.Range(row, 1, row, 1));
         sheet.Range(row, 2, row, 8).Merge();
         SetText(sheet.Cell(row, 2), value);
         StyleValue(sheet.Range(row, 2, row, 8));
+        if (leftToRight)
+        {
+            StyleLeftToRight(sheet.Range(row, 2, row, 8));
+        }
     }
 
     private static int AddTransferDetails(
         IXLWorksheet sheet,
         int row,
-        TransferReportSnapshot? transfer)
+        TransferReportSnapshot? transfer,
+        ExcelReportCopy copy)
     {
         if (transfer is null || transfer.Status == TransferStatus.AwaitingTransfer)
         {
-            SetPair(sheet, row++, 1, "Transfer status", transfer?.Status.ToString() ?? MissingValue);
+            SetPair(
+                sheet,
+                row++,
+                1,
+                copy["Transfer status"],
+                transfer is null ? copy.MissingValue : copy.Transfer(transfer.Status));
             SetWidePair(
                 sheet,
                 row++,
-                "Execution statement",
-                "Approval was recorded; no successful transfer has been recorded.");
+                copy["Execution statement"],
+                copy.AwaitingExecutionStatement);
             return row;
         }
 
-        SetPair(sheet, row, 1, "Transfer status", transfer.Status.ToString());
-        SetPair(sheet, row, 5, "Method", FormatMethod(transfer));
+        SetPair(sheet, row, 1, copy["Transfer status"], copy.Transfer(transfer.Status));
+        SetPair(sheet, row, 5, copy["Method"], FormatMethod(transfer, copy));
         row++;
-        SetPair(sheet, row, 1, "Executor", transfer.PerformedByFullName);
-        SetPair(sheet, row, 5, "Executor role", transfer.PerformedByRole);
+        SetPair(sheet, row, 1, copy["Executor"], transfer.PerformedByFullName);
+        SetPair(sheet, row, 5, copy["Executor role"], copy.Role(transfer.PerformedByRole));
         row++;
-        SetPair(sheet, row, 1, "Executor user ID", transfer.PerformedByUserId?.ToString());
-        SetPair(sheet, row, 5, "Recording time (UTC)",
-            transfer.RecordedAtUtc is null ? null : FormatUtc(transfer.RecordedAtUtc.Value));
+        SetPair(sheet, row, 1, copy["Executor user ID"], transfer.PerformedByUserId?.ToString(), leftToRight: true);
+        SetPair(sheet, row, 5, copy["Recording time (UTC)"],
+            transfer.RecordedAtUtc is null ? null : FormatUtc(transfer.RecordedAtUtc.Value),
+            leftToRight: true);
         row++;
-        SetWidePair(sheet, row++, "Reported transaction time", FormatReportedOccurrence(transfer));
+        SetWidePair(sheet, row++, copy["Reported transaction time"], FormatReportedOccurrence(transfer, copy), leftToRight: true);
 
         if (transfer.Method == TransferMethod.BankTransfer)
         {
-            SetPair(sheet, row, 1, "Destination account/card", transfer.DestinationAccountOrCardNumber);
-            SetPair(sheet, row++, 5, "Bank", transfer.BankName);
+            SetPair(sheet, row, 1, copy["Destination account/card"], transfer.DestinationAccountOrCardNumber, leftToRight: true);
+            SetPair(sheet, row++, 5, copy["Bank"], transfer.BankName);
         }
         else if (transfer.Method == TransferMethod.Cheque)
         {
-            SetPair(sheet, row, 1, "Cheque number", transfer.ChequeNumber);
-            SetPair(sheet, row, 5, "Cheque date", transfer.ChequeDate?.ToString("yyyy-MM-dd"));
+            SetPair(sheet, row, 1, copy["Cheque number"], transfer.ChequeNumber, leftToRight: true);
+            SetPair(sheet, row, 5, copy["Cheque date"], transfer.ChequeDate?.ToString("yyyy-MM-dd"), leftToRight: true);
             row++;
-            SetPair(sheet, row, 1, "Cheque payee", transfer.ChequePayeeName);
-            SetPair(sheet, row++, 5, "Bank", transfer.BankName);
+            SetPair(sheet, row, 1, copy["Cheque payee"], transfer.ChequePayeeName);
+            SetPair(sheet, row++, 5, copy["Bank"], transfer.BankName);
         }
 
         if (transfer.Status == TransferStatus.Unsuccessful)
         {
-            SetWidePair(sheet, row++, "Failure explanation", transfer.FailureReason);
+            SetWidePair(sheet, row++, copy["Failure explanation"], transfer.FailureReason);
             SetWidePair(
                 sheet,
                 row++,
-                "Execution statement",
-                "An unsuccessful attempt was recorded; no successful transfer has been recorded.");
+                copy["Execution statement"],
+                copy.UnsuccessfulExecutionStatement);
         }
 
-        SetWidePair(sheet, row++, "External accounting reference", transfer.ExternalReference);
-        SetPair(sheet, row, 1, "Operational state", transfer.IsClosed ? "Closed" : "Open");
-        SetPair(sheet, row, 5, "Closure type", transfer.ClosureType?.ToString());
+        SetWidePair(sheet, row++, copy["External accounting reference"], transfer.ExternalReference, leftToRight: true);
+        SetPair(sheet, row, 1, copy["Operational state"], copy[transfer.IsClosed ? "Closed" : "Open"]);
+        SetPair(sheet, row, 5, copy["Closure type"], transfer.ClosureType is { } closureType ? copy.Closure(closureType) : null);
         row++;
         if (transfer.IsClosed)
         {
@@ -431,28 +453,31 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
                 sheet,
                 row,
                 1,
-                "Closed at (UTC)",
-                transfer.ClosedAtUtc is null ? null : FormatUtc(transfer.ClosedAtUtc.Value));
+                copy["Closed at (UTC)"],
+                transfer.ClosedAtUtc is null ? null : FormatUtc(transfer.ClosedAtUtc.Value),
+                leftToRight: true);
             SetPair(
                 sheet,
                 row++,
                 5,
-                "Closed by",
+                copy["Closed by"],
                 transfer.ClosureType == TransferClosureType.Automatic
-                    ? "Automatic closure service"
+                    ? copy["Automatic closure service"]
                     : transfer.ClosedByFullName);
-            SetWidePair(sheet, row++, "Closure reason", transfer.ClosureReason);
+            SetWidePair(sheet, row++, copy["Closure reason"], transfer.ClosureReason);
         }
 
         return row;
     }
 
-    private static void StyleTitle(IXLRange range)
+    private static void StyleTitle(IXLRange range, bool rightToLeft)
     {
         range.Style.Font.Bold = true;
         range.Style.Font.FontSize = 15;
         range.Style.Font.FontColor = XLColor.FromHtml(DarkBlue);
-        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+        range.Style.Alignment.Horizontal = rightToLeft
+            ? XLAlignmentHorizontalValues.Right
+            : XLAlignmentHorizontalValues.Left;
         range.Worksheet.Row(range.FirstRow().RowNumber()).Height = 28;
     }
 
@@ -469,6 +494,12 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         range.Style.Border.OutsideBorderColor = XLColor.FromHtml(BorderGray);
         range.Style.Alignment.WrapText = true;
+    }
+
+    private static void StyleLeftToRight(IXLRange range)
+    {
+        range.Style.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
+        range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
     }
 
     private static void StyleTableHeader(IXLRange range)
@@ -496,7 +527,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
     private static void SetText(IXLCell cell, string? value)
     {
         // SetValue writes a shared-string cell, so formula-like user input is never evaluated.
-        cell.SetValue(string.IsNullOrEmpty(value) ? MissingValue : value);
+        cell.SetValue(string.IsNullOrEmpty(value) ? "—" : value);
         cell.Style.NumberFormat.Format = "@";
     }
 
@@ -504,6 +535,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
     {
         SetText(cell, value);
         cell.Style.NumberFormat.Format = "@";
+        cell.Style.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
     }
 
     private static void SetAmount(IXLCell cell, long amount)
@@ -511,6 +543,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         cell.SetValue(amount);
         cell.Style.NumberFormat.Format = "#,##0";
         cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+        cell.Style.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
     }
 
     private static void SetCompanyTime(
@@ -521,6 +554,7 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
         var local = TimeZoneInfo.ConvertTime(value, timeZone);
         cell.SetValue(local.DateTime);
         cell.Style.NumberFormat.Format = "yyyy-mm-dd hh:mm:ss";
+        cell.Style.Alignment.ReadingOrder = XLAlignmentReadingOrderValues.LeftToRight;
     }
 
     private static string FormatUtc(DateTimeOffset value) =>
@@ -529,12 +563,14 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
     private static string FormatCompanyTime(DateTimeOffset value, TimeZoneInfo timeZone) =>
         $"{TimeZoneInfo.ConvertTime(value, timeZone):yyyy-MM-dd HH:mm:ss zzz}";
 
-    private static string FormatReportedOccurrence(TransferReportSnapshot? transfer)
+    private static string FormatReportedOccurrence(
+        TransferReportSnapshot? transfer,
+        ExcelReportCopy copy)
     {
         if (transfer?.TransactionOccurredAtUtc is not { } occurredAt
             || transfer.TransactionUtcOffsetMinutes is not { } offsetMinutes)
         {
-            return MissingValue;
+            return copy.MissingValue;
         }
 
         var offset = TimeSpan.FromMinutes(offsetMinutes);
@@ -545,27 +581,33 @@ public sealed class ExcelWorkbookBuilder : IExcelWorkbookBuilder
             : $"{text} ({transfer.TransactionTimeZoneId})";
     }
 
-    private static string FormatMethod(TransferReportSnapshot? transfer)
+    private static string FormatMethod(
+        TransferReportSnapshot? transfer,
+        ExcelReportCopy copy)
     {
         if (transfer?.Method is null)
         {
-            return MissingValue;
+            return copy.MissingValue;
         }
 
         return transfer.Method == TransferMethod.Other
-            ? transfer.OtherMethodDescription ?? "Other"
-            : transfer.Method.ToString()!;
+            ? transfer.OtherMethodDescription ?? copy["Other"]
+            : copy.Method(transfer.Method.Value);
     }
 
-    private static string DateBasisLabel(ConsolidatedReportDateBasis basis) =>
-        basis == ConsolidatedReportDateBasis.ApprovalDecision
-            ? "Approval decision time"
-            : "Request submission time";
+    private static string DateBasisLabel(
+        ConsolidatedReportDateBasis basis,
+        ExcelReportCopy copy) => copy[
+            basis == ConsolidatedReportDateBasis.ApprovalDecision
+                ? "Approval decision time"
+                : "Request submission time"];
 
-    private static string CalendarLabel(ReportCalendarSystem calendarSystem) =>
-        calendarSystem == ReportCalendarSystem.Gregorian
-            ? "Gregorian"
-            : "Persian (Solar Hijri)";
+    private static string CalendarLabel(
+        ReportCalendarSystem calendarSystem,
+        ExcelReportCopy copy) => copy[
+            calendarSystem == ReportCalendarSystem.Gregorian
+                ? "Gregorian"
+                : "Persian (Solar Hijri)"];
 
     private static void FormatIndividualColumns(IXLWorksheet sheet)
     {

@@ -146,6 +146,44 @@ public sealed class WorkflowBrowserTests(AppServerFixture fixture) : IAsyncLifet
         Assert.Equal(0, await accountantPage.Locator("aside a[href*='employees' i]").CountAsync());
     }
 
+    [BrowserFact]
+    public async Task Reports_OfferClearPersianAndEnglishExcelDownloads()
+    {
+        await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "Admin Manager");
+        await using var context = await fixture.Browser.NewContextAsync(new()
+        {
+            ViewportSize = Desktop,
+            Locale = "fa-IR",
+            TimezoneId = "Asia/Tehran"
+        });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/account/login");
+        await page.FillAsync("#Input_Username", "admin");
+        await page.FillAsync("#Input_Password", AdminPassword);
+        await page.ClickAsync("#main-content button[type=submit]");
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/admin/reports");
+
+        Assert.Equal(3, await page.Locator(".report-facts > div").CountAsync());
+        Assert.True(await page.Locator("button[name='Language'][value='Persian']").IsVisibleAsync());
+        Assert.True(await page.Locator("button[name='Language'][value='English']").IsVisibleAsync());
+        Assert.Equal("Asia/Tehran", await page.InputValueAsync("#report-timezone"));
+        var overflowing = await page.EvaluateAsync<string[]>("""
+            [...document.querySelectorAll('body *')]
+              .filter(element => {
+                const box = element.getBoundingClientRect();
+                return box.left < -1 || box.right > document.documentElement.clientWidth + 1;
+              })
+              .slice(0, 10)
+              .map(element => `${element.tagName}.${element.className}`)
+            """);
+        Assert.Empty(overflowing);
+        await page.ScreenshotAsync(new()
+        {
+            Path = Path.Combine(AppServerFixture.ScreenshotDirectory, "reports-bilingual.png"),
+            FullPage = true
+        });
+    }
+
     private async Task RunWorkflowAsync(ViewportSize viewport, string prefix)
     {
         await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "مینا مدیر");

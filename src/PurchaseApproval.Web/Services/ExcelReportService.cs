@@ -9,11 +9,13 @@ public interface IExcelReportService
 {
     Task<ExcelReportFile?> CreateIndividualAsync(
         int requestId,
+        ReportLanguage language = ReportLanguage.English,
         CancellationToken cancellationToken = default);
 
     Task<ConsolidatedExcelReportResult> CreateConsolidatedAsync(
         ReportPeriod period,
         ResolvedReportingSettings settings,
+        ReportLanguage language = ReportLanguage.English,
         CancellationToken cancellationToken = default);
 }
 
@@ -25,6 +27,7 @@ public sealed class ExcelReportService(
     /// <summary>Creates a printable record only after a request has an approved or rejected decision.</summary>
     public async Task<ExcelReportFile?> CreateIndividualAsync(
         int requestId,
+        ReportLanguage language = ReportLanguage.English,
         CancellationToken cancellationToken = default)
     {
         var header = await dbContext.PaymentRequests
@@ -129,8 +132,9 @@ public sealed class ExcelReportService(
             header.Transfer,
             lines);
 
-        var content = workbookBuilder.BuildIndividual(report, timeProvider.GetUtcNow());
-        return new ExcelReportFile(content, $"{report.ReferenceNumber}-decision-record.xlsx");
+        var content = workbookBuilder.BuildIndividual(report, timeProvider.GetUtcNow(), language);
+        var languageSuffix = language == ReportLanguage.Persian ? "-fa" : string.Empty;
+        return new ExcelReportFile(content, $"{report.ReferenceNumber}-decision-record{languageSuffix}.xlsx");
     }
 
     /// <summary>
@@ -139,6 +143,7 @@ public sealed class ExcelReportService(
     public async Task<ConsolidatedExcelReportResult> CreateConsolidatedAsync(
         ReportPeriod period,
         ResolvedReportingSettings settings,
+        ReportLanguage language = ReportLanguage.English,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(period);
@@ -226,8 +231,10 @@ public sealed class ExcelReportService(
             rows,
             period,
             settings,
-            generatedAtUtc);
-        var name = $"approved-requests-{period.From:yyyyMMdd}-{period.To:yyyyMMdd}.xlsx";
+            generatedAtUtc,
+            language);
+        var languageSuffix = language == ReportLanguage.Persian ? "-fa" : string.Empty;
+        var name = $"approved-requests{languageSuffix}-{period.From:yyyyMMdd}-{period.To:yyyyMMdd}.xlsx";
         return new ConsolidatedExcelReportResult(
             new ExcelReportFile(content, name),
             rows.Count,

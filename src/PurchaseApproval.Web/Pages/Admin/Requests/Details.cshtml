@@ -111,9 +111,10 @@
                     {
                         <p class="mb-0"><strong>@L["Explanation shown to the requester"]:</strong> <span dir="auto">@(decision.RejectionReason ?? L["No explanation was supplied."])</span></p>
                     }
-                    <a asp-page-handler="Excel" asp-route-id="@request.Id" class="btn btn-outline-primary mt-3">
-                        @L["Download decision record (Excel, English)"]
-                    </a>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <a asp-page-handler="Excel" asp-route-id="@request.Id" asp-route-language="Persian" class="btn btn-primary">@L["Download Persian Excel"]</a>
+                        <a asp-page-handler="Excel" asp-route-id="@request.Id" asp-route-language="English" class="btn btn-outline-primary">@L["Download English Excel"]</a>
+                    </div>
                 </div>
             </div>
 

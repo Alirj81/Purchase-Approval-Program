@@ -272,10 +272,18 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
         var individual = await admin.GetAsync($"/admin/requests/{requestId}?handler=Excel");
         Assert.Equal(HttpStatusCode.OK, individual.StatusCode);
         Assert.Equal(ExcelReportFile.ContentType, individual.Content.Headers.ContentType!.MediaType);
+        var persianIndividual = await admin.GetAsync(
+            $"/admin/requests/{requestId}?handler=Excel&language=Persian");
+        Assert.Equal(HttpStatusCode.OK, persianIndividual.StatusCode);
+        Assert.Contains("-fa.xlsx", persianIndividual.Content.Headers.ContentDisposition!.FileNameStar);
         var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
         var consolidated = await admin.GetAsync($"/admin/reports?handler=Export&Date={today}&TimeZoneId=UTC");
         Assert.Equal(HttpStatusCode.OK, consolidated.StatusCode);
         Assert.Equal(ExcelReportFile.ContentType, consolidated.Content.Headers.ContentType!.MediaType);
+        var persianConsolidated = await admin.GetAsync(
+            $"/admin/reports?handler=Export&Date={today}&TimeZoneId=UTC&Language=Persian");
+        Assert.Equal(HttpStatusCode.OK, persianConsolidated.StatusCode);
+        Assert.Contains("approved-requests-fa-", persianConsolidated.Content.Headers.ContentDisposition!.FileNameStar);
         var accountantExport = await accountant.GetAsync($"/admin/reports?handler=Export&Date={today}&TimeZoneId=UTC");
         Assert.Equal(HttpStatusCode.Redirect, accountantExport.StatusCode);
 

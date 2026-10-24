@@ -24,6 +24,9 @@ public sealed class IndexModel(
     [BindProperty(SupportsGet = true)]
     public string? TimeZoneId { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public ReportLanguage Language { get; set; } = ReportLanguage.English;
+
     public ResolvedReportingSettings? Settings { get; private set; }
 
     public string? NoResultsMessage { get; private set; }
@@ -35,6 +38,11 @@ public sealed class IndexModel(
     /// <summary>Validates a single local date or inclusive range and returns an XLSX without mutations.</summary>
     public async Task<IActionResult> OnGetExportAsync()
     {
+        if (!Enum.IsDefined(Language))
+        {
+            return BadRequest();
+        }
+
         if (!ResolvedReportingSettings.TryCreate(TimeZoneId, out var settings, out var settingsError))
         {
             ModelState.AddModelError(nameof(TimeZoneId), settingsError!);
@@ -60,6 +68,7 @@ public sealed class IndexModel(
             result = await excelReportService.CreateConsolidatedAsync(
                 period!,
                 settings!,
+                Language,
                 HttpContext.RequestAborted);
         }
         catch (ArgumentException)

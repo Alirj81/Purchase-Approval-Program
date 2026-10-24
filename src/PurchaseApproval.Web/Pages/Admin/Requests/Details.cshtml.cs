@@ -74,10 +74,18 @@ public sealed class DetailsModel(
     }
 
     /// <summary>Downloads an approved or rejected decision record for authorized administrators.</summary>
-    public async Task<IActionResult> OnGetExcelAsync(int id)
+    public async Task<IActionResult> OnGetExcelAsync(
+        int id,
+        ReportLanguage language = ReportLanguage.English)
     {
+        if (!Enum.IsDefined(language))
+        {
+            return BadRequest();
+        }
+
         var report = await excelReportService.CreateIndividualAsync(
             id,
+            language,
             HttpContext.RequestAborted);
 
         return report is null
