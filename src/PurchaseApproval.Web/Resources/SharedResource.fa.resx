@@ -26,8 +26,8 @@
   <data name="History" xml:space="preserve"><value>تاریخچه</value></data>
   <data name="Reports" xml:space="preserve"><value>گزارش‌ها</value></data>
   <data name="Employees" xml:space="preserve"><value>کارکنان</value></data>
-  <data name="Staff accounts" xml:space="preserve"><value>حساب‌های کاربری مسئولان</value></data>
-  <data name="Execution records" xml:space="preserve"><value>سوابق پرداخت</value></data>
+  <data name="Staff accounts" xml:space="preserve"><value>مدیران و حسابداران</value></data>
+  <data name="Execution records" xml:space="preserve"><value>پرداخت‌ها</value></data>
   <data name="Language" xml:space="preserve"><value>زبان</value></data>
   <data name="Sign out" xml:space="preserve"><value>خروج</value></data>
   <data name="Change password" xml:space="preserve"><value>تغییر رمز عبور</value></data>
@@ -61,13 +61,13 @@
   <data name="Iranian rials (IRR)" xml:space="preserve"><value>ریال ایران (IRR)</value></data>
   <data name="Reference" xml:space="preserve"><value>شمارهٔ پیگیری</value></data>
   <data name="Status" xml:space="preserve"><value>وضعیت</value></data>
-  <data name="Decision" xml:space="preserve"><value>تصمیم مدیریت</value></data>
-  <data name="Execution" xml:space="preserve"><value>اجرای پرداخت</value></data>
+  <data name="Decision" xml:space="preserve"><value>تصمیم</value></data>
+  <data name="Execution" xml:space="preserve"><value>پرداخت</value></data>
   <data name="Payment" xml:space="preserve"><value>پرداخت</value></data>
-  <data name="Closure" xml:space="preserve"><value>بستن پرونده</value></data>
-  <data name="Submitted" xml:space="preserve"><value>زمان ثبت</value></data>
-  <data name="Decided" xml:space="preserve"><value>زمان تصمیم</value></data>
-  <data name="Recorded" xml:space="preserve"><value>زمان ثبت نتیجه</value></data>
+  <data name="Closure" xml:space="preserve"><value>پرونده</value></data>
+  <data name="Submitted" xml:space="preserve"><value>ثبت</value></data>
+  <data name="Decided" xml:space="preserve"><value>تصمیم</value></data>
+  <data name="Recorded" xml:space="preserve"><value>ثبت سرور</value></data>
   <data name="Requester" xml:space="preserve"><value>درخواست‌دهنده</value></data>
   <data name="Requester type" xml:space="preserve"><value>نوع درخواست‌دهنده</value></data>
   <data name="Name" xml:space="preserve"><value>نام</value></data>
@@ -311,6 +311,22 @@
   <data name="Enter the device or business timezone used for the date boundary." xml:space="preserve"><value>منطقهٔ زمانی دستگاه یا کسب‌وکار را برای مرز تاریخ وارد کنید.</value></data>
 
   <!-- Reports -->
+  <data name="Excel reports" xml:space="preserve"><value>گزارش‌های اکسل</value></data>
+  <data name="Download approved requests in Persian or English." xml:space="preserve"><value>درخواست‌های تأییدشده را به فارسی یا انگلیسی دریافت کنید.</value></data>
+  <data name="Report settings" xml:space="preserve"><value>تنظیمات گزارش</value></data>
+  <data name="Approval decision" xml:space="preserve"><value>زمان تأیید</value></data>
+  <data name="Calendar" xml:space="preserve"><value>تقویم</value></data>
+  <data name="Formats" xml:space="preserve"><value>زبان فایل</value></data>
+  <data name="Persian and English" xml:space="preserve"><value>فارسی و انگلیسی</value></data>
+  <data name="Report period" xml:space="preserve"><value>بازهٔ گزارش</value></data>
+  <data name="Choose one date or a start and end date." xml:space="preserve"><value>یک تاریخ یا تاریخ شروع و پایان را انتخاب کنید.</value></data>
+  <data name="Report timezone" xml:space="preserve"><value>منطقهٔ زمانی</value></data>
+  <data name="Detected from this device; change it if needed" xml:space="preserve"><value>از دستگاه تشخیص داده شده است؛ در صورت نیاز تغییر دهید</value></data>
+  <data name="One date" xml:space="preserve"><value>یک تاریخ</value></data>
+  <data name="Start date" xml:space="preserve"><value>از تاریخ</value></data>
+  <data name="End date" xml:space="preserve"><value>تا تاریخ</value></data>
+  <data name="Download Persian Excel" xml:space="preserve"><value>دانلود اکسل فارسی</value></data>
+  <data name="Download English Excel" xml:space="preserve"><value>دانلود اکسل انگلیسی</value></data>
   <data name="Approved request export" xml:space="preserve"><value>خروجی درخواست‌های تأییدشده</value></data>
   <data name="Generate one worksheet containing approved employee and administrator requests." xml:space="preserve"><value>یک کاربرگ شامل درخواست‌های تأییدشدهٔ کارکنان و مدیران تولید کنید.</value></data>
   <data name="Approval-decision timestamp" xml:space="preserve"><value>زمان تصمیم تأیید</value></data>

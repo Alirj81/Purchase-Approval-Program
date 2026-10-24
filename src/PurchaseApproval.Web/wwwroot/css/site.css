@@ -16,6 +16,94 @@ html {
    bundled so the application works on an intranet without internet access. */
 body {
   font-family: "Segoe UI", Tahoma, "Vazirmatn", "Noto Sans Arabic", Roboto, system-ui, sans-serif;
+  color: #172033;
+  background: #f8fafc;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #172033;
+  font-weight: 700;
+  letter-spacing: -.012em;
+}
+
+.page-heading {
+  padding-inline-start: 1rem;
+  border-inline-start: .25rem solid #1b6ec2;
+}
+
+.card {
+  border-color: #dfe5ec;
+  border-radius: .75rem;
+  box-shadow: 0 .2rem .75rem rgba(15, 23, 42, .045);
+}
+
+.card-header,
+.card-footer {
+  background: rgba(248, 250, 252, .78);
+  border-color: #e5eaf0;
+}
+
+.card-header {
+  padding-block: .75rem;
+}
+
+.form-label {
+  margin-bottom: .35rem;
+  color: #334155;
+  font-weight: 650;
+}
+
+.form-control,
+.form-select {
+  min-height: 2.65rem;
+  border-color: #cbd5e1;
+  border-radius: .55rem;
+}
+
+.form-control:hover,
+.form-select:hover {
+  border-color: #94a3b8;
+}
+
+.btn:not(.btn-sm) {
+  min-height: 2.45rem;
+}
+
+.btn {
+  border-radius: .5rem;
+  font-weight: 600;
+}
+
+.alert {
+  border-radius: .65rem;
+}
+
+.report-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.report-facts > div {
+  padding: .8rem 1rem;
+  border: 1px solid #dfe5ec;
+  border-radius: .65rem;
+  background: #fff;
+}
+
+.report-facts span,
+.report-facts strong {
+  display: block;
+}
+
+.report-facts span {
+  margin-bottom: .15rem;
+  color: var(--bs-secondary-color);
+  font-size: .78rem;
+}
+
+.report-facts strong {
+  font-size: .95rem;
 }
 
 /* Visible focus for keyboard users in both colour schemes. */
@@ -450,7 +538,10 @@ td, dd {
 }
 
 .dashboard-footer {
-  position: static;
+  /* Override the scaffolded scoped footer rule, which is absolute and 100% wide. Inside the
+     dashboard flex shell that combination extends underneath the sidebar in RTL layouts. */
+  position: static !important;
+  width: auto !important;
   flex: 0 0 auto;
   padding: 1rem clamp(1rem, 3vw, 2.5rem);
   line-height: 1.5;
@@ -480,6 +571,10 @@ td, dd {
 }
 
 @media (max-width: 575.98px) {
+  .report-facts {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-sidebar-actions {
     grid-template-columns: 1fr;
   }
