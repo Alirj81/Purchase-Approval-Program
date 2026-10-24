@@ -54,6 +54,98 @@ public sealed class WorkflowBrowserTests(AppServerFixture fixture) : IAsyncLifet
         Assert.Equal("rtl", await page.GetAttributeAsync("html", "dir"));
     }
 
+    [BrowserFact]
+    public async Task Administrator_CreatesOwnRequest_AndCreatesPasswordStaffAccount()
+    {
+        await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "Admin Manager");
+        await using var context = await fixture.Browser.NewContextAsync(new() { ViewportSize = Desktop });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/account/login");
+        await page.FillAsync("#Input_Username", "admin");
+        await page.FillAsync("#Input_Password", AdminPassword);
+        await page.ClickAsync("#main-content button[type=submit]");
+
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/admin/requests/create");
+        await page.FillAsync("#Input_PayeeName", "Administrator supplier");
+        await page.FillAsync("#Input_Justification", "Administrator-owned request regression test");
+        await page.FillAsync("#line-description-0", "Office equipment");
+        await page.FillAsync("#line-amountrials-0", "75000");
+        await page.ClickAsync("#submit-request");
+        await page.WaitForURLAsync("**/admin/requests/*");
+        Assert.Contains("Administrator supplier", await page.TextContentAsync("main") ?? string.Empty);
+
+        const string chosenPassword = "Browser#Password4567";
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/admin/staff/create");
+        await page.FillAsync("#Input_Username", "browser.acct");
+        await page.FillAsync("#Input_FullName", "Browser Accountant");
+        await page.SelectOptionAsync("#Input_Role", AppRoles.Accountant);
+        await page.FillAsync("#Input_Password", chosenPassword);
+        await page.FillAsync("#Input_ConfirmPassword", chosenPassword);
+        await page.ClickAsync("#main-content form button[type=submit]");
+        Assert.True(await page.Locator("main .alert-success").IsVisibleAsync());
+    }
+
+    [BrowserFact]
+    public async Task LongEmployeeNames_StayInsidePhoneLayout()
+    {
+        await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "Admin Manager");
+        await fixture.Seed.CreateEmployeeAsync("long.employee", new string('W', 190));
+        await using var context = await fixture.Browser.NewContextAsync(new() { ViewportSize = Phone });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/account/login");
+        await page.FillAsync("#Input_Username", "admin");
+        await page.FillAsync("#Input_Password", AdminPassword);
+        await page.ClickAsync("#main-content button[type=submit]");
+        await page.GotoAsync(AppServerFixture.BaseUrl + "/admin/employees");
+
+        var overflow = await page.EvaluateAsync<bool>("document.documentElement.scrollWidth > document.documentElement.clientWidth");
+        Assert.False(overflow);
+        foreach (var button in await page.Locator("main .btn").AllAsync())
+        {
+            var box = await button.BoundingBoxAsync();
+            if (box is not null)
+            {
+                Assert.True(box.X >= -1 && box.X + box.Width <= Phone.Width + 1);
+            }
+        }
+    }
+
+    [BrowserFact]
+    public async Task PrivilegedNavigation_UsesRoleAwareResponsiveSidebar()
+    {
+        await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "Admin Manager");
+        await fixture.Seed.CreateStaffAsync("acct", AppRoles.Accountant, AccountantPassword, "Accountant User");
+
+        await using (var adminContext = await fixture.Browser.NewContextAsync(new() { ViewportSize = Desktop }))
+        {
+            var page = await adminContext.NewPageAsync();
+            await page.GotoAsync(AppServerFixture.BaseUrl + "/account/login");
+            await page.FillAsync("#Input_Username", "admin");
+            await page.FillAsync("#Input_Password", AdminPassword);
+            await page.ClickAsync("#main-content button[type=submit]");
+            await page.WaitForURLAsync("**/admin/requests**");
+
+            Assert.True(await page.Locator("aside.dashboard-sidebar").IsVisibleAsync());
+            Assert.True(await page.Locator("aside a[href*='employees' i]").IsVisibleAsync());
+            Assert.True(await page.Locator("aside a[href*='execution' i]").IsVisibleAsync());
+            Assert.False(await page.Locator("header .navbar-nav").IsVisibleAsync());
+        }
+
+        await using var accountantContext = await fixture.Browser.NewContextAsync(new() { ViewportSize = Phone });
+        var accountantPage = await accountantContext.NewPageAsync();
+        await accountantPage.GotoAsync(AppServerFixture.BaseUrl + "/account/login");
+        await accountantPage.FillAsync("#Input_Username", "acct");
+        await accountantPage.FillAsync("#Input_Password", AccountantPassword);
+        await accountantPage.ClickAsync("#main-content button[type=submit]");
+        await accountantPage.WaitForURLAsync("**/execution**");
+
+        Assert.False(await accountantPage.Locator("#main-navigation").IsVisibleAsync());
+        await accountantPage.ClickAsync(".navbar-toggler");
+        await accountantPage.WaitForSelectorAsync("#main-navigation.show");
+        Assert.True(await accountantPage.Locator("aside a[href*='execution' i]").IsVisibleAsync());
+        Assert.Equal(0, await accountantPage.Locator("aside a[href*='employees' i]").CountAsync());
+    }
+
     private async Task RunWorkflowAsync(ViewportSize viewport, string prefix)
     {
         await fixture.Seed.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "مینا مدیر");

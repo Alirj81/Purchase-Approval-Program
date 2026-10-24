@@ -10,7 +10,17 @@
     var isEmployee = User.HasClaim(
         PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKindClaim,
         PurchaseApproval.Security.EmployeeAuthenticationDefaults.AuthenticationKind);
+    var isPrivilegedDashboard = isAdministrator || isAccountant;
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
+    var currentPath = Context.Request.Path.Value ?? string.Empty;
+    var isNewAdministratorRequest = currentPath.Equals("/admin/requests/create", StringComparison.OrdinalIgnoreCase);
+    var isMyAdministratorRequests = string.Equals(Context.Request.Query["mine"], "true", StringComparison.OrdinalIgnoreCase);
+    string SidebarLinkClass(string path) => currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase)
+        ? "dashboard-nav-link active"
+        : "dashboard-nav-link";
+    string SidebarStateClass(bool active, bool emphasis = false) => active
+        ? "dashboard-nav-link active"
+        : emphasis ? "dashboard-nav-link dashboard-nav-link-emphasis" : "dashboard-nav-link";
 }
 <!DOCTYPE html>
 <html lang="@uiCulture" dir="@(isRtl ? "rtl" : "ltr")">
@@ -31,6 +41,63 @@
 </head>
 <body>
     <a class="visually-hidden-focusable skip-link" href="#main-content">@L["Skip to main content"]</a>
+    @if (isPrivilegedDashboard)
+    {
+        <header class="dashboard-topbar border-bottom bg-white">
+            <div class="container-fluid d-flex align-items-center justify-content-between gap-3">
+                <a class="navbar-brand dashboard-brand" asp-area="" asp-page="@(isAdministrator ? "/Admin/Requests/Index" : "/Execution/Index")">@L["Purchase Approval"]</a>
+                <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation"
+                        aria-controls="main-navigation" aria-expanded="false" aria-label="@L["Toggle navigation"]">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </header>
+        <div class="dashboard-shell">
+            <aside class="dashboard-sidebar collapse d-lg-block" id="main-navigation" aria-label="@L["Main navigation"]">
+                <div class="dashboard-sidebar-inner">
+                    <div class="dashboard-user">
+                        <span class="small text-secondary">@L[isAdministrator ? "Administrator" : "Accountant"]</span>
+                        <strong dir="ltr" class="wrap-anywhere">@User.Identity?.Name</strong>
+                    </div>
+                    <nav class="dashboard-nav">
+                        @if (isAdministrator)
+                        {
+                            <a class="@SidebarStateClass(currentPath.StartsWith("/admin/requests", StringComparison.OrdinalIgnoreCase) && !isNewAdministratorRequest && !isMyAdministratorRequests)" asp-page="/Admin/Requests/Index"><span aria-hidden="true">&#9638;</span><span>@L["Review queue"]</span></a>
+                            <a class="@SidebarStateClass(isNewAdministratorRequest, true)" asp-page="/Admin/Requests/Create"><span aria-hidden="true">+</span><span>@L["New request"]</span></a>
+                            <a class="@SidebarStateClass(isMyAdministratorRequests)" asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-mine="true"><span aria-hidden="true">&#9673;</span><span>@L["My requests"]</span></a>
+                            <a class="@SidebarLinkClass("/admin/history")" asp-page="/Admin/History/Index"><span aria-hidden="true">&#8634;</span><span>@L["History"]</span></a>
+                            <a class="@SidebarLinkClass("/admin/reports")" asp-page="/Admin/Reports/Index"><span aria-hidden="true">&#8645;</span><span>@L["Reports"]</span></a>
+                            <a class="@SidebarLinkClass("/admin/employees")" asp-page="/Admin/Employees/Index"><span aria-hidden="true">&#9786;</span><span>@L["Employees"]</span></a>
+                            <a class="@SidebarLinkClass("/admin/staff")" asp-page="/Admin/Staff/Index"><span aria-hidden="true">&#9881;</span><span>@L["Staff accounts"]</span></a>
+                        }
+                        <a class="@SidebarLinkClass("/execution")" asp-page="/Execution/Index"><span aria-hidden="true">&#10003;</span><span>@L["Execution records"]</span></a>
+                    </nav>
+                    <div class="dashboard-sidebar-actions">
+                        <form method="post" asp-page="/Language">
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <input type="hidden" name="code" value="@(isRtl ? "en" : "fa")" />
+                            <button class="btn btn-sm btn-outline-secondary w-100" type="submit" lang="@(isRtl ? "en" : "fa")">@(isRtl ? "English" : "فارسی")</button>
+                        </form>
+                        <a class="btn btn-sm btn-outline-secondary w-100" asp-page="/Account/ChangePassword">@L["Change password"]</a>
+                        <form method="post" asp-page="/Account/Logout">
+                            <button class="btn btn-sm btn-outline-danger w-100" type="submit">@L["Sign out"]</button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+            <div class="dashboard-content">
+                <main role="main" class="container-fluid pb-4" id="main-content">
+                    <partial name="_StatusMessage" />
+                    @RenderBody()
+                </main>
+                <footer class="border-top footer dashboard-footer text-muted">
+                    <div class="container-fluid">&copy; 2026 - @L["Purchase Approval Program"]</div>
+                </footer>
+            </div>
+        </div>
+    }
+    else
+    {
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3" aria-label="@L["Main navigation"]">
             <div class="container">
@@ -46,20 +113,6 @@
                             <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Index">@L["Dashboard"]</a></li>
                             <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Requests/Create">@L["New request"]</a></li>
                             <li class="nav-item"><a class="nav-link" asp-page="/EmployeeAccess/Requests/Index">@L["My requests"]</a></li>
-                        }
-                        @if (isAdministrator)
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Index">@L["Review queue"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Create">@L["New request"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-mine="true">@L["My requests"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/History/Index">@L["History"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Reports/Index">@L["Reports"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Employees/Index">@L["Employees"]</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-page="/Admin/Staff/Index">@L["Staff accounts"]</a></li>
-                        }
-                        @if (isAdministrator || isAccountant)
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-page="/Execution/Index">@L["Execution records"]</a></li>
                         }
                     </ul>
                     <div class="d-flex flex-wrap align-items-center gap-2 navbar-actions">
@@ -106,6 +159,7 @@
             &copy; 2026 - @L["Purchase Approval Program"]
         </div>
     </footer>
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
