@@ -58,6 +58,9 @@ public interface IEmployeeAccessService
 
     Task<EmployeeAccessResult> RevokeAsync(int employeeId, AuditActor actor, CancellationToken cancellationToken = default);
 
+    /// <summary>Permanently removes access while retaining the employee row and request history.</summary>
+    Task<EmployeeAccessResult> DeleteAsync(int employeeId, AuditActor actor, CancellationToken cancellationToken = default);
+
     /// <summary>Explicit restoration of a revoked employee: sets Active and issues a fresh key.</summary>
     Task<EmployeeAccessResult> RestoreAccessAsync(int employeeId, AuditActor actor, CancellationToken cancellationToken = default);
 
@@ -149,6 +152,12 @@ public sealed class EmployeeAccessService(
             return NotFound();
         }
 
+        if (employee.AccessStatus is EmployeeAccessStatus.Revoked or EmployeeAccessStatus.Deleted)
+        {
+            return EmployeeAccessResult.Fail(EmployeeAccessOperation.InvalidState,
+                "Restore revoked access before editing. A deleted employee cannot be edited.");
+        }
+
         var changes = new List<string>();
         Apply(changes, "Full name", employee.FullName, profile.FullName.Trim(), value => employee.FullName = value);
         Apply(changes, "Phone", employee.PhoneNumber, Clean(profile.PhoneNumber), value => employee.PhoneNumber = value);
@@ -162,15 +171,14 @@ public sealed class EmployeeAccessService(
             changes.Add("Administrator notes updated");
         }
 
-        if (changes.Count == 0)
-        {
-            return EmployeeAccessResult.Ok(employee.Id);
-        }
-
-        dbContext.AuditEntries.Add(Audit(AuditAction.EmployeeProfileUpdated, employee, actor,
-            timeProvider.GetUtcNow(), string.Join("; ", changes)));
+        var now = timeProvider.GetUtcNow();
+        var key = accessKeyService.RotateCredential(employee);
+        dbContext.AuditEntries.Add(Audit(AuditAction.EmployeeProfileUpdated, employee, actor, now,
+            changes.Count == 0 ? "Profile confirmed without field changes." : string.Join("; ", changes)));
+        dbContext.AuditEntries.Add(Audit(AuditAction.EmployeeKeyReplaced, employee, actor, now,
+            "Fresh access key issued after profile edit; previous key and sessions invalidated."));
         await dbContext.SaveChangesAsync(cancellationToken);
-        return EmployeeAccessResult.Ok(employee.Id);
+        return EmployeeAccessResult.Ok(employee.Id, key);
     }
 
     public async Task<EmployeeAccessResult> DisableAsync(
@@ -232,6 +240,11 @@ public sealed class EmployeeAccessService(
             return NotFound();
         }
 
+        if (employee.AccessStatus == EmployeeAccessStatus.Deleted)
+        {
+            return EmployeeAccessResult.Fail(EmployeeAccessOperation.InvalidState, "A deleted employee cannot be changed.");
+        }
+
         if (employee.AccessStatus == EmployeeAccessStatus.Revoked)
         {
             return EmployeeAccessResult.Fail(EmployeeAccessOperation.InvalidState, "Access is already revoked.");
@@ -244,6 +257,34 @@ public sealed class EmployeeAccessService(
         employee.CredentialVersion = checked(employee.CredentialVersion + 1);
         dbContext.AuditEntries.Add(Audit(AuditAction.EmployeeRevoked, employee, actor, now,
             "Access revoked; key and sessions invalidated. Restoration requires an explicit action and a fresh key."));
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return EmployeeAccessResult.Ok(employee.Id);
+    }
+
+    public async Task<EmployeeAccessResult> DeleteAsync(
+        int employeeId, AuditActor actor, CancellationToken cancellationToken = default)
+    {
+        var employee = await dbContext.Employees.FindAsync([employeeId], cancellationToken);
+        if (employee is null)
+        {
+            return NotFound();
+        }
+
+        if (employee.AccessStatus == EmployeeAccessStatus.Deleted)
+        {
+            return EmployeeAccessResult.Fail(EmployeeAccessOperation.InvalidState, "The employee is already deleted.");
+        }
+
+        var now = timeProvider.GetUtcNow();
+        employee.AccessStatus = EmployeeAccessStatus.Deleted;
+        employee.DeletedAtUtc = now;
+        employee.DisabledAtUtc = null;
+        employee.RevokedAtUtc = null;
+        // Replace the stored hash with an undisclosed random credential as defence in depth;
+        // the Deleted state also prevents authentication and this key is intentionally discarded.
+        _ = accessKeyService.RotateCredential(employee);
+        dbContext.AuditEntries.Add(Audit(AuditAction.EmployeeDeleted, employee, actor, now,
+            "Employee deleted from active management; credentials and sessions invalidated; historical records retained."));
         await dbContext.SaveChangesAsync(cancellationToken);
         return EmployeeAccessResult.Ok(employee.Id);
     }
@@ -286,10 +327,10 @@ public sealed class EmployeeAccessService(
             return NotFound();
         }
 
-        if (employee.AccessStatus == EmployeeAccessStatus.Revoked)
+        if (employee.AccessStatus is EmployeeAccessStatus.Revoked or EmployeeAccessStatus.Deleted)
         {
             return EmployeeAccessResult.Fail(EmployeeAccessOperation.InvalidState,
-                "Restore the revoked employee first; a replacement key alone does not restore access.");
+                "Restore revoked access first. Deleted employees cannot receive replacement keys.");
         }
 
         var now = timeProvider.GetUtcNow();

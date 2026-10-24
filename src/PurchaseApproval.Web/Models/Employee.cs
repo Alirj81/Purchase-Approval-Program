@@ -27,11 +27,13 @@ public class Employee
     public DateTimeOffset? LastAuthenticatedAtUtc { get; set; }
     public DateTimeOffset? DisabledAtUtc { get; set; }
     public DateTimeOffset? RevokedAtUtc { get; set; }
+    public DateTimeOffset? DeletedAtUtc { get; set; }
 }
 
 public enum EmployeeAccessStatus
 {
     Active = 1,
     Disabled = 2,
-    Revoked = 3
+    Revoked = 3,
+    Deleted = 4
 }

@@ -369,7 +369,7 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                     b.ToTable("AuditEntries", null, t =>
                         {
-                            t.HasCheckConstraint("CK_AuditEntries_Action", "\"Action\" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42)");
+                            t.HasCheckConstraint("CK_AuditEntries_Action", "\"Action\" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 27, 40, 41, 42)");
 
                             t.HasCheckConstraint("CK_AuditEntries_Category", "\"Category\" IN (1, 2, 3)");
                         });
@@ -406,6 +406,9 @@ namespace PurchaseApproval.Web.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
+
+                    b.Property<DateTimeOffset?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Department")
                         .HasMaxLength(100)
@@ -452,7 +455,7 @@ namespace PurchaseApproval.Web.Data.Migrations
 
                     b.ToTable("Employees", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Employees_AccessStatus", "\"AccessStatus\" IN (1, 2, 3)");
+                            t.HasCheckConstraint("CK_Employees_AccessStatus", "\"AccessStatus\" IN (1, 2, 3, 4)");
                         });
                 });
 

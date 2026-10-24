@@ -71,6 +71,7 @@ public static class Labels
         EmployeeAccessStatus.Active => "Active",
         EmployeeAccessStatus.Disabled => "Disabled",
         EmployeeAccessStatus.Revoked => "Revoked",
+        EmployeeAccessStatus.Deleted => "Deleted",
         _ => status.ToString()
     };
 

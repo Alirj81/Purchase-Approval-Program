@@ -290,6 +290,48 @@ public sealed class HttpWorkflowTests : IAsyncLifetime
     }
 
     [PostgresFact]
+    public async Task Administrator_CanSubmitOwnRequest_AndItIsRecordedAsAdministratorOwned()
+    {
+        var adminId = await _factory.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword, "Mina Manager");
+        var admin = _factory.CreateCookieClient();
+        await Browser.UseEnglishAsync(admin);
+        await Browser.SignInStaffAsync(admin, "admin", AdminPassword);
+
+        var submitted = await Browser.SubmitRequestAsync(admin, "/admin/requests/create", "Admin Supplier", 45_000);
+        var requestId = int.Parse(submitted.Split('/').Last());
+
+        await using var context = TestDatabase.CreateContext();
+        var request = await context.PaymentRequests.SingleAsync(item => item.Id == requestId);
+        Assert.Equal(RequesterType.Administrator, request.RequesterType);
+        Assert.Equal(adminId, request.ApplicationUserRequesterId);
+        Assert.Null(request.EmployeeRequesterId);
+        Assert.Equal(PaymentRequestStatus.Pending, request.Status);
+    }
+
+    [PostgresFact]
+    public async Task AdministratorSuppliedStaffPassword_SignsInWithoutKeyOrForcedPasswordChange()
+    {
+        var adminId = await _factory.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword);
+        const string chosenPassword = "Chosen#Password4567";
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var staff = scope.ServiceProvider.GetRequiredService<IStaffAccountService>();
+            var created = await staff.CreateAsync(
+                new StaffAccountInput("chosen.acct", "Chosen Accountant", AppRoles.Accountant, null, null, null, chosenPassword),
+                new AuditActor(adminId, "Admin", AppRoles.Administrator));
+            Assert.Equal(StaffAccountOperation.Success, created.Status);
+            Assert.Null(created.TemporaryPassword);
+            Assert.Null(created.ExpiresAtUtc);
+        }
+
+        var client = _factory.CreateCookieClient();
+        var signIn = await Browser.SignInStaffAsync(client, "chosen.acct", chosenPassword);
+        Assert.Equal(HttpStatusCode.Redirect, signIn.StatusCode);
+        Assert.DoesNotContain("change-password", Browser.LocationPath(signIn), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/execution")).StatusCode);
+    }
+
+    [PostgresFact]
     public async Task TemporaryPassword_ForcesPasswordChangeBeforeAnyOtherPage()
     {
         var adminId = await _factory.CreateStaffAsync("admin", AppRoles.Administrator, AdminPassword);

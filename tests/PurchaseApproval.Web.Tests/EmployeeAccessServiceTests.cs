@@ -112,8 +112,8 @@ public sealed class EmployeeAccessServiceTests
     public async Task UpdateProfile_AuditsChangedFieldsWithoutExposingNotes()
     {
         await using var dbContext = TestSupport.CreateInMemoryContext();
-        var (service, _) = CreateService(dbContext);
-        await service.CreateAsync("a.rahimi", Profile("Ali"), Admin);
+        var (service, keys) = CreateService(dbContext);
+        var created = await service.CreateAsync("a.rahimi", Profile("Ali"), Admin);
         var employee = await dbContext.Employees.SingleAsync();
 
         var result = await service.UpdateProfileAsync(
@@ -122,9 +122,31 @@ public sealed class EmployeeAccessServiceTests
         Assert.Equal(EmployeeAccessOperation.Success, result.Status);
         Assert.Equal("Ali Rahimi", employee.FullName);
         Assert.Equal("secret note", employee.AdminNotes);
+        Assert.NotNull(result.IssuedAccessKey);
+        Assert.False(keys.Verify(employee, created.IssuedAccessKey!));
+        Assert.True(keys.Verify(employee, result.IssuedAccessKey!));
         var audit = await dbContext.AuditEntries.SingleAsync(entry => entry.Action == AuditAction.EmployeeProfileUpdated);
         Assert.Contains("Full name", audit.Details);
         Assert.DoesNotContain("secret note", audit.Details);
+    }
+
+    [Fact]
+    public async Task Delete_RemovesAccessButKeepsEmployeeAndHistoryIdentity()
+    {
+        await using var dbContext = TestSupport.CreateInMemoryContext();
+        var (service, keys) = CreateService(dbContext);
+        var created = await service.CreateAsync("a.rahimi", Profile("Ali"), Admin);
+        var employee = await dbContext.Employees.SingleAsync();
+
+        var deleted = await service.DeleteAsync(employee.Id, Admin);
+
+        Assert.Equal(EmployeeAccessOperation.Success, deleted.Status);
+        Assert.Equal(EmployeeAccessStatus.Deleted, employee.AccessStatus);
+        Assert.NotNull(employee.DeletedAtUtc);
+        Assert.False(keys.Verify(employee, created.IssuedAccessKey!));
+        Assert.Equal(employee.Id, (await dbContext.Employees.SingleAsync()).Id);
+        Assert.Contains(await dbContext.AuditEntries.ToListAsync(), row => row.Action == AuditAction.EmployeeDeleted);
+        Assert.Equal(EmployeeAccessOperation.InvalidState, (await service.ReplaceKeyAsync(employee.Id, Admin)).Status);
     }
 
     private static (EmployeeAccessService Service, EmployeeAccessKeyService Keys) CreateService(

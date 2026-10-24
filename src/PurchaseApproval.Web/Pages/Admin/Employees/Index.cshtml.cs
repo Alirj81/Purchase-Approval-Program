@@ -50,6 +50,9 @@ public sealed class IndexModel(
 
     public Task<IActionResult> OnPostRevokeAsync(int id) => ChangeStateAsync(id, employeeAccess.RevokeAsync, "The employee's access was revoked.");
 
+    public Task<IActionResult> OnPostDeleteAsync(int id) => ChangeStateAsync(
+        id, employeeAccess.DeleteAsync, "The employee was deleted. Historical requests and audit records were retained.");
+
     private async Task<IActionResult> ChangeStateAsync(
         int id,
         Func<int, AuditActor, CancellationToken, Task<EmployeeAccessResult>> operation,

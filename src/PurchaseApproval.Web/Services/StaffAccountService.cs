@@ -38,7 +38,8 @@ public sealed record StaffAccountInput(
     string Role,
     string? Department,
     string? Branch,
-    string? JobTitle);
+    string? JobTitle,
+    string? InitialPassword = null);
 
 public enum StaffAccountOperation
 {
@@ -140,8 +141,13 @@ public sealed class StaffAccountService(
         }
 
         var now = timeProvider.GetUtcNow();
-        var temporaryPassword = GenerateTemporaryPassword();
-        var expiresAt = now.AddHours(limits.Value.TemporaryCredentialLifetimeHours);
+        var administratorSuppliedPassword = !string.IsNullOrWhiteSpace(input.InitialPassword);
+        var initialPassword = administratorSuppliedPassword
+            ? input.InitialPassword!
+            : GenerateTemporaryPassword();
+        var expiresAt = administratorSuppliedPassword
+            ? (DateTimeOffset?)null
+            : now.AddHours(limits.Value.TemporaryCredentialLifetimeHours);
         var user = new ApplicationUser
         {
             UserName = input.Username.Trim(),
@@ -151,12 +157,12 @@ public sealed class StaffAccountService(
             JobTitle = Clean(input.JobTitle),
             IsActive = true,
             CreatedAtUtc = now,
-            MustChangePassword = true,
+            MustChangePassword = !administratorSuppliedPassword,
             TemporaryCredentialExpiresAtUtc = expiresAt
         };
 
         await using var transaction = await BeginAsync(cancellationToken);
-        var created = await userManager.CreateAsync(user, temporaryPassword);
+        var created = await userManager.CreateAsync(user, initialPassword);
         if (!created.Succeeded)
         {
             await RollbackAsync(transaction, cancellationToken);
@@ -178,11 +184,18 @@ public sealed class StaffAccountService(
             user.UserName!,
             actor,
             now,
-            $"Role {input.Role}; temporary password issued, expires {expiresAt:u}."));
+            administratorSuppliedPassword
+                ? $"Role {input.Role}; administrator supplied initial password."
+                : $"Role {input.Role}; temporary password issued, expires {expiresAt:u}."));
         await dbContext.SaveChangesAsync(cancellationToken);
         await CommitAsync(transaction, cancellationToken);
 
-        return new StaffCredentialResult(StaffAccountOperation.Success, user.Id, temporaryPassword, expiresAt, []);
+        return new StaffCredentialResult(
+            StaffAccountOperation.Success,
+            user.Id,
+            administratorSuppliedPassword ? null : initialPassword,
+            expiresAt,
+            []);
     }
 
     public async Task<StaffOperationResult> DeactivateAsync(

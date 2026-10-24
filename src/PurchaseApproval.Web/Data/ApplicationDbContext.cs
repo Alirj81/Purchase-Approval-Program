@@ -56,7 +56,7 @@ private static void ConfigureAuditEntries(ModelBuilder modelBuilder)
             table.HasCheckConstraint(
                 "CK_AuditEntries_Action",
                 """
-                "Action" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42)
+                "Action" IN (1, 2, 3, 4, 5, 6, 7, 20, 21, 22, 23, 24, 25, 26, 27, 40, 41, 42)
                 """);
         });
 
@@ -369,7 +369,7 @@ private static void ConfigurePaymentRequests(ModelBuilder modelBuilder)
             table.HasCheckConstraint(
                 "CK_Employees_AccessStatus",
                 """
-                "AccessStatus" IN (1, 2, 3)
+                "AccessStatus" IN (1, 2, 3, 4)
                 """);
         });
 

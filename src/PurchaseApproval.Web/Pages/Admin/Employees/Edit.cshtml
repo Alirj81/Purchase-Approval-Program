@@ -9,6 +9,15 @@
         <h1 class="h3 mb-1">@L["Edit employee profile"]</h1>
         <p class="text-secondary">@L["Username"]: <code>@Model.Username</code> · @L["Status"]: @L[Labels.AccessStatus(Model.AccessStatus)]</p>
         <p class="form-text">@L["Changes apply to future requests only. Requests already submitted keep the profile snapshot taken at submission."]</p>
+        @if (Model.IssuedAccessKey is not null)
+        {
+            <div class="alert alert-success" role="status">@L["The employee profile was updated and a new access key was issued."]</div>
+            <div class="alert alert-warning" role="alert">
+                <strong>@L["New access key:"]</strong>
+                <code class="user-select-all d-block my-2 wrap-anywhere">@Model.IssuedAccessKey</code>
+                <div>@L["This key is displayed only once. The previous key and sessions no longer work."]</div>
+            </div>
+        }
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
             <div class="mb-3">

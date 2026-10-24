@@ -33,6 +33,7 @@ public enum AuditAction
     EmployeeRevoked = 24,
     EmployeeAccessRestored = 25,
     EmployeeKeyReplaced = 26,
+    EmployeeDeleted = 27,
 
     RequestApproved = 40,
     RequestRejected = 41,

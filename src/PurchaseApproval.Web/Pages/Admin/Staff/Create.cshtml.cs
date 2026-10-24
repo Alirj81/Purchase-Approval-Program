@@ -21,9 +21,7 @@ public sealed class CreateModel(
     [BindProperty]
     public InputModel Input { get; set; } = new();
 
-    public string? TemporaryPassword { get; private set; }
-
-    public DateTimeOffset? TemporaryPasswordExpiresAtUtc { get; private set; }
+    public bool AccountCreated { get; private set; }
 
     public void OnGet()
     {
@@ -43,7 +41,7 @@ public sealed class CreateModel(
         }
 
         var result = await staffAccounts.CreateAsync(
-            new StaffAccountInput(Input.Username, Input.FullName, Input.Role, Input.Department, Input.Branch, Input.JobTitle),
+            new StaffAccountInput(Input.Username, Input.FullName, Input.Role, Input.Department, Input.Branch, Input.JobTitle, Input.Password),
             new AuditActor(administrator.Id, administrator.FullName, AppRoles.Administrator),
             HttpContext.RequestAborted);
 
@@ -57,8 +55,7 @@ public sealed class CreateModel(
             return Page();
         }
 
-        TemporaryPassword = result.TemporaryPassword;
-        TemporaryPasswordExpiresAtUtc = result.ExpiresAtUtc;
+        AccountCreated = true;
         return Page();
     }
 
@@ -76,6 +73,16 @@ public sealed class CreateModel(
         [Required(ErrorMessage = "Choose Administrator or Accountant.")]
         [Display(Name = "Role")]
         public string Role { get; set; } = AppRoles.Accountant;
+
+        [Required(ErrorMessage = "Password is required."), DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 12, ErrorMessage = "Password must be at least 12 characters.")]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirm the password."), DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "The passwords do not match.")]
+        [Display(Name = "Confirm password")]
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         [StringLength(100)]
         [Display(Name = "Department")]

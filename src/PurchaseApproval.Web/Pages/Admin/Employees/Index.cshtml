@@ -54,9 +54,12 @@
                         <td data-label="@L["Last sign-in"]"><timestamp utc="@employee.LastAuthenticatedAtUtc" /></td>
                         <td data-label="@L["Actions"]">
                             <div class="d-flex flex-wrap gap-2">
-                                <a asp-page="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">@L["Edit profile"]</a>
+                                @if (employee.AccessStatus is EmployeeAccessStatus.Active or EmployeeAccessStatus.Disabled)
+                                {
+                                    <a asp-page="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">@L["Edit profile"]</a>
+                                }
                                 <a asp-page="/Admin/Requests/Index" asp-route-status="all" asp-route-requesterType="Employee" asp-route-requesterId="@employee.Id" class="btn btn-sm btn-outline-secondary">@L["Requests"]</a>
-                                @if (employee.AccessStatus != EmployeeAccessStatus.Revoked)
+                                @if (employee.AccessStatus is EmployeeAccessStatus.Active or EmployeeAccessStatus.Disabled)
                                 {
                                     <form method="post" asp-page-handler="ReplaceKey" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Issue a replacement key? The current key and all sessions stop working immediately; the account state does not change."]">
                                         <input type="hidden" name="id" value="@employee.Id" />
@@ -77,16 +80,23 @@
                                         <button class="btn btn-sm btn-outline-success" type="submit">@L["Enable"]</button>
                                     </form>
                                 }
-                                @if (employee.AccessStatus != EmployeeAccessStatus.Revoked)
+                                @if (employee.AccessStatus is EmployeeAccessStatus.Active or EmployeeAccessStatus.Disabled)
                                 {
                                     <form method="post" asp-page-handler="Revoke" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Revoke this employee's access? The key and sessions become invalid; restoring access later requires an explicit action and a fresh key."]">
                                         <input type="hidden" name="id" value="@employee.Id" />
                                         <button class="btn btn-sm btn-outline-danger" type="submit">@L["Revoke"]</button>
                                     </form>
                                 }
-                                else
+                                else if (employee.AccessStatus == EmployeeAccessStatus.Revoked)
                                 {
                                     <a asp-page="Restore" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-success">@L["Restore access"]</a>
+                                }
+                                @if (employee.AccessStatus != EmployeeAccessStatus.Deleted)
+                                {
+                                    <form method="post" asp-page-handler="Delete" onsubmit="return confirm(this.dataset.confirm);" data-confirm="@L["Delete this employee? Sign-in will be permanently removed. Existing requests and audit history will be kept."]">
+                                        <input type="hidden" name="id" value="@employee.Id" />
+                                        <button class="btn btn-sm btn-danger" type="submit">@L["Delete employee"]</button>
+                                    </form>
                                 }
                             </div>
                         </td>

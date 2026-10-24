@@ -33,6 +33,8 @@ public sealed class EditModel(
 
     public EmployeeAccessStatus AccessStatus { get; private set; }
 
+    public string? IssuedAccessKey { get; private set; }
+
     public bool BranchRequired => limits.Value.RequireEmployeeBranch;
 
     public async Task<IActionResult> OnGetAsync(int id)
@@ -97,8 +99,9 @@ public sealed class EditModel(
             return Page();
         }
 
-        TempData["StatusMessage"] = "The employee profile was updated.";
-        return RedirectToPage("Index");
+        IssuedAccessKey = result.IssuedAccessKey;
+        ModelState.Clear();
+        return Page();
     }
 
     public sealed class InputModel

@@ -7,14 +7,10 @@
 <section class="row">
     <div class="col-lg-7">
         <h1 class="h3 mb-3">@L["Create staff account"]</h1>
-        @if (Model.TemporaryPassword is not null)
+        @if (Model.AccountCreated)
         {
             <div class="alert alert-success" role="status">@L["The account {0} was created.", Model.Input.Username]</div>
-            <div class="alert alert-warning" role="alert">
-                <strong>@L["Temporary password for {0}:", Model.Input.Username]</strong>
-                <code class="user-select-all d-block my-2">@Model.TemporaryPassword</code>
-                <div>@L["Shown once. Valid until"] <timestamp utc="@Model.TemporaryPasswordExpiresAtUtc" />. @L["The holder must choose a personal password at the next sign-in; all previous sessions are ended."]</div>
-            </div>
+            <p>@L["The account can now sign in through the administrator login using the username and password you provided."]</p>
             <a asp-page="Index" class="btn btn-primary">@L["Back to staff accounts"]</a>
         }
         else
@@ -42,6 +38,18 @@
                     </select>
                     <span asp-validation-for="Input.Role" class="text-danger"></span>
                 </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Input.Password" class="form-label">@L["Password"] <span class="required-marker" aria-hidden="true">*</span></label>
+                        <input asp-for="Input.Password" class="form-control ltr-value" autocomplete="new-password" dir="ltr" required />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Input.ConfirmPassword" class="form-label">@L["Confirm password"] <span class="required-marker" aria-hidden="true">*</span></label>
+                        <input asp-for="Input.ConfirmPassword" class="form-control ltr-value" autocomplete="new-password" dir="ltr" required />
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label asp-for="Input.Department" class="form-label">@L["Department"]</label>
                     <input asp-for="Input.Department" class="form-control" dir="auto" />
@@ -55,7 +63,7 @@
                     <input asp-for="Input.JobTitle" class="form-control" dir="auto" />
                 </div>
                 <div class="form-actions d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">@L["Create account and show temporary password"]</button>
+                    <button type="submit" class="btn btn-primary">@L["Create staff account"]</button>
                     <a asp-page="Index" class="btn btn-outline-secondary">@L["Cancel"]</a>
                 </div>
             </form>
