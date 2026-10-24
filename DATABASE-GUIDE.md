@@ -110,7 +110,7 @@ The most important tables are:
 
 Automated tests never use `purchase_approval_dev`. The PostgreSQL integration and browser tests
 read `PURCHASE_APPROVAL_TEST_CONNECTION` and refuse any database whose name does not end in
-`_test`; see the README section "Running the tests".
+`_test`. See "Run the automated tests" below for the complete procedure.
 
 The entity definitions are in `src/PurchaseApproval.Web/Models`, the mapping and constraints are
 in `src/PurchaseApproval.Web/Data/ApplicationDbContext.cs`, and database migrations are in
@@ -297,13 +297,60 @@ dotnet ef migrations list --project src/PurchaseApproval.Web --startup-project s
 Use a clear migration name, such as `AddEmployeeEmergencyContact`. Review the generated migration
 file before applying it. Do not edit an already-applied migration in a shared environment.
 
-## 10. Backup and restore a local database
+## 10. Run the automated tests
 
-The supported way to back up and restore any instance of this application, including the local
-development database, is described in [docs/BACKUP-AND-RESTORE.md](docs/BACKUP-AND-RESTORE.md)
-with `scripts/Backup-Database.ps1` and `scripts/Restore-Database.ps1` (custom-format `pg_dump`,
-verified restore). On this development PC the PostgreSQL client tools live only inside the
-container, so the equivalent commands are:
+The unit tests do not need PostgreSQL. Run them from the repository root:
+
+```powershell
+dotnet test tests/PurchaseApproval.Web.Tests --configuration Release
+```
+
+The integration and browser suites need a dedicated, disposable PostgreSQL database. Create a
+database whose name ends in `_test`, then set its connection string for the current PowerShell
+session. Never point this variable at a development, staging, or production database because the
+test suites delete and recreate data:
+
+```powershell
+$env:PURCHASE_APPROVAL_TEST_CONNECTION = "Host=localhost;Port=5432;Database=purchase_approval_test;Username=purchase_approval_test;Password=<test-password>"
+dotnet test tests/PurchaseApproval.Web.IntegrationTests --configuration Release
+```
+
+The browser project uses Playwright. Build it once and install its repository-local Chromium
+browser before the first run:
+
+```powershell
+dotnet build tests/PurchaseApproval.Web.BrowserTests --configuration Release
+$env:PLAYWRIGHT_BROWSERS_PATH = Join-Path (Get-Location) ".playwright"
+pwsh tests/PurchaseApproval.Web.BrowserTests/bin/Release/net10.0/playwright.ps1 install chromium
+dotnet test tests/PurchaseApproval.Web.BrowserTests --configuration Release --no-build
+```
+
+Run the suites one at a time because the database suites share the disposable database. A skipped
+database or browser test is not a successful verification. Remove the connection string from the
+session when finished:
+
+```powershell
+Remove-Item Env:PURCHASE_APPROVAL_TEST_CONNECTION
+```
+
+For release verification, first build the complete solution with warnings treated as errors, then
+run all three suites and record the passed, failed, and skipped totals:
+
+```powershell
+dotnet build PurchaseApproval.slnx --configuration Release --warnaserror
+dotnet test tests/PurchaseApproval.Web.Tests --configuration Release --no-build
+dotnet test tests/PurchaseApproval.Web.IntegrationTests --configuration Release --no-build
+dotnet test tests/PurchaseApproval.Web.BrowserTests --configuration Release --no-build
+```
+
+## 11. Backup and restore a local database
+
+Production backup and restore wrappers, scheduling instructions, retention policy, and recovery
+runbooks are operational material maintained separately from this source repository. Obtain the
+current approved copies from the deployment owner rather than relying on an old repository copy.
+
+For a local development-only backup, PostgreSQL tools in the Docker container can create a custom
+format archive and restore it into a new rehearsal database:
 
 ```powershell
 # Backup (custom format, restorable with pg_restore; the file stays inside the container until copied)
@@ -321,7 +368,7 @@ environment. Backups contain personal and financial data: keep them out of sourc
 (`*.dump` and `backups/` are git-ignored) and delete rehearsal copies when done. Restoring over a
 database you still need destroys its current content; restore into a separate database first.
 
-## 11. Common problems
+## 12. Common problems
 
 ### `Failed to connect to 127.0.0.1:5432`
 
@@ -349,7 +396,7 @@ dotnet ef database update --project src/PurchaseApproval.Web --startup-project s
 Use double quotes around the project's PascalCase table and column names, for example
 `"PaymentRequests"` and `"SubmittedAtUtc"`.
 
-## 12. Rules worth remembering
+## 13. Rules worth remembering
 
 - Never commit `.env`, user secrets, database backups, passwords, or access keys.
 - Never try to recover or replace a password by editing `PasswordHash` or `AccessKeyHash`.

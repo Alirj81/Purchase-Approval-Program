@@ -26,6 +26,10 @@ TestResults/
 TestResults/browser/
 TestResults/*.trx
 
+# Operational material maintained outside the repository
+/docs/
+/scripts/
+
 # Database backups and restore rehearsals
 backups/
 *.dump

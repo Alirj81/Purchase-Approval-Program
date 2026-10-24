@@ -68,8 +68,6 @@ Keep credentials, database backups and real payment information out of Git. Use 
 
 ## Current state
 
-The main request, approval, payment-recording and reporting flows have been implemented and tested locally, and the deployment, backup and restore scripts exist with their own checks. Still pending: the end-to-end backup and restore test with real Windows PostgreSQL client tools, the rehearsal on the intended Windows Server/IIS setup, and testing on physical devices over the company network.
+The main request, approval, payment-recording and reporting flows have been implemented and tested locally. Deployment, backup and restore tooling is maintained separately as operational material, and the backup/restore wrappers have been rehearsed end to end with native Windows PostgreSQL 17 tools. Still pending: the rehearsal on the intended Windows Server/IIS setup and testing on physical devices over the company network.
 
 I’m still developing this project. Local test results do not mean it is ready to handle real company payments yet.
-
-Technical changes are recorded in [the changelog](docs/CHANGELOG.md).
